@@ -7,7 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.terifan.forms.Orientation;
+import org.terifan.ui.Orientation;
 import org.terifan.ui.StyleSheet;
 import org.terifan.util.log.Log;
 

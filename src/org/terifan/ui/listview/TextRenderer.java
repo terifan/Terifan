@@ -11,7 +11,7 @@ import java.awt.font.LineMetrics;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Random;
-import org.terifan.forms.Anchor;
+import org.terifan.ui.Anchor;
 
 
 /**

@@ -1,4 +1,4 @@
-package org.terifan.graphics;
+package org.terifan.ui;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;

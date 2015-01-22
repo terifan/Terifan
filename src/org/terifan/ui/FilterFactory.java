@@ -1,4 +1,4 @@
-package org.terifan.graphics;
+package org.terifan.ui;
 
 import java.awt.image.Kernel;
 import static java.lang.Math.PI;
@@ -6,25 +6,25 @@ import static java.lang.Math.cos;
 import org.terifan.util.log.Log;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
-import static org.terifan.graphics.FilterFactory.Blackman;
-import static org.terifan.graphics.FilterFactory.Bohman;
-import static org.terifan.graphics.FilterFactory.Box;
-import static org.terifan.graphics.FilterFactory.Catrom;
-import static org.terifan.graphics.FilterFactory.Cubic;
-import static org.terifan.graphics.FilterFactory.FIXED_POINT_SCALE;
-import static org.terifan.graphics.FilterFactory.Gaussian;
-import static org.terifan.graphics.FilterFactory.Hamming;
-import static org.terifan.graphics.FilterFactory.Hanning;
-import static org.terifan.graphics.FilterFactory.Hermite;
-import static org.terifan.graphics.FilterFactory.Jinc;
-import static org.terifan.graphics.FilterFactory.Kasier;
-import static org.terifan.graphics.FilterFactory.Lanczos3;
-import static org.terifan.graphics.FilterFactory.Mitchell;
-import static org.terifan.graphics.FilterFactory.Quadratic;
-import static org.terifan.graphics.FilterFactory.Sinc;
-import static org.terifan.graphics.FilterFactory.Triangle;
-import static org.terifan.graphics.FilterFactory.Welch;
-import static org.terifan.graphics.FilterFactory.values;
+import static org.terifan.ui.FilterFactory.Blackman;
+import static org.terifan.ui.FilterFactory.Bohman;
+import static org.terifan.ui.FilterFactory.Box;
+import static org.terifan.ui.FilterFactory.Catrom;
+import static org.terifan.ui.FilterFactory.Cubic;
+import static org.terifan.ui.FilterFactory.FIXED_POINT_SCALE;
+import static org.terifan.ui.FilterFactory.Gaussian;
+import static org.terifan.ui.FilterFactory.Hamming;
+import static org.terifan.ui.FilterFactory.Hanning;
+import static org.terifan.ui.FilterFactory.Hermite;
+import static org.terifan.ui.FilterFactory.Jinc;
+import static org.terifan.ui.FilterFactory.Kasier;
+import static org.terifan.ui.FilterFactory.Lanczos3;
+import static org.terifan.ui.FilterFactory.Mitchell;
+import static org.terifan.ui.FilterFactory.Quadratic;
+import static org.terifan.ui.FilterFactory.Sinc;
+import static org.terifan.ui.FilterFactory.Triangle;
+import static org.terifan.ui.FilterFactory.Welch;
+import static org.terifan.ui.FilterFactory.values;
 
 
 public class FilterFactory

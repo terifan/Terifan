@@ -7,17 +7,16 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
 import javax.swing.JComponent;
-import org.terifan.forms.Icon;
+import org.terifan.ui.Icon;
 import org.terifan.ui.StyleSheet;
-import org.terifan.data.cache.Cache;
-import org.terifan.graphics.Utilities;
+import org.terifan.util.cache.Cache;
+import org.terifan.ui.Utilities;
 import org.terifan.ui.listview.ListView;
 import org.terifan.ui.listview.ListViewCellRenderer;
 import org.terifan.ui.listview.ListViewColumn;
 import org.terifan.ui.listview.ListViewItem;
 import org.terifan.ui.listview.SelectionMode;
 import org.terifan.ui.listview.util.Colors;
-import org.terifan.util.log.Log;
 
 
 public class CellRenderer extends JComponent implements ListViewCellRenderer

@@ -35,14 +35,12 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import org.terifan.forms.Orientation;
-import org.terifan.graphics.Utilities;
+import org.terifan.ui.Orientation;
 import org.terifan.ui.PopupFactory;
 import org.terifan.ui.StyleSheet;
+import org.terifan.ui.Utilities;
 import org.terifan.ui.listview.util.ListViewFactory;
 import org.terifan.util.log.Log;
 
