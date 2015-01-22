@@ -414,7 +414,7 @@ public class ListView extends JComponent implements Scrollable
 				panel.add(new ListViewBar(this), BorderLayout.NORTH);
 				panel.add(new ListViewHeader(this, "column_header"), BorderLayout.SOUTH);
 
-				scrollPane.setRowHeaderView(new ListViewHeader(this, "row_header"));
+//				scrollPane.setRowHeaderView(new ListViewHeader(this, "row_header"));
 				scrollPane.setColumnHeaderView(panel);
 				scrollPane.setCorner(ScrollPaneConstants.UPPER_LEFT_CORNER, new ListViewHeader(this, "upper_left_corner"));
 				scrollPane.setCorner(ScrollPaneConstants.UPPER_RIGHT_CORNER, new ListViewHeader(this, "upper_right_corner"));

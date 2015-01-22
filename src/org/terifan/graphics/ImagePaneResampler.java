@@ -48,9 +48,9 @@ class ImagePaneResampler extends Thread
 		g.drawImage(mInput, 0, 0, mSrcWidth, mSrcHeight, mSrcX, mSrcY, mSrcX + mSrcWidth, mSrcY + mSrcHeight, null);
 		g.dispose();
 
-//		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, FilterFactory.Lanczos3, mAbort);
-		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, FilterFactory.Box, mAbort);
-		Log.out.println(mDstWidth+" "+mDstHeight);
+		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, FilterFactory.Lanczos3, mAbort);
+//		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, FilterFactory.Box, mAbort);
+
 		if (!mAbort.get())
 		{
 			mCallback.update(output);

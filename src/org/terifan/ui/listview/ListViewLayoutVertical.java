@@ -1,5 +1,6 @@
 package org.terifan.ui.listview;
 
+import java.awt.Color;
 import org.terifan.util.SortedMap;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.terifan.forms.Orientation;
 import org.terifan.ui.StyleSheet;
+import org.terifan.util.log.Log;
 
 
 public class ListViewLayoutVertical extends AbstractListViewLayout
@@ -160,7 +162,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 
 					item.loadState();
 
-					int itemHeight = renderer.getItemHeight(mListView, item);
+//					int itemHeight = renderer.getItemHeight(mListView, item);
 
 					int tmpWidth = (int)(itemWidth + error);
 

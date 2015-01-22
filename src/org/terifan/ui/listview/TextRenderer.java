@@ -10,6 +10,7 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.Random;
 import org.terifan.forms.Anchor;
 
 
@@ -58,7 +59,7 @@ public class TextRenderer
 		if (aBackground != null)
 		{
 			g.setColor(aBackground);
-			g.fillRect(0, 0, aRectWidth, aRectHeight);
+			g.fillRect(aRectX, aRectY, aRectWidth, aRectHeight);
 		}
 
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
