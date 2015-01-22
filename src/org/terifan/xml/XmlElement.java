@@ -1,0 +1,183 @@
+package org.terifan.xml;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Iterator;
+import org.terifan.util.Assert;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+
+public class XmlElement extends XmlNode implements Iterable<XmlElement>
+{
+	public XmlElement(Node aNode)
+	{
+		super(aNode);
+
+		if (!(aNode instanceof Element))
+		{
+			throw new IllegalArgumentException("Provided node is not an instance of org.w3c.dom.Element.");
+		}
+	}
+
+
+	public XmlElement(XmlNode aNode)
+	{
+		super(aNode.mNode);
+
+		if (!(aNode.mNode instanceof Element))
+		{
+			throw new IllegalArgumentException("Provided node is not an instance of org.w3c.dom.Element.");
+		}
+	}
+
+
+	public void appendEntity(XmlPropertyProvider aEntity)
+	{
+		((XmlPropertyProvider)aEntity).appendProperties(this);
+	}
+
+
+	private void setValue(Field field, String name, Object aProvider) throws IllegalStateException
+	{
+		try
+		{
+			field.setAccessible(true);
+			if (name.startsWith("@"))
+			{
+				setAttribute(name.substring(1), field.get(aProvider).toString());
+			}
+			else
+			{
+				appendTextNode(name, field.get(aProvider).toString());
+			}
+		}
+		catch (Exception e)
+		{
+			throw new IllegalStateException("Problem getting property " + name + " via field " + field, e);
+		}
+	}
+
+
+	private void setValue(Method method, String name, Object aProvider) throws IllegalStateException
+	{
+		try
+		{
+			method.setAccessible(true);
+			if (name.startsWith("@"))
+			{
+				setAttribute(name.substring(1), method.invoke(aProvider).toString());
+			}
+			else
+			{
+				appendTextNode(name, method.invoke(aProvider).toString());
+			}
+		}
+		catch (Exception e)
+		{
+			throw new IllegalStateException("Problem getting property " + name + " via method " + method, e);
+		}
+	}
+
+
+	@Override
+	public XmlElement toElement()
+	{
+		return (XmlElement)mNode;
+	}
+
+
+	@Override
+	public String getAttribute(String aName)
+	{
+		return ((Element)mNode).getAttribute(aName);
+	}
+
+
+	@Override
+	public void setAttribute(String aName, String aValue)
+	{
+		((Element)mNode).setAttribute(aName, aValue);
+	}
+
+
+	@Override
+	public Iterator<XmlElement> iterator()
+	{
+		final NodeList list = getInternalNode().getChildNodes();
+		return new Iterator<XmlElement>()
+		{
+			int index;
+			XmlElement next;
+
+			@Override
+			public boolean hasNext()
+			{
+				if (next == null)
+				{
+					while (index < list.getLength())
+					{
+						Node node = list.item(index++);
+						if (node instanceof Element)
+						{
+							next = new XmlElement(node);
+							return true;
+						}
+					}
+				}
+				return next != null;
+			}
+
+			@Override
+			public XmlElement next()
+			{
+				XmlElement tmp = next;
+				next = null;
+				return tmp;
+			}
+
+			@Override
+			public void remove()
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+		};
+	}
+
+
+	public void importXml(XmlElement aElement)
+	{
+		Assert.assertNotNull(aElement);
+
+		appendChild(new XmlElement(mNode.getOwnerDocument().importNode(aElement.mNode, true)));
+	}
+
+
+	public XmlElement setText(String aText)
+	{
+		mNode.setTextContent(aText);
+		return this;
+	}
+
+
+//	public static void main(String ... args)
+//	{
+//		try
+//		{
+//			XmlDocument doc1 = new XmlDocument();
+//			doc1.appendElement("child").appendTextNode("param", "value");
+//
+//			XmlDocument doc2 = new XmlDocument();
+//			XmlElement dest = doc2.appendElement("parent");
+//
+//			dest.importXml(doc1.getFirstElement());
+//
+//			dest.writeTo(Log.out);
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
+}
