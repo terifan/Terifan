@@ -72,6 +72,13 @@ public class ColumnHeaderRenderer implements ListViewHeaderRenderer
 			aGraphics.setColor(style.getColor("headerBorder"));
 			aGraphics.drawLine(x, y+h-1, x+w, y+h-1);
 		}
+		else if (aSorting != null && aSorting != SortOrder.UNSORTED)
+		{
+			BufferedImage background = style.getScaledImage("headerBackgroundSorted", w, h-1);
+			aGraphics.drawImage(background, x, y, null);
+			aGraphics.setColor(style.getColor("headerBorder"));
+			aGraphics.drawLine(x, y+h-1, x+w, y+h-1);
+		}
 		else
 		{
 			BufferedImage background = style.getScaledImage("headerBackground", w, h-1);

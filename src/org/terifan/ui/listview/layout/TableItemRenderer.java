@@ -13,7 +13,6 @@ import org.terifan.ui.listview.ListViewLayout;
 import org.terifan.ui.listview.ListViewLayoutVertical;
 import org.terifan.ui.listview.ListViewModel;
 import org.terifan.ui.listview.SelectionMode;
-import org.terifan.ui.listview.util.Colors;
 
 
 public class TableItemRenderer implements ListViewItemRenderer

@@ -13,7 +13,7 @@
 		<!--color id="itemBackground" value="252,252,252"/-->
 		<color id="itemBackground" value="255,255,255"/>
 		<color id="itemRolloverForeground" value="0,0,0"/>
-		<color id="itemRolloverBackground" value="252,252,255"/>
+		<color id="itemRolloverBackground" value="252,252,252"/>
 		<color id="itemSelectedForeground" value="0,0,0"/>
 		<color id="itemSelectedBackground" value="166,175,201"/>
 		<color id="itemSelectedRolloverForeground" value="0,0,0"/>
@@ -47,7 +47,7 @@
 		<color id="groupSelectedUnfocusedBackground" value="212,208,200"/>
 
 		<color id="groupHorizontalLine" value="232,242,255"/>
-		<color id="horizontalLine" value="227,239,255"/>
+		<color id="horizontalLine" value="240,240,240"/> <!--227,239,255-->
 		<color id="verticalLine" value="227,239,255"/>
 		<color id="indentLine" value="253,238,201"/>
 		<color id="indent" value="253,238,201"/>
@@ -56,7 +56,7 @@
 		<int id="itemHorizontalLineThickness" value="1"/>
 		<int id="itemVerticalLineThickness" value="0"/>
 
-		<color id="headerBorder" value="101,147,207"/>
+		<color id="headerBorder" value="213,213,213"/> <!--101,147,207-->
 		<color id="headerForeground" value="0,0,0"/>
 		<color id="headerForegroundArmed" value="0,0,0"/>
 
@@ -65,13 +65,14 @@
 		<font id="header" value="Segoe UI,plain,11"/>
 		<font id="label" value="Segoe UI,bold,11"/>
 
-		<image id="headerBackground" value="header_background_normal.png"/>
-		<image id="headerBackgroundRollover" value="header_background_normal.png"/>
-		<image id="headerBackgroundArmed" value="header_background_armed.png"/>
-		<image id="headerBackgroundRolloverArmed" value="header_background_armed.png"/>
+		<image id="headerBackground" value="header_silver_background_normal.png"/>
+		<image id="headerBackgroundRollover" value="header_silver_background_normal.png"/>
+		<image id="headerBackgroundArmed" value="header_silver_background_armed.png"/>
+		<image id="headerBackgroundRolloverArmed" value="header_silver_background_armed.png"/>
+		<image id="headerBackgroundSorted" value="header_silver_background_sorted.png"/>
 
-		<image id="headerSeperator" value="header_seperator_normal.png"/>
-		<image id="headerSeperatorArmed" value="header_seperator_armed.png"/>
+		<image id="headerSeperator" value="header_silver_seperator_normal.png"/>
+		<image id="headerSeperatorArmed" value="header_silver_seperator_armed.png"/>
 
 		<image id="collapseButton" value="button_collapse.png"/>
 		<image id="expandButton" value="button_expand.png"/>

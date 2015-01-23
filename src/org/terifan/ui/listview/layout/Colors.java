@@ -1,11 +1,12 @@
-package org.terifan.ui.listview.util;
+package org.terifan.ui.listview.layout;
 
 import java.awt.Color;
 import org.terifan.ui.StyleSheet;
 import org.terifan.ui.listview.SelectionMode;
+import org.terifan.util.log.Log;
 
 
-public class Colors
+class Colors
 {
 	public static Color getTextForeground(StyleSheet aStyle, SelectionMode aSelectionMode, boolean aIsSorted, boolean aIsSelected, boolean aIsRollover, boolean aIsFocused, boolean aIsListViewFocused)
 	{
@@ -100,6 +101,10 @@ public class Colors
 			{
 				return style.getColor("itemSelectedUnfocusedBackground");
 			}
+		}
+		else if (aIsRollover)
+		{
+			return style.getColor("itemRolloverBackground");
 		}
 		else
 		{

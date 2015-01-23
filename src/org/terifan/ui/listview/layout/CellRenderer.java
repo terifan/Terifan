@@ -16,7 +16,7 @@ import org.terifan.ui.listview.ListViewCellRenderer;
 import org.terifan.ui.listview.ListViewColumn;
 import org.terifan.ui.listview.ListViewItem;
 import org.terifan.ui.listview.SelectionMode;
-import org.terifan.ui.listview.util.Colors;
+import org.terifan.util.log.Log;
 
 
 public class CellRenderer extends JComponent implements ListViewCellRenderer
