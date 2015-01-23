@@ -8,9 +8,9 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.terifan.forms.Orientation;
+import org.terifan.ui.Orientation;
 import org.terifan.ui.StyleSheet;
-import org.terifan.graphics.Utilities;
+import org.terifan.ui.Utilities;
 
 
 public class ListViewLayoutHorizontal extends AbstractListViewLayout

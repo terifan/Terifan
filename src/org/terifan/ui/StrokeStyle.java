@@ -1,4 +1,4 @@
-package org.terifan.forms;
+package org.terifan.ui;
 
 import java.awt.BasicStroke;
 

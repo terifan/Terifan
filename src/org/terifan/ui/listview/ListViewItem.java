@@ -1,6 +1,6 @@
 package org.terifan.ui.listview;
 
-import org.terifan.forms.Icon;
+import org.terifan.ui.Icon;
 
 
 public interface ListViewItem

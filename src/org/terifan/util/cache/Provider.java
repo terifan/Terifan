@@ -1,4 +1,4 @@
-package org.terifan.data.cache;
+package org.terifan.util.cache;
 
 
 public abstract class Provider<K,V>

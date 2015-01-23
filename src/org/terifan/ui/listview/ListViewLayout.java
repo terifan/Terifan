@@ -5,7 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
-import org.terifan.forms.Orientation;
+import org.terifan.ui.Orientation;
 
 
 public interface ListViewLayout

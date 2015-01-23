@@ -1,7 +1,7 @@
 package org.terifan.ui.listview;
 
 import java.util.Arrays;
-import org.terifan.forms.Icon;
+import org.terifan.ui.Icon;
 
 
 public class DefaultListViewItem extends AbstractListViewItem

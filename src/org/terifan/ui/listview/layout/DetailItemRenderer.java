@@ -5,7 +5,7 @@ import java.awt.Component;
 import java.awt.Graphics;
 import javax.swing.JComponent;
 import org.terifan.ui.StyleSheet;
-import org.terifan.graphics.Utilities;
+import org.terifan.ui.Utilities;
 import org.terifan.ui.listview.ListView;
 import org.terifan.ui.listview.ListViewCellRenderer;
 import org.terifan.ui.listview.ListViewColumn;

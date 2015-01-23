@@ -448,7 +448,7 @@ public class PasswordDialog
 
 		JPanel logoPanel = new JPanel()
 		{
-			ImageIcon icon = new ImageIcon(getClass().getResource("resources/password_dialog/top.png"));
+			ImageIcon icon = new ImageIcon(getClass().getResource("resources/password_dialog_top.png"));
 			@Override
 			public void paintComponent(Graphics g)
 			{

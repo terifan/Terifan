@@ -1,11 +1,11 @@
-package org.terifan.graphics;
+package org.terifan.ui;
 
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.terifan.graphics.FilterFactory.Filter;
+import org.terifan.ui.FilterFactory.Filter;
 
 
 public class ImageResizer

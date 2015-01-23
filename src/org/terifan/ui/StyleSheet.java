@@ -1,6 +1,5 @@
 package org.terifan.ui;
 
-import org.terifan.graphics.Utilities;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -14,10 +13,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
-import org.terifan.forms.Icon;
-import org.terifan.forms.ImageIcon;
-import org.terifan.data.cache.Cache;
-import org.terifan.graphics.InterpolationMode;
+import org.terifan.util.cache.Cache;
 import org.terifan.util.log.Log;
 import org.terifan.xml.XmlReader;
 

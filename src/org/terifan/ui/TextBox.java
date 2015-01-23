@@ -14,13 +14,12 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
-import org.terifan.forms.Anchor;
-import static org.terifan.forms.Anchor.CENTER;
-import static org.terifan.forms.Anchor.EAST;
-import static org.terifan.forms.Anchor.NORTH;
-import static org.terifan.forms.Anchor.NORTH_EAST;
-import static org.terifan.forms.Anchor.SOUTH;
-import static org.terifan.forms.Anchor.SOUTH_EAST;
+import static org.terifan.ui.Anchor.CENTER;
+import static org.terifan.ui.Anchor.EAST;
+import static org.terifan.ui.Anchor.NORTH;
+import static org.terifan.ui.Anchor.NORTH_EAST;
+import static org.terifan.ui.Anchor.SOUTH;
+import static org.terifan.ui.Anchor.SOUTH_EAST;
 
 
 public class TextBox implements Cloneable
