@@ -103,6 +103,7 @@ public class ListViewFactory
 		aListView.setBackground(Color.WHITE);
 		aListView.setHeaderRenderer(new ColumnHeaderRenderer());
 		aListView.setItemRenderer(renderer);
+//		aListView.setRowHeaderRenderer(null);
 		renderer.setExtendLastItem(aExtendLastItem);
 	}
 }

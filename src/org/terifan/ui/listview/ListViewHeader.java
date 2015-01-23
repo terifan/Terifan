@@ -137,39 +137,39 @@ public class ListViewHeader extends JComponent
 	@Override
 	public Dimension getPreferredSize()
 	{
-//		try
-//		{
-//			ListViewHeaderRenderer renderer = mListView.getHeaderRenderer();
-//
-//			if (renderer == null)
-//			{
-//				return new Dimension(0, 0);
-//			}
-//			else if (mPart.equals("row_header"))
-//			{
-//				return new Dimension(renderer.getRowHeaderWidth(), 1);
-//			}
-//			else
-//			{
-//				int w = 0;
-//				ListViewModel model = mListView.getModel();
-//				for (int i = 0; i < model.getColumnCount(); i++)
-//				{
-//					ListViewColumn column = model.getColumn(i);
-//					if (column.isVisible())
-//					{
-//						w += column.getWidth();
-//					}
-//				}
-//
-//				return new Dimension(w, renderer.getColumnHeaderHeight(mListView));
-//			}
-//		}
-//		catch (Exception e)
-//		{
-//			e.printStackTrace(Log.out);
+		try
+		{
+			ListViewHeaderRenderer renderer = mListView.getHeaderRenderer();
+
+			if (renderer == null)
+			{
+				return new Dimension(0, 0);
+			}
+			else if (mPart.equals("row_header"))
+			{
+				return new Dimension(renderer.getRowHeaderWidth(), 1);
+			}
+			else
+			{
+				int w = 0;
+				ListViewModel model = mListView.getModel();
+				for (int i = 0; i < model.getColumnCount(); i++)
+				{
+					ListViewColumn column = model.getColumn(i);
+					if (column.isVisible())
+					{
+						w += column.getWidth();
+					}
+				}
+
+				return new Dimension(w, renderer.getColumnHeaderHeight(mListView));
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(Log.out);
 			return new Dimension(16, 16);
-//		}
+		}
 	}
 
 
