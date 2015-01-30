@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.util.Date;
 import org.terifan.util.Calendar;
-import static org.terifan.util.CommonTools.close;
 
 
 /**
@@ -57,13 +56,10 @@ public class FileTarget implements LogTarget
 	{
 		try
 		{
-			Writer writer = null;
-			try
+			File file = getOutputFile(aDateTime, aTag, aLogLevel);
+
+			try (Writer writer = new BufferedWriter(new FileWriter(file, true)))
 			{
-				File file = getOutputFile(aDateTime, aTag, aLogLevel);
-
-				writer = new BufferedWriter(new FileWriter(file, true));
-
 				if (aThrowable != null)
 				{
 					writer.write("------------------------------------------------------------------------------------------------");
@@ -85,10 +81,6 @@ public class FileTarget implements LogTarget
 					writer.write("------------------------------------------------------------------------------------------------");
 				}
 				writer.write(System.getProperty("line.separator"));
-			}
-			finally
-			{
-				close(writer);
 			}
 		}
 		catch (Throwable e)

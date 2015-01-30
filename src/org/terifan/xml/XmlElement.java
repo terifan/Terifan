@@ -3,7 +3,6 @@ package org.terifan.xml;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Iterator;
-import org.terifan.util.Assert;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -148,8 +147,6 @@ public class XmlElement extends XmlNode implements Iterable<XmlElement>
 
 	public void importXml(XmlElement aElement)
 	{
-		Assert.assertNotNull(aElement);
-
 		appendChild(new XmlElement(mNode.getOwnerDocument().importNode(aElement.mNode, true)));
 	}
 
@@ -159,25 +156,4 @@ public class XmlElement extends XmlNode implements Iterable<XmlElement>
 		mNode.setTextContent(aText);
 		return this;
 	}
-
-
-//	public static void main(String ... args)
-//	{
-//		try
-//		{
-//			XmlDocument doc1 = new XmlDocument();
-//			doc1.appendElement("child").appendTextNode("param", "value");
-//
-//			XmlDocument doc2 = new XmlDocument();
-//			XmlElement dest = doc2.appendElement("parent");
-//
-//			dest.importXml(doc1.getFirstElement());
-//
-//			dest.writeTo(Log.out);
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
 }

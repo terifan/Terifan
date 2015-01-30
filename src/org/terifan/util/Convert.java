@@ -638,18 +638,4 @@ public class Convert
 		}
 		return bytes;
 	}
-
-
-//	public static void main(String... args)
-//	{
-//		try
-//		{
-//			Log.out.println(toHexString(0x12345678));
-//			Log.out.println(toHexString(0x123456789abcdef0l));
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
 }

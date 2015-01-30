@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Date;
 import org.terifan.util.Calendar;
-import static org.terifan.util.CommonTools.close;
 
 
 // TODO: batch insert log rows, row count parameter, timeout parameter
@@ -40,25 +39,16 @@ public class DatabaseTarget implements LogTarget
 	{
 		try
 		{
-			Connection connection = null;
-			PreparedStatement statement = null;
-			try
+			Class.forName(mDriver);
+
+			try (Connection connection = DriverManager.getConnection(mProtocol + "://" + mHost + "/" + mFile, mUser, mPassword); PreparedStatement statement = connection.prepareStatement("insert " + mTable + " (datetime,tag,level,message,exception) values(?,?,?,?,?)"))
 			{
-				Class.forName(mDriver);
-
-				connection = DriverManager.getConnection(mProtocol + "://" + mHost + "/" + mFile, mUser, mPassword);
-
-				statement = connection.prepareStatement("insert " + mTable + " (datetime,tag,level,message,exception) values(?,?,?,?,?)");
 				statement.setString(1, Calendar.format(aDateTime.getTime()));
 				statement.setString(2, aTag);
 				statement.setString(3, aLogLevel.name());
 				statement.setString(4, aMessage);
 				statement.setString(5, aThrowable == null ? null : Log.getStackTraceString(aThrowable));
 				statement.executeUpdate();
-			}
-			finally
-			{
-				close(statement, connection);
 			}
 		}
 		catch (Throwable e)

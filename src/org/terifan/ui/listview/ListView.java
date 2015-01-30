@@ -967,27 +967,4 @@ public class ListView extends JComponent implements Scrollable
 	{
 		return mSelectionRectangle;
 	}
-
-
-	public static void main(String ... args)
-	{
-		try
-		{
-			ListViewModel listViewModel = new ListViewModel();
-			listViewModel.addColumn("test", 100);
-			listViewModel.addItem(new DefaultListViewItem("test item"));
-			ListView listView = new ListView(listViewModel);
-			ListViewFactory.applyDetailLayout(listView, true);
-
-			JFrame frame = new JFrame();
-			frame.setSize(1024, 768);
-			frame.add(new JScrollPane(listView));
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setVisible(true);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
 }

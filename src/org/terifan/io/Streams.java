@@ -12,14 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
-import java.util.Arrays;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.dom.DOMSource;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
+import java.nio.ByteBuffer;
 
 
 /**
@@ -27,21 +20,22 @@ import org.w3c.dom.Node;
  * <p>
  * Input:
  * <ol>
- *  <li>java.io.InputStream</li>
- *  <li>java.io.File</li>
- *  <li>java.lang.String (file path)</li>
- *  <li>java.net.URL</li>
- *  <li>org.terifan.net.filesystem.File</li>
- *  <li>byte array</li>
+ * <li>java.io.InputStream</li>
+ * <li>java.io.File</li>
+ * <li>java.lang.String (file path)</li>
+ * <li>java.lang.CharSequence</li>
+ * <li>java.net.URL</li>
+ * <li>byte array</li>
+ * <li>java.nio.ByteBuffer</li>
  * </ol>
  *
  * Output:
  * <ol>
- *  <li>java.io.OutputStream</li>
- *  <li>java.io.File</li>
- *  <li>java.lang.String (file path)</li>
- *  <li>java.net.URL</li>
- *  <li>org.terifan.data.ByteBuffer</li>
+ * <li>java.io.OutputStream</li>
+ * <li>java.io.File</li>
+ * <li>java.lang.String (file path)</li>
+ * <li>java.net.URL</li>
+ * <li>java.nio.ByteBuffer</li>
  * </ol>
  *
  * This sample will copy a file:
@@ -59,188 +53,60 @@ public final class Streams
 
 
 	/**
-	 * Transfers bytes from the InputStream to the OutputStreams until end of
-	 * stream is reached. Streams are closed when the transfer has completed.
+	 * Transfers bytes from the InputStream to the OutputStreams until end of stream is reached. Streams are closed when the transfer has
+	 * completed.
 	 *
-	 * @param aInput
-	 *   an input to read from
-	 * @param aOutput
-	 *   one or more outputs to write to
-	 * @return
-	 *   number of bytes actually transfered.
+	 * @param aInput an input to read from
+	 * @param aOutput one or more outputs to write to
+	 * @return number of bytes actually transfered.
 	 */
-	public static long transfer(Object aInput, Object ... aOutput) throws IOException
+	public static byte[] fetch(Object aInput) throws IOException
 	{
-		return transfer(Long.MAX_VALUE, true, true, aInput, aOutput);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		transfer(aInput, output);
+		return output.toByteArray();
 	}
 
 
 	/**
-	 * Transfers bytes from the InputStream to the OutputStreams until end of
-	 * stream is reached.
+	 * Transfers bytes from the InputStream to the OutputStreams until end of stream is reached.
 	 *
-	 * @param aClose
-	 *   if true, calls the close method when transfer is complete.
-	 * @return
-	 *   number of bytes actually transfered.
+	 * @param aCloseInput if true, calls the closeInput method when transfer is complete.
+	 * @param aCloseOutput if true, calls the closeOutput method when transfer is complete.
+	 * @return number of bytes actually transfered.
 	 */
-	public static long transfer(Boolean aClose, Object aInput, Object ... aOutput) throws IOException
+	public static long transfer(Object aInput, Object aOutput) throws IOException
 	{
-		return transfer(Long.MAX_VALUE, aClose, aClose, aInput, aOutput);
-	}
-
-
-	/**
-	 * Transfers bytes from the InputStream to the OutputStreams until end of
-	 * stream is reached.
-	 *
-	 * @param aCloseInput
-	 *   if true, calls the closeInput method when transfer is complete.
-	 * @param aCloseOutput
-	 *   if true, calls the closeOutput method when transfer is complete.
-	 * @return
-	 *   number of bytes actually transfered.
-	 */
-	public static long transfer(Boolean aCloseInput, Boolean aCloseOutput, Object aInput, Object ... aOutput) throws IOException
-	{
-		return transfer(Long.MAX_VALUE, aCloseInput, aCloseOutput, aInput, aOutput);
-	}
-
-
-	/**
-	 * Transfers a limited number of bytes from the InputStream to all the
-	 * OutputStreams. Streams are closed when the transfer has completed.
-	 *
-	 * @param aLimit
-	 *   number of bytes to transfer. A negative value indicates no limit.
-	 * @return
-	 *   number of bytes actually transfered.
-	 */
-	public static long transfer(Long aLimit, Object aInput, Object ... aOutput) throws IOException
-	{
-		return transfer(aLimit, true, true, aInput, aOutput);
-	}
-
-
-	/**
-	 * Transfers a limited number of bytes from the InputStream to all the
-	 * OutputStreams.
-	 *
-	 * @param aLimit
-	 *   number of bytes to transfer. A negative value indicates no limit.
-	 * @param aCloseInput
-	 *   if true, calls the closeInput method when transfer is complete.
-	 * @param aCloseOutput
-	 *   if true, calls the closeOutput method when transfer is complete.
-	 * @return
-	 *   number of bytes actually transfered.
-	 */
-	public static long transfer(Long aLimit, Boolean aCloseInput, Boolean aCloseOutput, Object aInput, Object ... aOutput) throws IOException
-	{
-		boolean doCloseInput = true;
-		boolean [] doCloseOutput = null;
 		InputStream inputStream = null;
-		OutputStream [] outputStreams = null;
+		OutputStream outputStream = null;
 
 		try
 		{
-			outputStreams = new OutputStream[aOutput.length];
-			doCloseOutput = new boolean[aOutput.length];
-			Arrays.fill(doCloseOutput, true);
-
-			// setup input
-
-			doCloseInput = aCloseInput;
-			if (aInput instanceof InputStream)
-			{
-				inputStream = (InputStream)aInput;
-			}
-			else if (aInput instanceof URL) inputStream = ((URL)aInput).openStream();
-			else if (aInput instanceof File) inputStream = new BufferedInputStream(new FileInputStream((File)aInput));
-			else if (aInput instanceof String) inputStream = new FileInputStream((String)aInput);
-			else if (aInput instanceof CharSequence) inputStream = new ByteArrayInputStream(((CharSequence)aInput).toString().getBytes());
-			else if (aInput instanceof RandomAccessFile) inputStream = new RandomAccessFileInputStream((RandomAccessFile)aInput);
-			else if (aInput instanceof java.nio.ByteBuffer) inputStream = new ByteBufferInputStream((java.nio.ByteBuffer)aInput);
-			else if (aInput instanceof byte[]) inputStream = new ByteArrayInputStream((byte[])aInput);
-			else if (aInput == null) throw new IOException("Unsupported input type: null");
-			else throw new IOException("Unsupported input type: " + aInput.getClass());
-
-			// setup output
-
-			for (int i = 0; i < aOutput.length; i++)
-			{
-				Object o = aOutput[i];
-				doCloseOutput[i] = aCloseOutput;
-				if (o instanceof OutputStream)
-				{
-					outputStreams[i] = (OutputStream)o;
-				}
-				else if (o instanceof File) outputStreams[i] = new BufferedOutputStream(new FileOutputStream((File)o));
-				else if (o instanceof String) outputStreams[i] = new FileOutputStream((String)o);
-				else if (o instanceof ByteBuffer) outputStreams[i] = new ByteBufferOutputStream((ByteBuffer)o);
-				else if (o instanceof Document) outputStreams[i] = new ByteArrayOutputStream();
-				else if (o instanceof byte[]) outputStreams[i] = new MyByteArrayOutputStream((byte[])o);
-				else if (o == null) throw new IOException("Unsupported output type: null");
-				else throw new IOException("Unsupported output type: " + o.getClass());
-			}
-
-			// perform transfer
+			inputStream = createInputStream(aInput);
+			outputStream = createOutputStream(aOutput);
 
 			long total = 0;
-			byte [] buffer = new byte[4096];
+			byte[] buffer = new byte[4096];
 
-			while (aLimit > 0)
+			for (;;)
 			{
-				int len = inputStream.read(buffer, 0, (int)Math.min(buffer.length, aLimit));
+				int len = inputStream.read(buffer);
 
 				if (len <= 0)
 				{
 					break;
 				}
 
-				for (OutputStream outputStream : outputStreams)
-				{
-					outputStream.write(buffer, 0, len);
-				}
+				outputStream.write(buffer, 0, len);
 
 				total += len;
-				aLimit -= len;
-			}
-
-			// post processing of output data
-
-			for (int i = 0; i < aOutput.length; i++)
-			{
-				if (aOutput[i] instanceof Node)
-				{
-					try
-					{
-						Document sourceDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(((ByteArrayOutputStream)outputStreams[i]).toByteArray()));
-						Document targetDoc = (Document)aOutput[i];
-
-						Transformer tx   = TransformerFactory.newInstance().newTransformer();
-						DOMSource source = new DOMSource(sourceDoc);
-						DOMResult result = new DOMResult(targetDoc);
-						tx.transform(source,result);
-					}
-					catch (Exception e)
-					{
-						throw new IOException(e);
-					}
-				}
 			}
 
 			return total;
 		}
-		catch (java.io.IOException e)
-		{
-			throw new IOException(e);
-		}
 		finally
 		{
-			// ensure all streams are closed
-
-			if (doCloseInput && inputStream != null)
+			if (inputStream != null)
 			{
 				try
 				{
@@ -250,111 +116,133 @@ public final class Streams
 				{
 				}
 			}
-			for (int i = 0; outputStreams != null && i < outputStreams.length; i++)
+			if (outputStream != null)
 			{
-				if (doCloseOutput[i])
+				try
 				{
-					try
-					{
-						outputStreams[i].close();
-					}
-					catch (Throwable e)
-					{
-					}
+					outputStream.close();
+				}
+				catch (Throwable e)
+				{
 				}
 			}
 		}
 	}
 
 
-	private static class ByteBufferOutputStream extends OutputStream
+	private static InputStream createInputStream(Object aInput) throws IOException
 	{
-		private ByteBuffer mBuffer;
-
-		public ByteBufferOutputStream(ByteBuffer aBuffer)
+		if (aInput instanceof InputStream)
 		{
-			mBuffer = aBuffer;
+			return (InputStream)aInput;
+		}
+		if (aInput instanceof URL)
+		{
+			return ((URL)aInput).openStream();
+		}
+		if (aInput instanceof File)
+		{
+			return new BufferedInputStream(new FileInputStream((File)aInput));
+		}
+		if (aInput instanceof String)
+		{
+			return new FileInputStream((String)aInput);
+		}
+		if (aInput instanceof CharSequence)
+		{
+			return new ByteArrayInputStream(((CharSequence)aInput).toString().getBytes());
+		}
+		if (aInput instanceof RandomAccessFile)
+		{
+			return new MyRandomAccessFileInputStream((RandomAccessFile)aInput);
+		}
+		if (aInput instanceof ByteBuffer)
+		{
+			return new ByteBufferInputStream((ByteBuffer)aInput);
+		}
+		if (aInput instanceof byte[])
+		{
+			return new ByteArrayInputStream((byte[])aInput);
 		}
 
-		@Override
-		public void write(int b) throws IOException
-		{
-			if (mBuffer.position() >= mBuffer.capacity()-1)
-			{
-				mBuffer.ensureCapacity(1+mBuffer.capacity()*3/2);
-			}
-			mBuffer.put(b);
-		}
+		throw new IOException("Unsupported input type: " + (aInput == null ? "" : aInput.getClass()));
 	}
 
 
-	/**
-	 * Transfers bytes from the InputStream to the OutputStreams until end of
-	 * stream is reached. Streams are closed when the transfer has completed.
-	 *
-	 * @param aInput
-	 *   an input to read from
-	 * @param aOutput
-	 *   one or more outputs to write to
-	 * @return
-	 *   number of bytes actually transfered.
-	 */
-	public static byte [] fetch(Object aInput) throws IOException
+	private static OutputStream createOutputStream(Object aOutput) throws IOException
 	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		transfer(aInput, baos);
-		return baos.toByteArray();
+		if (aOutput instanceof OutputStream)
+		{
+			return (OutputStream)aOutput;
+		}
+		if (aOutput instanceof File)
+		{
+			return new BufferedOutputStream(new FileOutputStream((File)aOutput));
+		}
+		if (aOutput instanceof String)
+		{
+			return new FileOutputStream((String)aOutput);
+		}
+		if (aOutput instanceof ByteBuffer)
+		{
+			return new ByteBufferOutputStream((ByteBuffer)aOutput);
+		}
+		if (aOutput instanceof byte[])
+		{
+			return new MyByteArrayOutputStream((byte[])aOutput);
+		}
+
+		throw new IOException("Unsupported output type: " + (aOutput == null ? "" : aOutput.getClass()));
 	}
 
 
 	private static class MyByteArrayOutputStream extends OutputStream
 	{
-		private byte [] mBuffer;
+		private byte[] mBuffer;
 		private int mOffset;
 
-		public MyByteArrayOutputStream(byte [] aBuffer)
+
+		public MyByteArrayOutputStream(byte[] aBuffer)
 		{
 			mBuffer = aBuffer;
 		}
 
+
 		@Override
-		public void write(int b) throws java.io.IOException
+		public void write(int b) throws IOException
 		{
-			if (mOffset < mBuffer.length)
-			{
-				mBuffer[mOffset++] = (byte)b;
-			}
+			mBuffer[mOffset++] = (byte)b;
 		}
 	}
 
 
-	private static class RandomAccessFileInputStream extends InputStream
+	private static class MyRandomAccessFileInputStream extends InputStream
 	{
 		private RandomAccessFile mFile;
 
 
-		public RandomAccessFileInputStream(RandomAccessFile aFile)
+		public MyRandomAccessFileInputStream(RandomAccessFile aFile)
 		{
 			mFile = aFile;
 		}
 
 
 		@Override
-		public int read(byte[] b, int off, int len) throws java.io.IOException
+		public int read(byte[] b, int off, int len) throws IOException
 		{
 			return mFile.read(b, off, len);
 		}
 
 
 		@Override
-		public int read() throws java.io.IOException
+		public int read() throws IOException
 		{
 			return mFile.read();
 		}
 
 
 		@Override
-		public void close() throws java.io.IOException
+		public void close() throws IOException
 		{
 			mFile.close();
 		}

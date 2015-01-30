@@ -160,7 +160,7 @@ public class PasswordDialog
 	{
 		mDialog = new JDialog(mParent, mTitle, true);
 		mSelectEnvironmentComboBox = new JComboBox();
-		
+
 		init();
 
 		mPasswordField = new JPasswordField(20);
@@ -684,27 +684,4 @@ public class PasswordDialog
 			}
 		}
 	}
-
-
-//	public static void main(String ... a)
-//	{
-//		try{
-//		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//		Toolkit.getDefaultToolkit().setDynamicLayout(true);
-//		}catch(Exception e){}
-//
-//		JFrame f = new JFrame();
-//		JPanel p = new JPanel(new FlowLayout());
-//		f.setSize(800,600);
-//		f.setVisible(true);
-//		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//		PasswordDialog dialog = new PasswordDialog(f, "Unlock file", "Enter your password to unlock the file:", 5, PasswordDialog.Option.USER_NAME, PasswordDialog.Option.REMEMBER);
-//		dialog.show("patrik", "test", true);
-//		p.add(new JLabel("User name: " + (dialog.getUserName()==null?"[empty]":dialog.getUserName())));
-//		p.add(new JLabel("Password: " + (dialog.getPassword()==null?"[empty]":new String(dialog.getPassword()))));
-//		p.add(new JLabel("Remember: " + dialog.getRememberMyPasswordState()));
-//		f.add(p);
-//		f.validate();
-//		f.repaint();
-//	}
 }

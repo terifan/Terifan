@@ -232,7 +232,7 @@ public class XmlReader
 	public void close() throws IOException
 	{
 		mReader.close();
-		
+
 		if (mReadable instanceof Closeable)
 		{
 			((Closeable)mReadable).close();
@@ -287,7 +287,7 @@ public class XmlReader
 		outer: for (;;)
 		{
 			int b = peek();
-			
+
 			if (b == -1)
 			{
 				mEOF = true;
@@ -316,7 +316,7 @@ public class XmlReader
 		for (;;)
 		{
 			int b = read();
-			
+
 			if (b == -1)
 			{
 				mEOF = true;
@@ -346,33 +346,5 @@ public class XmlReader
 		int c = mReader.read();
 		mReader.unread(c);
 		return c;
-	}
-
-
-	public static void main(String ... args)
-	{
-		try
-		{
-			XmlReader reader = new XmlReader(new StringReader("<?xml version=\"1.0\" encoding=\"utf-8\"?><xml><company><employee first_name=\"patrik\" last_name=\"olsson\">kebab</employee><employee first_name=\"carian\" last_name=\"andersson\">sushi</employee></company></xml>"));
-
-			while (reader.moveToNextElement())
-			{
-				System.out.println(reader.getName());
-			
-				if (reader.getName().equals("employee"))
-				{
-					while (reader.moveToNextAttribute())
-					{
-						System.out.println(reader.getName() + " = " + reader.getValue());
-					}
-
-					System.out.println(reader.readElementString());
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
 	}
 }

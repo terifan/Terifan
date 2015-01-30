@@ -264,30 +264,4 @@ public class Strings
 	{
 		return aString == null || aString.isEmpty() ? null : aString;
 	}
-
-
-//	public static void main(String... args)
-//	{
-//		try
-//		{
-//			System.out.println(compareWords("abcdefghijklmnop", "abcdxfghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "abcdxxfghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "abcdxxxfghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "abcdfghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "abcdghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "abcdhijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "acdeghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "axcdeghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "axcdexghijklmnop", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "axcdexghijklmnopxx", 9, false));
-//			System.out.println(compareWords("abcdefghijklmnop", "axcdexghijklmn", 9, false));
-//			System.out.println(compareWords("TOBAPHO-TPAHCIOPTHARHAKJADHARNo^", "TOBAPHO-TPARCIOPTBARHAKJADHARNO", 9, false));
-//			System.out.println(compareWords("TOBAPHO-TPAHCIOPTHARHAKJADHARNo^", "TOBAPHO-TPHCIOP-RHAKXYZJADHARNo121271/o8", 9, false));
-//			System.out.println(compareWords("BIL^", "ILFRAGTIBEV", 1, false));
-//		}
-//		catch (Exception e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
 }
