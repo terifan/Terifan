@@ -19,6 +19,7 @@ public interface Writer
 	void nextElement();
 	void endArray();
 
+	void writeNull();
 	void writePrimitive(Object aPrimitive, String aTypeName);
 	void writeReference(Object aObject);
 }

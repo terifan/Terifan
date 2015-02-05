@@ -79,11 +79,20 @@ public class JSONWriter implements Writer
 
 
 	@Override
+	public void writeNull()
+	{
+		print("null", false, false);
+	}
+
+
+	@Override
 	public void writePrimitive(Object aPrimitive, String aTypeName)
 	{
 		if (aPrimitive instanceof String || aPrimitive instanceof Character)
 		{
-			print("\"" + aPrimitive + "\"", false, false);
+			String value = aPrimitive.toString();
+			value = value.replace("\"", "'");
+			print("\"" + value + "\"", false, false);
 		}
 		else
 		{

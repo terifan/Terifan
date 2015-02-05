@@ -8,6 +8,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import org.terifan.io.serialization.ObjectSerializer.Serialize;
 import org.terifan.util.Calendar;
+import org.terifan.xml.XmlDocument;
 
 
 public class Test
@@ -28,6 +29,14 @@ public class Test
 			{
 				ObjectSerializer serializer = new ObjectSerializer(new XMLWriter(fos));
 				serializer.serialize(obj);
+			}
+
+			try (FileOutputStream fos = new FileOutputStream("d:/object_dom.xml"))
+			{
+				XmlDocument doc = new XmlDocument();
+				ObjectSerializer serializer = new ObjectSerializer(new DOMWriter(doc));
+				serializer.serialize(obj);
+				doc.writeTo(fos);
 			}
 
 			try (FileOutputStream fos = new FileOutputStream("d:/object.json"))
@@ -66,7 +75,7 @@ public class Test
 		byte[][] byteArrray2 = {{4,5,6},{7,8,9}};
 		byte[][] byteArrray2X = {{4,5,6},{7,8,9}};
 		byte[][][] byteArrray3 = {{{10,11,12},{7,8,9}},{null,{13,14,15}}};
-		String string = "hej";
+		String string = "<&>";
 		String stringX = "hej";
 		String[] stringArray = {"hej",null,"apa"};
 		Object[] objectArray = {"hej",7,new Calendar()};

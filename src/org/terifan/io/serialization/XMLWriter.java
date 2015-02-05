@@ -1,9 +1,7 @@
 package org.terifan.io.serialization;
 
 import java.io.OutputStream;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import org.terifan.io.serialization.ObjectSerializer.Serialize;
 import org.terifan.util.log.Log;
 
 
@@ -22,7 +20,7 @@ public class XMLWriter implements Writer
 	@Override
 	public void startOutput()
 	{
-		print("<?xml version='1.0' encoding='iso-8859-1'?>");
+		print("<?xml version='1.0' encoding='utf-8'?>");
 	}
 
 
@@ -35,7 +33,7 @@ public class XMLWriter implements Writer
 	@Override
 	public void startObject(Object aObject, String aTypeName, int aFieldCount)
 	{
-		print("<object type='" + aTypeName + "' fields='" + aFieldCount + "'>");
+		print("<object fields='" + aFieldCount + "' type='" + aTypeName + "'>");
 		mIndent++;
 	}
 
@@ -71,23 +69,27 @@ public class XMLWriter implements Writer
 
 
 	@Override
+	public void writeNull()
+	{
+		print("<null/>");
+	}
+
+
+	@Override
 	public void writePrimitive(Object aPrimitive, String aTypeName)
 	{
-		if (aPrimitive == null)
-		{
-			print("<null/>");
-		}
-		else
-		{
-			print("<primitive type='" + aTypeName + "'>" + aPrimitive + "</primitive>");
-		}
+		String value = "" + aPrimitive;
+		value = value.replace("&", "&amp;");
+		value = value.replace("<", "&lt;");
+		value = value.replace(">", "&gt;");
+		print("<primitive type='" + aTypeName + "'>" + value + "</primitive>");
 	}
 
 
 	@Override
 	public void startArray(Object aArray, int aDepth, int aLength, String aTypeName, boolean aNulls, String aArrayType)
 	{
-		print("<array depth='"+aDepth+"' length='"+aLength+"' nulls='"+aNulls+"' type='"+aTypeName+"' arrayType='" + aArrayType + "'>");
+		print("<array arrayType='" + aArrayType + "' depth='"+aDepth+"' length='"+aLength+"' nulls='"+aNulls+"' type='"+aTypeName+"'>");
 		mIndent++;
 	}
 
@@ -123,7 +125,7 @@ public class XMLWriter implements Writer
 				mOutputStream.write('\t');
 			}
 			Log.out.println(aString);
-			mOutputStream.write(aString.getBytes());
+			mOutputStream.write(aString.getBytes("utf-8"));
 			mOutputStream.write('\r');
 			mOutputStream.write('\n');
 		}

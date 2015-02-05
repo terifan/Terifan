@@ -99,60 +99,59 @@ public class ObjectSerializer
 	{
 		if (aObject == null)
 		{
-			mWriter.writePrimitive(null, "null");
+			mWriter.writeNull();
+			return;
+		}
+
+		if (aVisitedObjects.contains(aObject))
+		{
+			mWriter.writeReference(aObject);
+			return;
+		}
+
+		Class valueType = aObject.getClass();
+
+		if (valueType.isArray())
+		{
+			serializeArray(aObject, "array", aVisitedObjects);
+		}
+		else if (aPrimitives
+			|| valueType.isPrimitive()
+			|| valueType == Boolean.class
+			|| valueType == Byte.class
+			|| valueType == Short.class
+			|| valueType == Character.class
+			|| valueType == Integer.class
+			|| valueType == Long.class
+			|| valueType == Float.class
+			|| valueType == Double.class
+			|| valueType == String.class)
+		{
+			mWriter.writePrimitive(aObject, getTypeName(valueType, aPrimitives));
+		}
+		else if (Date.class.isAssignableFrom(valueType))
+		{
+			mWriter.writePrimitive(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format((Date)aObject), "DateTime");
+		}
+		else if (Calendar.class.isAssignableFrom(valueType))
+		{
+			mWriter.writePrimitive(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(((Calendar)aObject).getTime()), "DateTime");
+		}
+		else if (List.class.isAssignableFrom(valueType))
+		{
+			serializeArray(((List)aObject).toArray(), "list", aVisitedObjects);
+		}
+		else if (Set.class.isAssignableFrom(valueType))
+		{
+			serializeArray(((Set)aObject).toArray(), "set", aVisitedObjects);
+		}
+		else if (Map.class.isAssignableFrom(valueType))
+		{
+			serializeMap((Map)aObject, aVisitedObjects);
 		}
 		else
 		{
-			if (aVisitedObjects.contains(aObject))
-			{
-				mWriter.writeReference(aObject);
-				return;
-			}
-
-			Class valueType = aObject.getClass();
-
-			if (valueType.isArray())
-			{
-				serializeArray(aObject, "array", aVisitedObjects);
-			}
-			else if (aPrimitives
-				|| valueType.isPrimitive()
-				|| valueType == Boolean.class
-				|| valueType == Byte.class
-				|| valueType == Short.class
-				|| valueType == Character.class
-				|| valueType == Integer.class
-				|| valueType == Long.class
-				|| valueType == Float.class
-				|| valueType == Double.class
-				|| valueType == String.class)
-			{
-				mWriter.writePrimitive(aObject, getTypeName(valueType, aPrimitives));
-			}
-			else if (Date.class.isAssignableFrom(valueType))
-			{
-				mWriter.writePrimitive(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format((Date)aObject), "DateTime");
-			}
-			else if (Calendar.class.isAssignableFrom(valueType))
-			{
-				mWriter.writePrimitive(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(((Calendar)aObject).getTime()), "DateTime");
-			}
-			else if (List.class.isAssignableFrom(valueType))
-			{
-				serializeArray(((List)aObject).toArray(), "list", aVisitedObjects);
-			}
-			else if (Set.class.isAssignableFrom(valueType))
-			{
-				serializeArray(((Set)aObject).toArray(), "set", aVisitedObjects);
-			}
-			else if (Map.class.isAssignableFrom(valueType))
-			{
-				serializeMap((Map)aObject, aVisitedObjects);
-			}
-			else
-			{
-				serializeObject(aObject, new HashSet<>(aVisitedObjects));
-			}
+			serializeObject(aObject, new HashSet<>(aVisitedObjects));
 		}
 	}
 
