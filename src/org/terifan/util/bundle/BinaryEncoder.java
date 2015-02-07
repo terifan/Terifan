@@ -7,25 +7,24 @@ import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.terifan.util.Convert;
 import org.terifan.io.BitOutputStream;
 import org.terifan.io.ByteBufferOutputStream;
-import org.terifan.util.Convert;
 
 
 public class BinaryEncoder
 {
-	private HashSet<String> mKnownKeys;
+	private TreeSet<String> mKnownKeys;
 	private TreeMap<String,Integer> mBundleKeys;
 	private BitOutputStream mOutput;
 
 
 	public BinaryEncoder()
 	{
-		mKnownKeys = new HashSet<>();
+		mKnownKeys = new TreeSet<>();
 	}
 
 
@@ -146,9 +145,10 @@ public class BinaryEncoder
 
 			if (fieldType != null)
 			{
-				mOutput.writeBits(fieldType.ordinal(), 4);
+//				Log.out.println("ENCODE: " + fieldType+" "+key);
 
-				mOutput.writeBitsInRange(mBundleKeys.get(key), mBundleKeys.size() - 1);
+				mOutput.writeBits(fieldType.ordinal(), 4);
+				mOutput.writeBitsInRange(mBundleKeys.get(key), mBundleKeys.size());
 
 				Class<? extends Object> cls = value.getClass();
 

@@ -1309,7 +1309,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	}
 
 
-	void put(String aKey, Object aValue)
+	public void put(String aKey, Object aValue)
 	{
 		if (aKey == null)
 		{

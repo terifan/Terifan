@@ -8,22 +8,22 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import org.terifan.io.BitInputStream;
 import org.terifan.io.ByteBufferInputStream;
 
 
 public class BinaryDecoder
 {
-	private HashSet<String> mKnownKeys;
+	private TreeSet<String> mKnownKeys;
 	private TreeMap<Integer,String> mBundleKeys;
 	private BitInputStream mInput;
 
 
 	public BinaryDecoder()
 	{
-		mKnownKeys = new HashSet<>();
+		mKnownKeys = new TreeSet<>();
 	}
 
 
@@ -48,6 +48,11 @@ public class BinaryDecoder
 
 	public Bundle unmarshal(byte[] aBuffer) throws IOException
 	{
+		if (aBuffer == null || aBuffer.length == 0)
+		{
+			return null;
+		}
+
 		return unmarshal(new ByteArrayInputStream(aBuffer));
 	}
 
@@ -77,7 +82,9 @@ public class BinaryDecoder
 				break;
 			}
 
-			mBundleKeys.put(mBundleKeys.size(), readString(len));
+			String key = readString(len);
+
+			mBundleKeys.put(mBundleKeys.size(), key);
 		}
 
 		return readBundle(new Bundle());
@@ -95,7 +102,9 @@ public class BinaryDecoder
 				break;
 			}
 
-			String key = mBundleKeys.get((int)mInput.readBitsInRange(mBundleKeys.size() - 1));
+			String key = mBundleKeys.get((int)mInput.readBitsInRange(mBundleKeys.size()));
+
+//			Log.out.println("DECODE: " + fieldType+" "+key);
 
 			Object value;
 

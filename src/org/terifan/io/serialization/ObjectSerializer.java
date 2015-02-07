@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.terifan.util.Result;
 import org.terifan.util.Strings;
 
@@ -27,11 +29,18 @@ import org.terifan.util.Strings;
 public class ObjectSerializer
 {
 	private Writer mWriter;
+	private Reader mReader;
 
 
 	public ObjectSerializer(Writer aWriter) throws IOException
 	{
 		mWriter = aWriter;
+	}
+
+
+	public ObjectSerializer(Reader aReader) throws IOException
+	{
+		mReader = aReader;
 	}
 
 
