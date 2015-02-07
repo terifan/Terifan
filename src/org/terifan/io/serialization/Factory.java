@@ -1,70 +1,256 @@
 package org.terifan.io.serialization;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import org.terifan.util.log.Log;
 
 
 public class Factory
 {
-	private ArrayDeque<HashMap> mStack = new ArrayDeque<>();
-	private HashMap mContainer;
-	private HashMap mRoot;
+	private final static String TAG = Factory.class.getName();
+
+	private String mIndent = "";
+	private Context mContext;
+	private Object mOutput;
 
 
-	public Factory()
+	public Factory(Class aType)
 	{
-		mRoot = mContainer = new HashMap();
+		mContext = new Context();
+		mContext.type = aType;
 	}
 
 
-	public HashMap get()
+	public Object getOutput()
 	{
-		return mContainer;
+		return mOutput;
 	}
 
 
-	public void enter(String aKey)
+	public void startDecoding() throws IOException
 	{
-		Log.out.println("enter "+aKey);
-
-		HashMap map = new HashMap();
-		mContainer.put(aKey, map);
-
-		mStack.push(mContainer);
-
-		mContainer = map;
 	}
 
 
-	public void exit()
+	public void endDecoding() throws IOException
 	{
-		Log.out.println("exit");
+	}
 
-		mContainer = mStack.pop();
+	
+	public void startElement(String aKey) throws IOException
+	{
+		print(1, "start element " + aKey);
+
+		try
+		{
+			mContext.create();
+			mContext.field = mContext.object.getClass().getDeclaredField(aKey);
+			mContext.field.setAccessible(true);
+
+			Type type = mContext.field.getGenericType();
+			if (type instanceof ParameterizedType)
+			{
+				ParameterizedType paramType = (ParameterizedType)type;
+				mContext.type = Class.forName(paramType.getActualTypeArguments()[0].getTypeName());
+			}
+			else
+			{
+				mContext.type = mContext.field.getType();
+			}
+		}
+		catch (NoSuchFieldException | SecurityException | ClassNotFoundException e)
+		{
+			throw new IOException(e);
+		}
 	}
 
 
-	public void newObject()
+	public void endElement()
 	{
-		Log.out.println("new");
+		print(-1, "end element");
+
+		mContext.end();
 	}
 
 
-	public void setValue(String aKey, Object aValue)
+	public void startObject() throws IOException
 	{
-		Log.out.println(this+" "+aKey+" "+aValue);
-		mContainer.put(aKey, aValue);
+		print(1, "start object " + mContext.type);
 
-//		try
+		mContext.create();
+		
+		try
+		{
+			mContext.object = mContext.type.newInstance();
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+
+		if (mOutput == null)
+		{
+			mOutput = mContext.object;
+		}
+	}
+
+
+	public void endObject() throws IOException
+	{
+		print(-1, "end object");
+
+		if (mContext.array != null)
+		{
+			mContext.array.add(mContext.object);
+		}
+		else if (mContext.parent.object != null)
+		{
+			try
+			{
+				mContext.field.set(mContext.parent.object, mContext.object);
+			}
+			catch (IllegalArgumentException | IllegalAccessException e)
+			{
+				throw new IOException(e);
+			}
+		}
+		
+		mContext.end();
+	}
+
+
+	public void startArray()
+	{
+		print(1, "start array");
+
+		mContext.create();
+		mContext.array = new ArrayList();
+		mContext.object = mContext.array;
+	}
+
+
+	public void endArray() throws IOException
+	{
+		print(-1, "end array");
+
+//		if (mContext.array != null)
 //		{
-//			Field field = mParent.getClass().getDeclaredField(aKey);
-//			field.setAccessible(true);
-//			field.set(mParent, aValue);
+//			mContext.array.add(mContext.object);
 //		}
-//		catch (IllegalAccessException | NoSuchFieldException | SecurityException ex)
+//		else if (mContext.parent.object != null)
 //		{
-//			Logger.getLogger(JSONReader.class.getName()).log(Level.SEVERE, null, ex);
+			try
+			{
+				mContext.field.set(mContext.parent.object, mContext.object);
+			}
+			catch (IllegalArgumentException | IllegalAccessException e)
+			{
+				throw new IOException(e);
+			}
 //		}
+		
+		mContext.end();
+	}
+
+
+	public void startArrayElement()
+	{
+		print(1, "start array element");
+	}
+
+
+	public void endArrayElement()
+	{
+		print(-1, "end array element");
+	}
+
+
+	public void setValue(Object aValue) throws IOException
+	{
+		try
+		{
+			if (mContext.array == mContext.object)
+			{
+				mContext.array.add(cast(aValue));
+			}
+			else
+			{
+				mContext.field.set(mContext.object, cast(aValue));
+			}
+		}
+		catch (IllegalArgumentException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+
+		print(0, mContext.field + " = " + aValue);
+	}
+	
+	
+	private Object cast(Object aValue)
+	{
+		Class type = mContext.field.getType();
+
+		if (type == Integer.class || type == Integer.TYPE)
+		{
+			return (int)(long)(Long)aValue;
+		}
+
+		return aValue;
+	}
+	
+	
+	private void print(int aIndent, String aString)
+	{
+		if (aIndent == -1)
+		{
+			mIndent = mIndent.substring(0, mIndent.length() - 4);
+		}
+		
+		Log.out.println(mIndent + aString);
+
+		if (aIndent == 1)
+		{
+			mIndent += "... ";
+		}
+	}
+
+
+	private static class Context
+	{
+		Context parent;
+		Context child;
+		Object object;
+		Field field;
+		Class type;
+		List array;
+
+
+		private void create()
+		{
+			Context ctx = new Context();
+			ctx.field = field;
+			ctx.object = object;
+			ctx.type = type;
+			ctx.parent = parent;
+			ctx.array = array;
+			ctx.child = this;
+			parent = ctx;
+		}
+
+
+		private void end()
+		{
+			field = parent.field;
+			object = parent.object;
+			type = parent.type;
+			array = parent.array;
+			parent = parent.parent;
+			child = null;
+		}
 	}
 }

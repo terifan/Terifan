@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackReader;
-import java.util.ArrayList;
 
 
 public class JSONReader
@@ -29,7 +28,7 @@ public class JSONReader
 
 	private void readObject() throws IOException
 	{
-		mFactory.newObject();
+		mFactory.startObject();
 
 		for (boolean first = true;; first = false)
 		{
@@ -37,6 +36,8 @@ public class JSONReader
 
 			if (c == '}')
 			{
+				mFactory.endObject();
+
 				return;
 			}
 			if (first)
@@ -51,6 +52,8 @@ public class JSONReader
 
 			String key = readString((char)0);
 
+			mFactory.startElement(key);
+			
 			c = readChar();
 
 			if (c != '=' && c != ':')
@@ -58,54 +61,30 @@ public class JSONReader
 				throw new IOException("Expected colon sign between key and value: found ascii " + c);
 			}
 
-			Object value = readValue(key, true);
-
-			mFactory.setValue(key, value);
+			readValue();
+			
+			mFactory.endElement();
 		}
 	}
 
-
-	private char read() throws IOException
-	{
-		char c = (char)mReader.read();
-//		Log.out.println("  read "+c);
-		return c;
-	}
-
-
-	private void unread(char aChar) throws IOException
-	{
-//		Log.out.println("unread "+aChar);
-		mReader.unread(aChar);
-	}
-
-
-	private Object readValue(String aKey, boolean enter) throws IOException
+	private void readValue() throws IOException
 	{
 		char c = readChar();
 
 		if (c == '{')
 		{
-			if (enter)
-			{
-				mFactory.enter(aKey);
-				readObject();
-				mFactory.exit();
-				return null;
-			}
-			else
-			{
-				readObject();
-				return mFactory.get();
-			}
+			readObject();
+			return;
 		}
 		if (c == '[')
 		{
-			return readArray(aKey);
+			readArray();
+			return;
 		}
 		if (c == '\"' || c == '\'')
 		{
-			return readString(c);
+			mFactory.setValue(readString(c));
+			return;
 		}
 
 		StringBuilder sb = new StringBuilder();
@@ -119,7 +98,8 @@ public class JSONReader
 			if (c == '}' || c == ']' || c == ',' || c == ';')
 			{
 				unread(c);
-				return processValue(sb.toString().trim());
+				mFactory.setValue(processValue(sb.toString().trim()));
+				return;
 			}
 			sb.append(c);
 
@@ -166,16 +146,18 @@ public class JSONReader
 	}
 
 
-	private Object readArray(String aKey) throws IOException
+	private void readArray() throws IOException
 	{
-		ArrayList list = new ArrayList();
-
+		mFactory.startArray();
+		
 		for (boolean first = true; ; first = false)
 		{
 			char c = readChar();
 			if (c == ']')
 			{
-				return list;
+				mFactory.endArray();
+
+				return;
 			}
 
 			if (first)
@@ -187,7 +169,11 @@ public class JSONReader
 				throw new IOException("Expected comma between elements in array.");
 			}
 
-			list.add(readValue(aKey, false));
+			mFactory.startArrayElement();
+			
+			readValue();
+
+			mFactory.endArrayElement();
 		}
 	}
 
@@ -235,5 +221,20 @@ public class JSONReader
 		}
 
 		return aString;
+	}
+
+
+	private char read() throws IOException
+	{
+		char c = (char)mReader.read();
+//		Log.out.println("  read "+c);
+		return c;
+	}
+
+
+	private void unread(char aChar) throws IOException
+	{
+//		Log.out.println("unread "+aChar);
+		mReader.unread(aChar);
 	}
 }

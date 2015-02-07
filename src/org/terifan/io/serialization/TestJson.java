@@ -1,7 +1,7 @@
 package org.terifan.io.serialization;
 
 import java.io.ByteArrayInputStream;
-import java.util.List;
+import java.util.ArrayList;
 import org.terifan.util.log.Log;
 
 
@@ -11,9 +11,10 @@ public class TestJson
 	{
 		try
 		{
-			Factory factory = new Factory();
-			new JSONReader().unmarshal(factory, new ByteArrayInputStream("{year:2000, name:Stig, email:[{address:'ssss'},{address:'tttt'}]}".getBytes()));
-			Log.out.println(factory.get());
+			Factory factory = new Factory(Person.class);
+//			new JSONReader().unmarshal(factory, new ByteArrayInputStream("{year:2000, name:Stig, body:{height:182}, email:[{address:'sss'},{address:'ttt'}]}".getBytes()));
+			new JSONReader().unmarshal(factory, new ByteArrayInputStream("{year:2000, name:Stig, body:{height:182}, email:[{address:'sss'},{address:'ttt'}], numbers:[1,2,3]}".getBytes()));
+			Log.out.println(factory.getOutput());
 		}
 		catch (Throwable e)
 		{
@@ -21,26 +22,38 @@ public class TestJson
 		}
 	}
 
-//	static class Person
-//	{
-//		long year;
-//		String name;
-//		List email;
-//
-//		@Override
-//		public String toString()
-//		{
-//			return year+" "+name+" "+email;
-//		}
-//	}
-//	static class Email
-//	{
-//		String address;
-//
-//		@Override
-//		public String toString()
-//		{
-//			return address;
-//		}
-//	}
+	static class Person
+	{
+		long year;
+		String name;
+		ArrayList<Email> email;
+		Body body;
+		ArrayList<Long> numbers;
+
+		@Override
+		public String toString()
+		{
+			return "{year="+year+", name="+name+", body="+body+", email="+email+", numbers="+numbers+"}";
+		}
+	}
+	static class Body
+	{
+		int height;
+
+		@Override
+		public String toString()
+		{
+			return "{height="+height+"}";
+		}
+	}
+	static class Email
+	{
+		String address;
+
+		@Override
+		public String toString()
+		{
+			return "{address="+address+"}";
+		}
+	}
 }
