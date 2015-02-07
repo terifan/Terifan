@@ -1,6 +1,7 @@
 package org.terifan.io.serialization;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -137,21 +138,21 @@ public class Factory
 	{
 		print(-1, "end array");
 
-//		if (mContext.array != null)
-//		{
-//			mContext.array.add(mContext.object);
-//		}
-//		else if (mContext.parent.object != null)
-//		{
+		if (mContext.parent == null || !List.class.isAssignableFrom(mContext.parent.object.getClass()))
+		{
 			try
 			{
-				mContext.field.set(mContext.parent.object, mContext.object);
+				mContext.field.set(mContext.parent.object, castArray((List)mContext.object));
 			}
 			catch (IllegalArgumentException | IllegalAccessException e)
 			{
 				throw new IOException(e);
 			}
-//		}
+		}
+		else
+		{
+			mContext.parent.array.add(mContext.array);
+		}
 		
 		mContext.end();
 	}
@@ -173,13 +174,16 @@ public class Factory
 	{
 		try
 		{
+			Class type = mContext.field.getType();
+			Object value = cast(aValue, type);
+
 			if (mContext.array == mContext.object)
 			{
-				mContext.array.add(cast(aValue));
+				mContext.array.add(value);
 			}
 			else
 			{
-				mContext.field.set(mContext.object, cast(aValue));
+				mContext.field.set(mContext.object, value);
 			}
 		}
 		catch (IllegalArgumentException | IllegalAccessException e)
@@ -191,16 +195,59 @@ public class Factory
 	}
 	
 	
-	private Object cast(Object aValue)
+	private Object cast(Object aValue, Class aType)
 	{
-		Class type = mContext.field.getType();
-
-		if (type == Integer.class || type == Integer.TYPE)
+		if (aType == Integer.class || aType == Integer.TYPE)
 		{
 			return (int)(long)(Long)aValue;
 		}
 
 		return aValue;
+	}
+	
+	
+	private Object castArray(List aValue)
+	{
+		Class type = mContext.field.getType();
+
+		Log.out.println(aValue.getClass());
+
+		if (type.isArray())
+		{
+			int depth = 0;
+			do
+			{
+				depth++;
+				type = type.getComponentType();
+			} while (type.isArray());
+
+			return castArray(aValue, depth, 1, type);
+		}
+
+		return aValue;
+	}
+	
+	
+	private Object castArray(List aList, int aDepth, int aLevel, Class aComponentType)
+	{
+		int[]dims = new int[aDepth - aLevel + 1];
+		dims[0] = aList.size();
+		Object array = Array.newInstance(aComponentType, dims);
+
+		for (int i = 0; i < aList.size(); i++)
+		{
+			if (aDepth == aLevel)
+			{
+				Array.set(array, i, cast(aList.get(i), aComponentType));
+			}
+			else
+			{
+				Object arr = castArray((List)aList.get(i), aDepth, aLevel + 1, aComponentType);
+				Array.set(array, i, arr);
+			}
+		}
+
+		return array;
 	}
 	
 	
