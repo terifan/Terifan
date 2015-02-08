@@ -23,7 +23,11 @@ public class TestJson
 					+ "{address:'ttt'}"
 				+ "], "
 				+ "singleArray:[1,2,3], "
-				+ "doubleArray:[[4,5,6],[7,8]]"
+				+ "doubleArray:[[4,5,6],[7,8]],"
+				+ "trippleArray:[[[4,5,6],[7,8]],[[9]]]"
+//				+ "listInt:[10,11,12],"
+//				+ "listSingleArray:[[13,14],[15,16]]"
+//				+ "mapValue:{a:1, b:2, c:3}"
 				+ "}";
 			new JSONReader().unmarshal(factory, new ByteArrayInputStream(json.getBytes()));
 			Log.out.println(factory.getOutput());
@@ -57,7 +61,9 @@ public class TestJson
 				+ "body="+body+", "
 				+ "email="+email+", "
 				+ "singleArray="+Arrays.toString(singleArray)+", "
-				+ "doubleArray=["+Arrays.toString(doubleArray[0])+", "+Arrays.toString(doubleArray[1])+"]"
+				+ "doubleArray=["+Arrays.toString(doubleArray[0])+", "+Arrays.toString(doubleArray[1])+"], "
+				+ "trippleArray=[["+Arrays.toString(trippleArray[0][0])+", "+Arrays.toString(trippleArray[0][1])+"],["+Arrays.toString(trippleArray[1][0])+"]], "
+				+ "mapValue=" + mapValue
 				+ "}";
 		}
 	}
