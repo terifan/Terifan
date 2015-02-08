@@ -56,14 +56,23 @@ public class Factory
 			if (type instanceof ParameterizedType)
 			{
 				ParameterizedType paramType = (ParameterizedType)type;
-				mContext.type = Class.forName(paramType.getActualTypeArguments()[0].getTypeName());
+				String typeName = paramType.getActualTypeArguments()[0].getTypeName();
+
+				try
+				{
+					mContext.type = Class.forName(typeName);
+				}
+				catch (ClassNotFoundException e)
+				{
+					throw new IOException("Unsupported generic type: " + typeName, e);
+				}
 			}
 			else
 			{
 				mContext.type = mContext.field.getType();
 			}
 		}
-		catch (NoSuchFieldException | SecurityException | ClassNotFoundException e)
+		catch (NoSuchFieldException | SecurityException e)
 		{
 			throw new IOException(e);
 		}
@@ -104,15 +113,15 @@ public class Factory
 	{
 		print(-1, "end object");
 
-		if (mContext.array != null)
+		if (mContext.parent.array != null)
 		{
-			mContext.array.add(mContext.object);
+			mContext.parent.array.add(mContext.object);
 		}
 		else if (mContext.parent.object != null)
 		{
 			try
 			{
-				mContext.field.set(mContext.parent.object, mContext.object);
+				mContext.parent.field.set(mContext.parent.object, mContext.object);
 			}
 			catch (IllegalArgumentException | IllegalAccessException e)
 			{
@@ -138,11 +147,17 @@ public class Factory
 	{
 		print(-1, "end array");
 
+//		Log.out.println("#"+mContext.object.getClass());
+//		Log.out.println("#"+mContext.parent.object.getClass());
+//		Log.out.println("#"+mContext.type);
+//		Log.out.println("#"+mContext.typeName);
+//		Log.out.println("#"+(mContext.parent == null || !List.class.isAssignableFrom(mContext.parent.object.getClass())));
+
 		if (mContext.parent == null || !List.class.isAssignableFrom(mContext.parent.object.getClass()))
 		{
 			try
 			{
-				mContext.field.set(mContext.parent.object, castArray((List)mContext.object));
+				mContext.parent.field.set(mContext.parent.object, castArray((List)mContext.object));
 			}
 			catch (IllegalArgumentException | IllegalAccessException e)
 			{
@@ -153,7 +168,7 @@ public class Factory
 		{
 			mContext.parent.array.add(mContext.array);
 		}
-		
+
 		mContext.end();
 	}
 
@@ -174,7 +189,8 @@ public class Factory
 	{
 		try
 		{
-			Class type = mContext.field.getType();
+//			Class type = mContext.field.getType();
+			Class type = mContext.type;
 			Object value = cast(aValue, type);
 
 			if (mContext.array == mContext.object)
@@ -209,8 +225,6 @@ public class Factory
 	private Object castArray(List aValue)
 	{
 		Class type = mContext.field.getType();
-
-		Log.out.println(aValue.getClass());
 
 		if (type.isArray())
 		{
@@ -275,6 +289,7 @@ public class Factory
 		Field field;
 		Class type;
 		List array;
+//		String typeName;
 
 
 		private void create()
@@ -283,6 +298,7 @@ public class Factory
 			ctx.field = field;
 			ctx.object = object;
 			ctx.type = type;
+//			ctx.typeName = typeName;
 			ctx.parent = parent;
 			ctx.array = array;
 			ctx.child = this;
@@ -295,6 +311,7 @@ public class Factory
 			field = parent.field;
 			object = parent.object;
 			type = parent.type;
+//			typeName = parent.typeName;
 			array = parent.array;
 			parent = parent.parent;
 			child = null;
