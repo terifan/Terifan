@@ -6,7 +6,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.terifan.util.log.Log;
 
 
@@ -22,7 +24,7 @@ public class Factory
 	public Factory(Class aType)
 	{
 		mContext = new Context();
-		mContext.type = aType;
+		mContext.setType(aType);
 	}
 
 
@@ -46,56 +48,99 @@ public class Factory
 	{
 		print(1, "start element " + aKey);
 
-		try
+		mContext.create();
+
+		if (mContext.getParent().getField() != null && Map.class.isAssignableFrom(mContext.getParent().getField().getType()))
 		{
-			mContext.create();
-			mContext.field = mContext.object.getClass().getDeclaredField(aKey);
-			mContext.field.setAccessible(true);
+			Type type = mContext.getParent().getField().getGenericType();
+			ParameterizedType paramType = (ParameterizedType)type;
+			String typeName = paramType.getActualTypeArguments()[0].getTypeName();
 
-			Type type = mContext.field.getGenericType();
-			if (type instanceof ParameterizedType)
+			Log.out.println(paramType.getActualTypeArguments()[0].getTypeName());
+			Log.out.println(paramType.getActualTypeArguments()[1].getTypeName());
+
+			mContext.setMapKey(aKey);
+
+			try
 			{
-				ParameterizedType paramType = (ParameterizedType)type;
-				String typeName = paramType.getActualTypeArguments()[0].getTypeName();
+				mContext.getParent().getField().setAccessible(true);
+				if (mContext.getParent().getField().get(mContext.getParent().getParent().getObject()) == null)
+				{
+					mContext.getParent().getField().set(mContext.getParent().getParent().getObject(), new HashMap());
+				}
 
-				try
-				{
-					mContext.type = Class.forName(typeName);
-				}
-				catch (ClassNotFoundException e)
-				{
-					throw new IOException("Unsupported generic type: " + typeName, e);
-				}
+				mContext.setType(Class.forName(typeName));
+				mContext.setMapValueType(Class.forName(paramType.getActualTypeArguments()[1].getTypeName()));
 			}
-			else
+			catch (IllegalAccessException | ClassNotFoundException e)
 			{
-				mContext.type = mContext.field.getType();
+				throw new IOException("Unsupported generic type: " + typeName, e);
 			}
 		}
-		catch (NoSuchFieldException | SecurityException e)
+		else
 		{
-			throw new IOException(e);
+			try
+			{
+				mContext.setField(mContext.getObject().getClass().getDeclaredField(aKey));
+				mContext.getField().setAccessible(true);
+
+				Type type = mContext.getField().getGenericType();
+				if (type instanceof ParameterizedType)
+				{
+					ParameterizedType paramType = (ParameterizedType)type;
+					String typeName = paramType.getActualTypeArguments()[0].getTypeName();
+
+					try
+					{
+						mContext.setType(Class.forName(typeName));
+					}
+					catch (ClassNotFoundException e)
+					{
+						throw new IOException("Unsupported generic type: " + typeName, e);
+					}
+				}
+				else
+				{
+					mContext.setType(mContext.getField().getType());
+				}
+			}
+			catch (NoSuchFieldException | SecurityException e)
+			{
+				throw new IOException(e);
+			}
 		}
 	}
 
 
-	public void endElement()
+	public void endElement() throws IOException
 	{
 		print(-1, "end element");
 
+		if (mContext.getParent() == null || !Map.class.isAssignableFrom(mContext.getParent().getObject().getClass()))
+		{
+//			try
+//			{
+//				mContext.getParent().getField().set(mContext.getParent().getObject(), castArray((List)mContext.getObject()));
+//			}
+//			catch (IllegalArgumentException | IllegalAccessException e)
+//			{
+//				throw new IOException(e);
+//			}
+		}
+		
 		mContext.end();
 	}
 
 
 	public void startObject() throws IOException
 	{
-		print(1, "start object " + mContext.type);
+		print(1, "start object " + mContext.getType());
 
 		mContext.create();
 		
 		try
 		{
-			mContext.object = mContext.type.newInstance();
+			mContext.setObject(mContext.getType().newInstance());
 		}
 		catch (InstantiationException | IllegalAccessException e)
 		{
@@ -104,7 +149,7 @@ public class Factory
 
 		if (mOutput == null)
 		{
-			mOutput = mContext.object;
+			mOutput = mContext.getObject();
 		}
 	}
 
@@ -113,15 +158,15 @@ public class Factory
 	{
 		print(-1, "end object");
 
-		if (mContext.parent.array != null)
+		if (mContext.getParent().getArray() != null)
 		{
-			mContext.parent.array.add(mContext.object);
+			mContext.getParent().getArray().add(mContext.getObject());
 		}
-		else if (mContext.parent.object != null)
+		else if (mContext.getParent().getObject() != null)
 		{
 			try
 			{
-				mContext.parent.field.set(mContext.parent.object, mContext.object);
+				mContext.getParent().getField().set(mContext.getParent().getObject(), mContext.getObject());
 			}
 			catch (IllegalArgumentException | IllegalAccessException e)
 			{
@@ -138,8 +183,8 @@ public class Factory
 		print(1, "start array");
 
 		mContext.create();
-		mContext.array = new ArrayList();
-		mContext.object = mContext.array;
+		mContext.setArray(new ArrayList());
+		mContext.setObject(mContext.getArray());
 	}
 
 
@@ -147,17 +192,11 @@ public class Factory
 	{
 		print(-1, "end array");
 
-//		Log.out.println("#"+mContext.object.getClass());
-//		Log.out.println("#"+mContext.parent.object.getClass());
-//		Log.out.println("#"+mContext.type);
-//		Log.out.println("#"+mContext.typeName);
-//		Log.out.println("#"+(mContext.parent == null || !List.class.isAssignableFrom(mContext.parent.object.getClass())));
-
-		if (mContext.parent == null || !List.class.isAssignableFrom(mContext.parent.object.getClass()))
+		if (mContext.getParent() == null || !List.class.isAssignableFrom(mContext.getParent().getObject().getClass()))
 		{
 			try
 			{
-				mContext.parent.field.set(mContext.parent.object, castArray((List)mContext.object));
+				mContext.getParent().getField().set(mContext.getParent().getObject(), castArray((List)mContext.getObject()));
 			}
 			catch (IllegalArgumentException | IllegalAccessException e)
 			{
@@ -166,7 +205,7 @@ public class Factory
 		}
 		else
 		{
-			mContext.parent.array.add(mContext.array);
+			mContext.getParent().getArray().add(mContext.getArray());
 		}
 
 		mContext.end();
@@ -189,17 +228,28 @@ public class Factory
 	{
 		try
 		{
-//			Class type = mContext.field.getType();
-			Class type = mContext.type;
+			Class type = mContext.getType();
 			Object value = cast(aValue, type);
 
-			if (mContext.array == mContext.object)
+			if (mContext.getMapValueType() != null)
 			{
-				mContext.array.add(value);
+				Log.out.println("###"+mContext.getMapKey()+" = "+aValue);
+				Log.out.println("***"+mContext.getParent().getParent().getObject().getClass());
+				Log.out.println("***"+mContext.getField());
+				Log.out.println("***"+mContext.getField().get(mContext.getParent().getParent().getObject()).getClass());
+
+				Map map = (Map)mContext.getField().get(mContext.getParent().getParent().getObject());
+				map.put(mContext.getMapKey(), aValue);
+				
+				Log.out.println(map);
+			}
+			else if (mContext.getArray() == mContext.getObject())
+			{
+				mContext.getArray().add(value);
 			}
 			else
 			{
-				mContext.field.set(mContext.object, value);
+				mContext.getField().set(mContext.getObject(), value);
 			}
 		}
 		catch (IllegalArgumentException | IllegalAccessException e)
@@ -207,7 +257,7 @@ public class Factory
 			throw new IOException(e);
 		}
 
-		print(0, mContext.field + " = " + aValue);
+		print(0, mContext.getField() + " = " + aValue);
 	}
 	
 	
@@ -224,7 +274,7 @@ public class Factory
 	
 	private Object castArray(List aValue)
 	{
-		Class type = mContext.field.getType();
+		Class type = mContext.getParent().getField().getType();
 
 		if (type.isArray())
 		{
@@ -281,40 +331,146 @@ public class Factory
 	}
 
 
-	private static class Context
+}
+
+class Context
+{
+	private Context parent;
+	private Context child;
+	private Object object;
+	private Field field;
+	private Class type;
+	private List array;
+//	private String typeName;
+
+	private Object mapKey;
+	private Class mapValueType;
+
+
+	public void create()
 	{
-		Context parent;
-		Context child;
-		Object object;
-		Field field;
-		Class type;
-		List array;
-//		String typeName;
+		Context ctx = new Context();
+		ctx.field = field;
+		ctx.object = object;
+		ctx.type = type;
+//		ctx.typeName = typeName;
+		ctx.parent = parent;
+		ctx.array = array;
+		ctx.child = this;
+		ctx.mapKey = mapKey;
+		ctx.mapValueType = mapValueType;
+		parent = ctx;
+	}
 
 
-		private void create()
-		{
-			Context ctx = new Context();
-			ctx.field = field;
-			ctx.object = object;
-			ctx.type = type;
-//			ctx.typeName = typeName;
-			ctx.parent = parent;
-			ctx.array = array;
-			ctx.child = this;
-			parent = ctx;
-		}
+	public void end()
+	{
+		field = parent.field;
+		object = parent.object;
+		type = parent.type;
+//		typeName = parent.typeName;
+		array = parent.array;
+		parent = parent.parent;
+		mapKey = parent.mapKey;
+		mapValueType = parent.mapValueType;
+		child = null;
+	}
 
 
-		private void end()
-		{
-			field = parent.field;
-			object = parent.object;
-			type = parent.type;
-//			typeName = parent.typeName;
-			array = parent.array;
-			parent = parent.parent;
-			child = null;
-		}
+	public Context getParent()
+	{
+		return parent;
+	}
+
+
+	public void setParent(Context aParent)
+	{
+		this.parent = aParent;
+	}
+
+
+	public Context getChild()
+	{
+		return child;
+	}
+
+
+	public void setChild(Context aChild)
+	{
+		this.child = aChild;
+	}
+
+
+	public Object getObject()
+	{
+		return object;
+	}
+
+
+	public void setObject(Object aObject)
+	{
+		Log.out.println("setting object = " + aObject.getClass());
+		this.object = aObject;
+	}
+
+
+	public Field getField()
+	{
+		return field;
+	}
+
+
+	public void setField(Field aField)
+	{
+		this.field = aField;
+	}
+
+
+	public Class getType()
+	{
+		return type;
+	}
+
+
+	public void setType(Class aType)
+	{
+		this.type = aType;
+	}
+
+
+	public List getArray()
+	{
+		return array;
+	}
+
+
+	public void setArray(List aArray)
+	{
+		this.array = aArray;
+	}
+
+
+	public Object getMapKey()
+	{
+		return mapKey;
+	}
+
+
+	public void setMapKey(Object aApKey)
+	{
+		this.mapKey = aApKey;
+	}
+
+
+	public Class getMapValueType()
+	{
+		return mapValueType;
+	}
+
+
+	public void setMapValueType(Class aApValueType)
+	{
+		this.mapValueType = aApValueType;
 	}
 }
+

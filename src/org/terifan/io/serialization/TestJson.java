@@ -24,10 +24,10 @@ public class TestJson
 				+ "], "
 				+ "singleArray:[1,2,3], "
 				+ "doubleArray:[[4,5,6],[7,8]],"
-				+ "trippleArray:[[[4,5,6],[7,8]],[[9]]]"
+				+ "trippleArray:[[[4,5,6],[7,8]],[[9]]],"
 //				+ "listInt:[10,11,12],"
 //				+ "listSingleArray:[[13,14],[15,16]]"
-//				+ "mapValue:{a:1, b:2, c:3}"
+				+ "mapValue:{a:1, b:2, c:3}"
 				+ "}";
 			new JSONReader().unmarshal(factory, new ByteArrayInputStream(json.getBytes()));
 			Log.out.println(factory.getOutput());
