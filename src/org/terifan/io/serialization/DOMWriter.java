@@ -46,7 +46,7 @@ public class DOMWriter implements Writer
 
 
 	@Override
-	public void startField(Field aField, String aName, String aTypeName)
+	public void startProperty(Property aProperty, String aName, String aTypeName)
 	{
 		XmlElement element = mNode.appendElement("field");
 		element.setAttribute("name", aName);
@@ -56,14 +56,14 @@ public class DOMWriter implements Writer
 
 
 	@Override
-	public void endField()
+	public void endProperty()
 	{
 		mNode = mNode.getParent();
 	}
 
 
 	@Override
-	public void nextField()
+	public void nextProperty()
 	{
 	}
 

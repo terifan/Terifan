@@ -4,6 +4,11 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.TYPE;
+import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1410,5 +1415,197 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			out.writeUTF(key);
 			out.writeObject(mValues.get(key));
 		}
+	}
+
+
+	public <T extends BundleExternalizable> T getObject(Class<T> aType, String aName) throws IOException
+	{
+		try
+		{
+			T instance = aType.newInstance();
+			instance.readExternal(getBundle(aName));
+			return instance;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+	}
+
+
+	public <T> T[] getObjectArray(Class aType, String aName) throws IOException
+	{
+		try
+		{
+			ArrayList<Bundle> bundleArray = getBundleArrayList(aName);
+			if (bundleArray == null)
+			{
+				return null;
+			}
+			Object array = Array.newInstance(aType, bundleArray.size());
+			for (int i = 0; i < bundleArray.size(); i++)
+			{
+				BundleExternalizable instance = (BundleExternalizable)aType.newInstance();
+				instance.readExternal(bundleArray.get(i));
+				Array.set(array, i, instance);
+			}
+			return (T[])array;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+	}
+
+
+	public <T extends BundleExternalizable> ArrayList<T> getObjectArrayList(Class<T> aType, String aName) throws IOException
+	{
+		try
+		{
+			ArrayList<T> list = new ArrayList<>();
+			for (Bundle bundle : getBundleArrayList(aName))
+			{
+				T instance = aType.newInstance();
+				instance.readExternal(bundle);
+				list.add(instance);
+			}
+			return list;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+	}
+
+
+	public Bundle putObject(String aName, BundleExternalizable aObject) throws IOException
+	{
+		Bundle bundle = new Bundle();
+		aObject.writeExternal(bundle);
+		putBundle(aName, bundle);
+		return this;
+	}
+
+
+	public Bundle putObjectArray(String aName, BundleExternalizable[] aArray) throws IOException
+	{
+		if (aArray != null)
+		{
+			Bundle[] array = new Bundle[aArray.length];
+			for (int i = 0; i < array.length; i++)
+			{
+				Bundle bundle = new Bundle();
+				array[i] = bundle;
+				aArray[i].writeExternal(bundle);
+			}
+			putBundleArray(aName, array);
+		}
+		return this;
+	}
+
+
+	public Bundle putObjectArrayList(String aName, ArrayList<? extends BundleExternalizable> aList) throws IOException
+	{
+		ArrayList<Bundle> list = new ArrayList<>(aList.size());
+		for (BundleExternalizable entry : aList)
+		{
+			Bundle bundle = new Bundle();
+			list.add(bundle);
+			entry.writeExternal(bundle);
+		}
+		putBundleArrayList(aName, list);
+		return this;
+	}
+	
+	
+	public int getAsInt(String aKey)
+	{
+		return getAsInt(aKey, 0);
+	}
+	
+	
+	public int getAsInt(String aKey, int aDefaultValue)
+	{
+		Object o = mValues.get(aKey);
+		if (o == null)
+		{
+			return aDefaultValue;
+		}
+		if (o instanceof Integer)
+		{
+			return (Integer)o;
+		}
+		try
+		{
+			return ((Number)o).intValue();
+		}
+		catch (ClassCastException e)
+		{
+			return (Integer)typeWarning(aKey, o, "Integer", aDefaultValue, e);
+		}
+	}
+	
+	
+	public long getAsLong(String aKey)
+	{
+		return getAsLong(aKey, 0L);
+	}
+	
+	
+	public long getAsLong(String aKey, long aDefaultValue)
+	{
+		Object o = mValues.get(aKey);
+		if (o == null)
+		{
+			return aDefaultValue;
+		}
+		if (o instanceof Long)
+		{
+			return (Long)o;
+		}
+		try
+		{
+			return ((Number)o).longValue();
+		}
+		catch (ClassCastException e)
+		{
+			return (Long)typeWarning(aKey, o, "Long", aDefaultValue, e);
+		}
+	}
+	
+	
+	public float getAsFloat(String aKey)
+	{
+		return getAsFloat(aKey, 0f);
+	}
+	
+	
+	public float getAsFloat(String aKey, float aDefaultValue)
+	{
+		Object o = mValues.get(aKey);
+		if (o == null)
+		{
+			return aDefaultValue;
+		}
+		if (o instanceof Float)
+		{
+			return (Float)o;
+		}
+		try
+		{
+			return ((Number)o).floatValue();
+		}
+		catch (ClassCastException e)
+		{
+			return (Long)typeWarning(aKey, o, "Long", aDefaultValue, e);
+		}
+	}
+
+
+	@Retention(RUNTIME)
+	@Target({FIELD,TYPE})
+	public @interface Bundlable
+	{
+		String value() default "";
 	}
 }

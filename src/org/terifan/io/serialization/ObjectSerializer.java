@@ -2,6 +2,7 @@ package org.terifan.io.serialization;
 
 import java.io.IOException;
 import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.TYPE;
 import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
@@ -17,10 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.terifan.util.Result;
-import org.terifan.util.Strings;
 
 
 /**
@@ -44,7 +42,7 @@ public class ObjectSerializer
 	}
 
 
-	public void serialize(Object aObject) throws IllegalAccessException
+	public void serialize(Object aObject) throws IOException
 	{
 		mWriter.startOutput();
 
@@ -54,57 +52,44 @@ public class ObjectSerializer
 	}
 
 
-	private void serializeObject(Object aObject, HashSet<Object> aVisitedObjects) throws IllegalAccessException
+	private void serializeObject(Object aObject, HashSet<Object> aVisitedObjects) throws IOException
 	{
 		if (!aVisitedObjects.add(aObject))
 		{
 			return;
 		}
 
-		ArrayList<Field> fields = getFields(aObject);
+		ArrayList<Property> entries = getEntries(aObject);
 
-		mWriter.startObject(aObject, getTypeName(aObject.getClass(), false), fields.size());
+		mWriter.startObject(aObject, getTypeName(aObject.getClass(), false), entries.size());
 
 		boolean first = true;
 
-		for (Field field : fields)
+		for (Property entry : entries)
 		{
 			if (!first)
 			{
-				mWriter.nextField();
+				mWriter.nextProperty();
 			}
 			first = false;
 
-			field.setAccessible(true);
+			String name = entry.getName();
+			Object value = entry.get();
+			boolean primitive = entry.isPrimitive();
+			String typeName = getTypeName(entry.getType(), primitive);
 
-			String name = null;
-
-			Serialize annotation = field.getAnnotation(Serialize.class);
-			if (annotation != null)
-			{
-				name = annotation.value();
-			}
-			if (Strings.isEmptyOrNull(name))
-			{
-				name = field.getName();
-			}
-
-			Object value = field.get(aObject);
-
-			boolean primitive = field.getType().isPrimitive();
-
-			mWriter.startField(field, name, getTypeName(field.getType(), primitive));
+			mWriter.startProperty(entry, name, typeName);
 
 			serializeValue(value, primitive, aVisitedObjects);
 
-			mWriter.endField();
+			mWriter.endProperty();
 		}
 
 		mWriter.endObject();
 	}
 
 
-	private void serializeValue(Object aObject, boolean aPrimitives, HashSet<Object> aVisitedObjects) throws IllegalAccessException
+	private void serializeValue(Object aObject, boolean aPrimitives, HashSet<Object> aVisitedObjects) throws IOException
 	{
 		if (aObject == null)
 		{
@@ -165,7 +150,7 @@ public class ObjectSerializer
 	}
 
 
-	private void serializeArray(Object aObject, String aArrayType, HashSet<Object> aVisitedObjects) throws IllegalAccessException
+	private void serializeArray(Object aObject, String aArrayType, HashSet<Object> aVisitedObjects) throws IOException
 	{
 		Class valueType = aObject.getClass();
 
@@ -203,7 +188,7 @@ public class ObjectSerializer
 	}
 
 
-	private void serializeMap(Map aMap, HashSet<Object> aVisitedObjects) throws IllegalAccessException
+	private void serializeMap(Map aMap, HashSet<Object> aVisitedObjects) throws IOException
 	{
 		Object[] items = new Object[2 * aMap.size()];
 		int i = 0;
@@ -217,9 +202,9 @@ public class ObjectSerializer
 	}
 
 
-	private ArrayList<Field> getFields(Object aObject) throws SecurityException
+	private ArrayList<Property> getEntries(Object aObject) throws IOException
 	{
-		ArrayList<Field> fields = new ArrayList<>();
+		ArrayList<Property> fields = new ArrayList<>();
 		HashSet<String> done = new HashSet<>();
 		Class cls = aObject.getClass();
 
@@ -227,9 +212,9 @@ public class ObjectSerializer
 		{
 			for (Field field : cls.getDeclaredFields())
 			{
-				if ((field.getModifiers() & (Modifier.FINAL | Modifier.TRANSIENT)) == 0 && done.add(field.getName()))
+				if ((field.getModifiers() & (Modifier.FINAL | Modifier.TRANSIENT | Modifier.STATIC)) == 0 && done.add(field.getName()))
 				{
-					fields.add(field);
+					fields.add(new FieldProperty(aObject, field));
 				}
 			}
 			cls = cls.getSuperclass();
@@ -312,10 +297,10 @@ public class ObjectSerializer
 
 		return aType.getTypeName();
 	}
-
+	
 
 	@Retention(RUNTIME)
-	@Target(FIELD)
+	@Target({FIELD,TYPE})
 	public @interface Serialize
 	{
 		String value() default "";
