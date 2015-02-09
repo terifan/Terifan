@@ -4,18 +4,22 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.TYPE;
-import java.lang.annotation.Retention;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.Target;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import org.terifan.util.Convert;
+import org.terifan.util.bundle.BundleExternalizable.Bundlable;
 import org.terifan.util.log.Log;
 
 
@@ -24,6 +28,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	private final static long serialVersionUID = 1L;
 
 	private final Map<String, Object> mValues = new TreeMap<>();
+	private boolean mStrict;
 
 
 	/**
@@ -40,6 +45,19 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	public Bundle(Bundle aOther)
 	{
 		putAll(aOther);
+	}
+
+
+	public Bundle setStrict(boolean aStrict)
+	{
+		mStrict = aStrict;
+		return this;
+	}
+
+
+	public boolean isStrict()
+	{
+		return mStrict;
 	}
 
 
@@ -112,7 +130,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Bundle)o;
+			return ((Bundle)o).setStrict(mStrict);
 		}
 		catch (ClassCastException e)
 		{
@@ -178,7 +196,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Boolean)o;
+			if (mStrict || o instanceof Boolean)
+			{
+				return (Boolean)o;
+			}
+			return ((Number)o).longValue() != 0;
 		}
 		catch (ClassCastException e)
 		{
@@ -244,7 +266,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Byte)o;
+			if (mStrict)
+			{
+				return (Byte)o;
+			}
+			return ((Number)o).byteValue();
 		}
 		catch (ClassCastException e)
 		{
@@ -310,7 +336,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Character)o;
+			if (mStrict || o instanceof Character)
+			{
+				return (Character)o;
+			}
+			return (char)((Number)o).shortValue();
 		}
 		catch (ClassCastException e)
 		{
@@ -376,7 +406,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Double)o;
+			if (mStrict)
+			{
+				return (Double)o;
+			}
+			return ((Number)o).doubleValue();
 		}
 		catch (ClassCastException e)
 		{
@@ -442,7 +476,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Float)o;
+			if (mStrict)
+			{
+				return (Float)o;
+			}
+			return ((Number)o).floatValue();
 		}
 		catch (ClassCastException e)
 		{
@@ -499,7 +537,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Integer)o;
+			if (mStrict)
+			{
+				return (Integer)o;
+			}
+			return ((Number)o).intValue();
 		}
 		catch (ClassCastException e)
 		{
@@ -526,6 +568,10 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		Object o = mValues.get(aKey);
 		try
 		{
+			if (!mStrict)
+			{
+				return Convert.toInts(o);
+			}
 			return (int[])o;
 		}
 		catch (ClassCastException e)
@@ -574,7 +620,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Long)o;
+			if (mStrict)
+			{
+				return (Long)o;
+			}
+			return ((Number)o).longValue();
 		}
 		catch (ClassCastException e)
 		{
@@ -640,7 +690,11 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (Short)o;
+			if (mStrict)
+			{
+				return (Short)o;
+			}
+			return ((Number)o).shortValue();
 		}
 		catch (ClassCastException e)
 		{
@@ -707,7 +761,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
-			return (String)o;
+			return o.toString();
 		}
 		catch (ClassCastException e)
 		{
@@ -774,9 +828,20 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		}
 		try
 		{
+			if (!mStrict && !(o instanceof Date))
+			{
+				if (o instanceof Long)
+				{
+					return new Date((Long)o);
+				}
+				if (o instanceof String)
+				{
+					return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse((String)o);
+				}
+			}
 			return (Date)o;
 		}
-		catch (ClassCastException e)
+		catch (ClassCastException | ParseException e)
 		{
 			return (Date)typeWarning(aKey, o, "Date", aDefaultValue, e);
 		}
@@ -1423,7 +1488,9 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		try
 		{
 			T instance = aType.newInstance();
-			instance.readExternal(getBundle(aName));
+			Bundle bundle = getBundle(aName);
+			bundle.bundleToObject(instance);
+			instance.readExternal(bundle);
 			return instance;
 		}
 		catch (InstantiationException | IllegalAccessException e)
@@ -1446,7 +1513,9 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			for (int i = 0; i < bundleArray.size(); i++)
 			{
 				BundleExternalizable instance = (BundleExternalizable)aType.newInstance();
-				instance.readExternal(bundleArray.get(i));
+				Bundle bundle = bundleArray.get(i);
+				bundle.bundleToObject(instance);
+				instance.readExternal(bundle);
 				Array.set(array, i, instance);
 			}
 			return (T[])array;
@@ -1466,6 +1535,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			for (Bundle bundle : getBundleArrayList(aName))
 			{
 				T instance = aType.newInstance();
+				bundle.bundleToObject(instance);
 				instance.readExternal(bundle);
 				list.add(instance);
 			}
@@ -1481,6 +1551,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	public Bundle putObject(String aName, BundleExternalizable aObject) throws IOException
 	{
 		Bundle bundle = new Bundle();
+		bundle.objectToBundle(aObject);
 		aObject.writeExternal(bundle);
 		putBundle(aName, bundle);
 		return this;
@@ -1496,6 +1567,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			{
 				Bundle bundle = new Bundle();
 				array[i] = bundle;
+				bundle.objectToBundle(aArray[i]);
 				aArray[i].writeExternal(bundle);
 			}
 			putBundleArray(aName, array);
@@ -1511,101 +1583,69 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		{
 			Bundle bundle = new Bundle();
 			list.add(bundle);
+			bundle.objectToBundle(entry);
 			entry.writeExternal(bundle);
 		}
 		putBundleArrayList(aName, list);
 		return this;
 	}
-	
-	
-	public int getAsInt(String aKey)
+
+
+	private void bundleToObject(BundleExternalizable aObject)
 	{
-		return getAsInt(aKey, 0);
-	}
-	
-	
-	public int getAsInt(String aKey, int aDefaultValue)
-	{
-		Object o = mValues.get(aKey);
-		if (o == null)
-		{
-			return aDefaultValue;
-		}
-		if (o instanceof Integer)
-		{
-			return (Integer)o;
-		}
 		try
 		{
-			return ((Number)o).intValue();
+			for (Field field : aObject.getClass().getDeclaredFields())
+			{
+				field.setAccessible(true);
+				if (field.getAnnotation(Bundlable.class) != null)
+				{
+					Object value = get(field.getName());
+
+					Class fieldType = field.getType();
+					if (fieldType.isArray())
+					{
+						field.set(aObject, Convert.asArray(fieldType.getComponentType(), value));
+					}
+					else if (List.class.isAssignableFrom(fieldType))
+					{
+						ParameterizedType paramType = (ParameterizedType)field.getGenericType();
+						Class valueType = Class.forName(paramType.getActualTypeArguments()[0].getTypeName());
+						field.set(aObject, Convert.asList(valueType, value));
+					}
+					else
+					{
+						field.set(aObject, value);
+					}
+				}
+			}
 		}
-		catch (ClassCastException e)
+		catch (SecurityException | IllegalArgumentException | IllegalAccessException | ClassNotFoundException e)
 		{
-			return (Integer)typeWarning(aKey, o, "Integer", aDefaultValue, e);
-		}
-	}
-	
-	
-	public long getAsLong(String aKey)
-	{
-		return getAsLong(aKey, 0L);
-	}
-	
-	
-	public long getAsLong(String aKey, long aDefaultValue)
-	{
-		Object o = mValues.get(aKey);
-		if (o == null)
-		{
-			return aDefaultValue;
-		}
-		if (o instanceof Long)
-		{
-			return (Long)o;
-		}
-		try
-		{
-			return ((Number)o).longValue();
-		}
-		catch (ClassCastException e)
-		{
-			return (Long)typeWarning(aKey, o, "Long", aDefaultValue, e);
-		}
-	}
-	
-	
-	public float getAsFloat(String aKey)
-	{
-		return getAsFloat(aKey, 0f);
-	}
-	
-	
-	public float getAsFloat(String aKey, float aDefaultValue)
-	{
-		Object o = mValues.get(aKey);
-		if (o == null)
-		{
-			return aDefaultValue;
-		}
-		if (o instanceof Float)
-		{
-			return (Float)o;
-		}
-		try
-		{
-			return ((Number)o).floatValue();
-		}
-		catch (ClassCastException e)
-		{
-			return (Long)typeWarning(aKey, o, "Long", aDefaultValue, e);
+			throw new IllegalArgumentException(e);
 		}
 	}
 
 
-	@Retention(RUNTIME)
-	@Target({FIELD,TYPE})
-	public @interface Bundlable
+	private void objectToBundle(BundleExternalizable aObject)
 	{
-		String value() default "";
+		try
+		{
+			for (Field field : aObject.getClass().getDeclaredFields())
+			{
+				field.setAccessible(true);
+				if (field.getAnnotation(Bundlable.class) != null)
+				{
+					Object value = field.get(aObject);
+//					Log.out.println("#"+field);
+//					Log.out.println("*"+field.get(aObject));
+					put(field.getName(), value);
+				}
+			}
+		}
+		catch (SecurityException | IllegalArgumentException | IllegalAccessException e)
+		{
+			throw new IllegalArgumentException(e);
+		}
 	}
 }

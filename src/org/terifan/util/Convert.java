@@ -3,8 +3,13 @@ package org.terifan.util;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import org.terifan.io.ByteArray;
+import org.terifan.util.log.Log;
 
 
 public class Convert
@@ -637,5 +642,102 @@ public class Convert
 			ByteArray.BE.putDouble(bytes, 8 * i, aInput[i]);
 		}
 		return bytes;
+	}
+
+
+	/**
+	 * Convert an array or Collection of Numbers into ints.
+	 *
+	 * @param aValues
+	 *   a collection of values to be converted (supported types include array, list and set of Numbers)
+	 */
+	public static int[] toInts(Object aValues)
+	{
+		if (aValues == null)
+		{
+			return null;
+		}
+		Class type = aValues.getClass();
+		if (type == int[].class)
+		{
+			return (int[])aValues;
+		}
+		if (type.isArray())
+		{
+			int[] q = new int[Array.getLength(aValues)];
+			for (int i = 0; i < q.length; i++)
+			{
+				q[i] = ((Number)Array.get(aValues, i)).intValue();
+			}
+			return q;
+		}
+		if (Collection.class.isAssignableFrom(type))
+		{
+			Collection items = (Collection)aValues;
+			int[] q = new int[items.size()];
+			int i = 0;
+			for (Object v : items)
+			{
+				q[i++] = ((Number)v).intValue();
+			}
+			return q;
+		}
+		throw new IllegalArgumentException("Failed to convert object to int array: type: " + type);
+	}
+
+
+	public static <T> T[] asArray(Class<T> aArrayType, Object aObject)
+	{
+		Log.out.println(aArrayType);
+
+		if (List.class.isAssignableFrom(aObject.getClass()))
+		{
+			List list = (List)aObject;
+			Object array = Array.newInstance(aArrayType, list.size());
+			for (int i = 0; i < list.size(); i++)
+			{
+				Array.set(array, i, ((Number)list.get(i)).intValue());
+			}
+			return (T[])array;
+		}
+
+		ArrayList<T> list = new ArrayList<>();
+
+//		 && (fieldType.getComponentType() == Integer.class || fieldType.getComponentType() == Integer.TYPE)
+
+		return null;
+	}
+
+
+	public static <T> List<T> asList(Class<T> aListType, Object aObject)
+	{
+		if (List.class.isAssignableFrom(aObject.getClass()))
+		{
+			aObject = ((List)aObject).toArray();
+		}
+
+		ArrayList<T> list = new ArrayList<>();
+		for (int i = 0; i < Array.getLength(aObject); i++)
+		{
+			if (aListType == Integer.class)
+			{
+				list.add((T)(Integer)((Number)Array.get(aObject, i)).intValue());
+			}
+		}
+
+		return list;
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			Log.out.println(Arrays.toString(toInts(new Long[]{7L})));
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }

@@ -69,8 +69,7 @@ public class JSONEncoder
 			}
 			first = false;
 
-			aAppendable.append("\""+key+"\"");
-			aAppendable.append(":");
+			aAppendable.append("\""+key+"\":");
 
 			if (value == null)
 			{

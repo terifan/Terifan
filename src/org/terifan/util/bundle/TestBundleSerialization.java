@@ -18,6 +18,8 @@ public class TestBundleSerialization
 			person.email = new ArrayList<>(Arrays.asList(new Email("ss"), new Email("tt")));
 			person.body = new Body(182, 86);
 			person.email2 = new Email[]{new Email("xx"), new Email("yy")};
+			person.numbers = new int[]{1,2,3};
+			person.numbers2 = new ArrayList<>(Arrays.asList(1,2,3));
 
 			Bundle bundle = new Bundle();
 			bundle.putObject("person", person);
@@ -38,28 +40,32 @@ public class TestBundleSerialization
 
 	static class Person implements BundleExternalizable
 	{
-		long year;
-		String name;
+		@Bundlable long year;
+		@Bundlable String name;
 		ArrayList<Email> email;
 		Body body;
 		Email[] email2;
+		@Bundlable int[] numbers;
+		@Bundlable ArrayList<Integer> numbers2;
 		@Override
 		public void readExternal(Bundle aBundle) throws IOException
 		{
-			year = aBundle.getLong("year");
-			name = aBundle.getString("name");
+//			year = aBundle.getLong("year");
+//			name = aBundle.getString("name");
 			email = aBundle.getObjectArrayList(Email.class, "email");
 			body = aBundle.getObject(Body.class, "body");
 			email2 = aBundle.getObjectArray(Email.class, "email2");
+//			numbers = aBundle.getIntArray("numbers");
 		}
 		@Override
 		public void writeExternal(Bundle aBundle) throws IOException
 		{
-			aBundle.putLong("year", year);
-			aBundle.putString("name", name);
-			aBundle.putObject("body", body);
+//			aBundle.putLong("year", year);
+//			aBundle.putString("name", name);
 			aBundle.putObjectArrayList("email", email);
+			aBundle.putObject("body", body);
 			aBundle.putObjectArray("email2", email2);
+//			aBundle.putIntArray("numbers", numbers);
 		}
 	}
 
@@ -78,8 +84,8 @@ public class TestBundleSerialization
 		@Override
 		public void readExternal(Bundle aBundle) throws IOException
 		{
-			height = aBundle.getAsInt("height", 0);
-			weight = aBundle.getAsFloat("weight", 0);
+			height = aBundle.getInt("height", 0);
+			weight = aBundle.getFloat("weight", 0f);
 		}
 		@Override
 		public void writeExternal(Bundle aBundle) throws IOException
@@ -88,7 +94,7 @@ public class TestBundleSerialization
 			aBundle.putFloat("weight", weight);
 		}
 	}
-	
+
 	static class Email implements BundleExternalizable
 	{
 		String address;
