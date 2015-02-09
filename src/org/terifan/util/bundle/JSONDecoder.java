@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 
@@ -45,14 +46,14 @@ public class JSONDecoder
 	/**
 	 * Reads the provided string and returns a Bundle.
 	 *
-	 * @param aInputStream
+	 * @param aReader
 	 *   the JSON string
 	 * @return
 	 *   the read Bundle
 	 */
-	public Bundle unmarshal(InputStream aInputStream) throws IOException
+	public Bundle unmarshal(Reader aReader) throws IOException
 	{
-		return readBundle(new PushbackReader(new InputStreamReader(aInputStream)), false);
+		return readBundle(new PushbackReader(aReader), false);
 	}
 
 
