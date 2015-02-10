@@ -7,11 +7,9 @@ import java.io.ObjectOutput;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -1404,62 +1402,6 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	}
 
 
-//	public void put(String aKey, Object aValue)
-//	{
-//		if (aValue == null)
-//		{
-//			throw new IllegalArgumentException("Value is null.");
-//		}
-//
-//		ClassType classType;
-//
-//		if (aValue instanceof ArrayList)
-//		{
-//			Class type = null;
-//
-//			for (Object v : (List)aValue)
-//			{
-//				if (type == null)
-//				{
-//					type = v.getClass();
-//					if (type == null)
-//					{
-//						throw new IllegalArgumentException("List contain null value.");
-//					}
-//				}
-//				else if (type != v.getClass())
-//				{
-//					throw new IllegalArgumentException("List contain mixed types.");
-//				}
-//			}
-//
-//			ArrayList list = (ArrayList)aValue;
-//
-//			if (list.isEmpty() || type == null)
-//			{
-//				throw new IllegalArgumentException("List is empty.");
-//			}
-//
-//			classType = ClassType.ARRAYLIST;
-//		}
-//		else if (aValue.getClass().isArray())
-//		{
-//			if (aValue.getClass().getComponentType().isArray())
-//			{
-//				throw new IllegalArgumentException();
-//			}
-//
-//			classType = ClassType.ARRAY;
-//		}
-//		else
-//		{
-//			classType = ClassType.SINGLE;
-//		}
-//
-//		mValues.put(aKey, aValue);
-//	}
-
-
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
 	{
@@ -1480,6 +1422,14 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			out.writeUTF(key);
 			out.writeObject(mValues.get(key));
 		}
+	}
+
+
+	public Bundle getObject(BundleExternalizable aObject) throws IOException
+	{
+		bundleToObject(aObject);
+		aObject.readExternal(this);
+		return this;
 	}
 
 
@@ -1548,6 +1498,14 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	}
 
 
+	public Bundle putObject(BundleExternalizable aObject) throws IOException
+	{
+		objectToBundle(aObject);
+		aObject.writeExternal(this);
+		return this;
+	}
+
+
 	public Bundle putObject(String aName, BundleExternalizable aObject) throws IOException
 	{
 		Bundle bundle = new Bundle();
@@ -1567,8 +1525,14 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			{
 				Bundle bundle = new Bundle();
 				array[i] = bundle;
-				bundle.objectToBundle(aArray[i]);
-				aArray[i].writeExternal(bundle);
+
+				BundleExternalizable item = aArray[i];
+
+				if (item != null)
+				{
+					bundle.objectToBundle(item);
+					item.writeExternal(bundle);
+				}
 			}
 			putBundleArray(aName, array);
 		}
@@ -1593,6 +1557,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	private void bundleToObject(BundleExternalizable aObject)
 	{
+		Log.out.println("bundleToObject " + aObject);
 		try
 		{
 			for (Field field : aObject.getClass().getDeclaredFields())
@@ -1600,34 +1565,18 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 				field.setAccessible(true);
 				if (field.getAnnotation(Bundlable.class) != null)
 				{
-					Object value = get(field.getName());
-
-					Class fieldType = field.getType();
-					if (fieldType.isArray())
-					{
-						field.set(aObject, Convert.asArray(fieldType.getComponentType(), value));
-					}
-					else if (List.class.isAssignableFrom(fieldType))
-					{
-						ParameterizedType paramType = (ParameterizedType)field.getGenericType();
-						Class valueType = Class.forName(paramType.getActualTypeArguments()[0].getTypeName());
-						field.set(aObject, Convert.asList(valueType, value));
-					}
-					else
-					{
-						field.set(aObject, value);
-					}
+					updateField(field, aObject);
 				}
 			}
 		}
-		catch (SecurityException | IllegalArgumentException | IllegalAccessException | ClassNotFoundException e)
+		catch (SecurityException | IllegalAccessException | ClassNotFoundException | InstantiationException | IOException e)
 		{
 			throw new IllegalArgumentException(e);
 		}
 	}
 
 
-	private void objectToBundle(BundleExternalizable aObject)
+	private void objectToBundle(BundleExternalizable aObject) throws IOException
 	{
 		try
 		{
@@ -1636,16 +1585,101 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 				field.setAccessible(true);
 				if (field.getAnnotation(Bundlable.class) != null)
 				{
-					Object value = field.get(aObject);
-//					Log.out.println("#"+field);
-//					Log.out.println("*"+field.get(aObject));
-					put(field.getName(), value);
+					putField(field, aObject);
 				}
 			}
 		}
-		catch (SecurityException | IllegalArgumentException | IllegalAccessException e)
+		catch (SecurityException | IllegalAccessException | ClassNotFoundException e)
 		{
 			throw new IllegalArgumentException(e);
 		}
+	}
+
+
+	private void updateField(Field aField, BundleExternalizable aObject) throws IllegalAccessException, ClassNotFoundException, InstantiationException, IOException
+	{
+		Object value = get(aField.getName());
+		Class fieldType = aField.getType();
+
+		Log.out.println(aField+" = "+value);
+		
+		if (value == null)
+		{
+			if (!fieldType.isPrimitive())
+			{
+				aField.set(aObject, value);
+			}
+		}
+		else if (value instanceof Bundle)
+		{
+			BundleExternalizable instance = (BundleExternalizable)aField.get(aObject);
+			if (instance == null)
+			{
+				instance = (BundleExternalizable)fieldType.newInstance();
+			}
+			Bundle bundle = (Bundle)value;
+			instance.readExternal(bundle);
+			bundle.bundleToObject(instance);
+			aField.set(aObject, instance);
+		}
+		else if (fieldType.isArray())
+		{
+			aField.set(aObject, Convert.asArray(fieldType.getComponentType(), value));
+		}
+		else if (List.class.isAssignableFrom(fieldType))
+		{
+			aField.set(aObject, Convert.asList(getParameterizedType(aField, 0), value));
+		}
+		else
+		{
+			aField.set(aObject, value);
+		}
+	}
+
+
+	private void putField(Field aField, Object aObject) throws IOException, ClassNotFoundException, IllegalAccessException
+	{
+		Object value = aField.get(aObject);
+		Class fieldType = aField.getType();
+		String name = aField.getName();
+
+		if (isSupportedType(fieldType) 
+			|| fieldType.isArray() && isSupportedType(fieldType.getComponentType()) 
+			|| ArrayList.class.isAssignableFrom(fieldType) && isSupportedType(getParameterizedType(aField, 0)))
+		{
+			put(name, value);
+		}
+		else if (BundleExternalizable.class.isAssignableFrom(fieldType))
+		{
+			BundleExternalizable externalizable = (BundleExternalizable)value;
+			externalizable.writeExternal(this);
+			putObject(name, externalizable);
+		}
+		else if (fieldType.isArray() && BundleExternalizable.class.isAssignableFrom(fieldType.getComponentType()))
+		{
+			putObjectArray(name, (BundleExternalizable[])value);
+		}
+		else if (ArrayList.class.isAssignableFrom(fieldType) && BundleExternalizable.class.isAssignableFrom(getParameterizedType(aField, 0)))
+		{
+			putObjectArrayList(name, (ArrayList<BundleExternalizable>)value);
+		}
+		else
+		{
+			throw new IllegalArgumentException("Unsupported type: " + aField);
+		}
+	}
+
+
+	private static boolean isSupportedType(Class aFieldType)
+	{
+		return aFieldType == Boolean.class || aFieldType == Boolean.TYPE || aFieldType == Short.class || aFieldType == Short.TYPE || aFieldType == Character.class || aFieldType == Character.TYPE || aFieldType == Integer.class || aFieldType == Integer.TYPE || aFieldType == Long.class || aFieldType == Long.TYPE || aFieldType == Float.class || aFieldType == Float.TYPE || aFieldType == Double.class || aFieldType == Double.TYPE || aFieldType == String.class || aFieldType == Date.class || aFieldType == Bundle.class;
+	}
+
+
+	private Class getParameterizedType(Field aField, int aIndex) throws ClassNotFoundException
+	{
+		ParameterizedType paramType = (ParameterizedType)aField.getGenericType();
+		Class valueType = Class.forName(paramType.getActualTypeArguments()[aIndex].getTypeName());
+		return valueType;
 	}
 }
