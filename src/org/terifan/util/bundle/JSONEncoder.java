@@ -11,6 +11,8 @@ import java.util.List;
 public class JSONEncoder
 {
 	private SimpleDateFormat mDateFormatter;
+	private int mIndent;
+	private Appendable mAppendable;
 
 
 	public void marshal(Bundle aBundle, File aOutput) throws IOException
@@ -30,7 +32,7 @@ public class JSONEncoder
 	 */
 	public String marshal(Bundle aBundle) throws IOException
 	{
-		return marshal(aBundle, new StringBuilder()).toString();
+		return marshal(aBundle, new StringBuilder(1<<17)).toString();
 	}
 
 
@@ -42,99 +44,180 @@ public class JSONEncoder
 	 */
 	public Appendable marshal(Bundle aBundle, Appendable aAppendable) throws IOException
 	{
-		writeBundle(aBundle, aAppendable);
+		mAppendable = aAppendable;
+		mIndent = 0;
+
+		writeBundle(aBundle);
+
 		return aAppendable;
 	}
 
 
-	private void writeBundle(Bundle aBundle, Appendable aAppendable) throws IOException
+	private void writeBundle(Bundle aBundle) throws IOException
 	{
-		aAppendable.append("{");
+		mAppendable.append("{");
 
-		boolean first = true;
-
-		for (String key : aBundle.keySet())
+		if (!aBundle.isEmpty())
 		{
-			if (key.contains("\""))
+			boolean first = true;
+			boolean simple = true;
+
+			for (String key : aBundle.keySet())
 			{
-				throw new IOException("Name contains illegal character: " + key);
-			}
-
-			Object value = aBundle.get(key);
-			FieldType fieldType = FieldType.valueOf(value);
-
-			if (!first)
-			{
-				aAppendable.append(", ");
-			}
-			first = false;
-
-			aAppendable.append("\""+key+"\":");
-
-			if (value == null)
-			{
-				aAppendable.append("null");
-			}
-			else
-			{
-				Class<? extends Object> cls = value.getClass();
-
-				if (cls.isArray() || List.class.isAssignableFrom(cls))
+				Object value = aBundle.get(key);
+				FieldType fieldType = FieldType.valueOf(value);
+				if (value != null && (fieldType == FieldType.BUNDLE || value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())))
 				{
-					if (List.class.isAssignableFrom(cls))
+					simple = false;
+					break;
+				}
+			}
+
+			if (!simple)
+			{
+				mAppendable.append("\n");
+				mIndent++;
+			}
+
+			for (String key : aBundle.keySet())
+			{
+				if (key.contains("\""))
+				{
+					throw new IOException("Name contains illegal character: " + key);
+				}
+
+				Object value = aBundle.get(key);
+				FieldType fieldType = FieldType.valueOf(value);
+
+				if (!first)
+				{
+					if (simple)
 					{
-						value = ((List)value).toArray();
+						mAppendable.append(", ");
 					}
-					aAppendable.append("[");
-					for (int i = 0, len = Array.getLength(value); i < len; i++)
+					else
 					{
-						if (i > 0)
-						{
-							aAppendable.append(", ");
-						}
-						writeValue(Array.get(value, i), aAppendable, fieldType);
+						mAppendable.append(",\n");
+						indent();
 					}
-					aAppendable.append("]");
+				}
+				else if (!simple)
+				{
+					indent();
+				}
+				first = false;
+
+				mAppendable.append("\""+key+"\": ");
+
+				if (value == null)
+				{
+					mAppendable.append("null");
 				}
 				else
 				{
-					writeValue(value, aAppendable, fieldType);
+					Class<? extends Object> cls = value.getClass();
+
+					if (cls.isArray() || List.class.isAssignableFrom(cls))
+					{
+						if (List.class.isAssignableFrom(cls))
+						{
+							value = ((List)value).toArray();
+						}
+						mAppendable.append("[");
+						int len = Array.getLength(value);
+						if (len > 0)
+						{
+							boolean simpleArray = true;
+							for (int i = 0; i < len; i++)
+							{
+								Object v = Array.get(value, i);
+								fieldType = FieldType.valueOf(v);
+								if (v != null && (fieldType == FieldType.BUNDLE || v.getClass().isArray() || List.class.isAssignableFrom(v.getClass())))
+								{
+									simpleArray = false;
+									break;
+								}
+							}
+
+							if (!simpleArray)
+							{
+								mAppendable.append("\n");
+								mIndent++;
+							}
+							for (int i = 0; i < len; i++)
+							{
+								if (i > 0)
+								{
+									if (simpleArray)
+									{
+										mAppendable.append(", ");
+									}
+									else
+									{
+										mAppendable.append(",\n");
+									}
+								}
+								if (!simpleArray)
+								{
+									indent();
+								}
+								writeValue(Array.get(value, i), fieldType);
+							}
+							if (!simpleArray)
+							{
+								mIndent--;
+								mAppendable.append("\n");
+								indent();
+							}
+						}
+						mAppendable.append("]");
+					}
+					else
+					{
+						writeValue(value, fieldType);
+					}
 				}
 			}
-		}
 
-		aAppendable.append("}");
+			if (!simple)
+			{
+				mIndent--;
+				mAppendable.append("\n");
+				indent();
+			}
+		}
+		mAppendable.append("}");
 	}
 
 
-	private void writeValue(Object aValue, Appendable aAppendable, FieldType aFieldType) throws IOException
+	private void writeValue(Object aValue, FieldType aFieldType) throws IOException
 	{
 		if (aValue == null)
 		{
-			aAppendable.append("null");
+			mAppendable.append("null");
 			return;
 		}
 
 		switch (aFieldType)
 		{
 			case BUNDLE:
-				writeBundle((Bundle)aValue, aAppendable);
+				writeBundle((Bundle)aValue);
 				break;
 			case STRING:
-				aAppendable.append("\"" + escapeString(aValue.toString()) + "\"");
+				mAppendable.append("\"" + escapeString(aValue.toString()) + "\"");
 				break;
 			case DATE:
 				if (mDateFormatter == null)
 				{
 					mDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				}
-				aAppendable.append("\"" + mDateFormatter.format(aValue) + "\"");
+				mAppendable.append("\"" + mDateFormatter.format(aValue) + "\"");
 				break;
 			case CHAR:
-				aAppendable.append("\"" + (int)(Character)aValue + "\"");
+				mAppendable.append("\"" + (int)(Character)aValue + "\"");
 				break;
 			default:
-				aAppendable.append(aValue.toString());
+				mAppendable.append(aValue.toString());
 				break;
 		}
 	}
@@ -143,5 +226,14 @@ public class JSONEncoder
 	private String escapeString(String s)
 	{
 		return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("/", "\\/").replace("\b", "\\\b").replace("\f", "\\\f").replace("\n", "\\\n").replace("\r", "\\\r").replace("\t", "\\\t");
+	}
+	
+	
+	private void indent() throws IOException
+	{
+		for (int i = 0; i < mIndent; i++)
+		{
+			mAppendable.append("\t");
+		}
 	}
 }
