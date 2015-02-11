@@ -1557,7 +1557,6 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	private void bundleToObject(BundleExternalizable aObject)
 	{
-		Log.out.println("bundleToObject " + aObject);
 		try
 		{
 			for (Field field : aObject.getClass().getDeclaredFields())
@@ -1601,8 +1600,6 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		Object value = get(aField.getName());
 		Class fieldType = aField.getType();
 
-		Log.out.println(aField+" = "+value);
-		
 		if (value == null)
 		{
 			if (!fieldType.isPrimitive())
