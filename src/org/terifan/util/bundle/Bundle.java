@@ -1439,6 +1439,10 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		{
 			T instance = aType.newInstance();
 			Bundle bundle = getBundle(aName);
+			if (bundle == null)
+			{
+				throw new IllegalArgumentException("Bundle not found: name: " + aName);
+			}
 			bundle.bundleToObject(instance);
 			instance.readExternal(bundle);
 			return instance;
@@ -1479,10 +1483,17 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	public <T extends BundleExternalizable> ArrayList<T> getObjectArrayList(Class<T> aType, String aName) throws IOException
 	{
+		ArrayList<Bundle> bundleArrayList = getBundleArrayList(aName);
+
+		if (bundleArrayList == null)
+		{
+			return null;
+		}
+
 		try
 		{
 			ArrayList<T> list = new ArrayList<>();
-			for (Bundle bundle : getBundleArrayList(aName))
+			for (Bundle bundle : bundleArrayList)
 			{
 				T instance = aType.newInstance();
 				bundle.bundleToObject(instance);
@@ -1557,9 +1568,9 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	private void bundleToObject(BundleExternalizable aObject)
 	{
-		try
+		for (Field field : aObject.getClass().getDeclaredFields())
 		{
-			for (Field field : aObject.getClass().getDeclaredFields())
+			try
 			{
 				field.setAccessible(true);
 				if (field.getAnnotation(Bundlable.class) != null)
@@ -1567,10 +1578,10 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 					updateField(field, aObject);
 				}
 			}
-		}
-		catch (SecurityException | IllegalAccessException | ClassNotFoundException | InstantiationException | IOException e)
-		{
-			throw new IllegalArgumentException(e);
+			catch (Exception e)
+			{
+				throw new IllegalArgumentException("Error updating field: " + field, e);
+			}
 		}
 	}
 
@@ -1597,39 +1608,44 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	private void updateField(Field aField, BundleExternalizable aObject) throws IllegalAccessException, ClassNotFoundException, InstantiationException, IOException
 	{
-		Object value = get(aField.getName());
+		String fieldName = aField.getName();
+		Object fieldValue = get(fieldName);
 		Class fieldType = aField.getType();
 
-		if (value == null)
+		if (fieldValue == null)
 		{
-			if (!fieldType.isPrimitive())
+			if (containsKey(fieldName) && !fieldType.isPrimitive())
 			{
-				aField.set(aObject, value);
+				aField.set(aObject, fieldValue);
 			}
 		}
-		else if (value instanceof Bundle)
+		else if (fieldValue instanceof Bundle)
 		{
 			BundleExternalizable instance = (BundleExternalizable)aField.get(aObject);
 			if (instance == null)
 			{
 				instance = (BundleExternalizable)fieldType.newInstance();
 			}
-			Bundle bundle = (Bundle)value;
+			Bundle bundle = (Bundle)fieldValue;
 			instance.readExternal(bundle);
 			bundle.bundleToObject(instance);
 			aField.set(aObject, instance);
 		}
 		else if (fieldType.isArray())
 		{
-			aField.set(aObject, Convert.asArray(fieldType.getComponentType(), value));
+			aField.set(aObject, Convert.asArray(fieldType.getComponentType(), fieldValue));
 		}
 		else if (List.class.isAssignableFrom(fieldType))
 		{
-			aField.set(aObject, Convert.asList(getParameterizedType(aField, 0), value));
+			aField.set(aObject, Convert.asList(getParameterizedType(aField, 0), fieldValue));
+		}
+		else if (aField.getType() == Integer.class || aField.getType() == Integer.TYPE)
+		{
+			aField.set(aObject, ((Number)fieldValue).intValue());
 		}
 		else
 		{
-			aField.set(aObject, value);
+			aField.set(aObject, fieldValue);
 		}
 	}
 
