@@ -690,7 +690,7 @@ public class Convert
 
 	public static <T> T[] asArray(Class<T> aArrayType, Object aObject)
 	{
-		Log.out.println(aArrayType);
+//		Log.out.println(aArrayType);
 
 		if (List.class.isAssignableFrom(aObject.getClass()))
 		{
