@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.terifan.io.ByteArray;
+import org.terifan.util.bundle.Bundle;
+import org.terifan.util.bundle.BundleExternalizable;
 import org.terifan.util.log.Log;
 
 
@@ -688,24 +690,51 @@ public class Convert
 
 	public static <T> T[] asArray(Class<T> aArrayType, Object aObject)
 	{
-		Log.out.println(aArrayType);
+//		Log.out.println(aArrayType);
 
 		if (List.class.isAssignableFrom(aObject.getClass()))
 		{
 			List list = (List)aObject;
+
 			Object array = Array.newInstance(aArrayType, list.size());
+
 			for (int i = 0; i < list.size(); i++)
 			{
-				Array.set(array, i, ((Number)list.get(i)).intValue());
+				if (aArrayType == Integer.class)
+				{
+					Array.set(array, i, ((Number)list.get(i)).intValue());
+				}
+				else if (BundleExternalizable.class.isAssignableFrom(aArrayType))
+				{
+					try
+					{
+						BundleExternalizable be = (BundleExternalizable)aArrayType.newInstance();
+						Bundle b = (Bundle)list.get(i);
+						b.getObject(be);
+
+						Array.set(array, i, be);
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace(Log.out);
+						throw new RuntimeException(e);
+					}
+				}
+				else
+				{
+					throw new IllegalStateException("Unsupported type: " + aArrayType);
+				}
 			}
 			return (T[])array;
 		}
 
-		ArrayList<T> list = new ArrayList<>();
+		throw new IllegalStateException("Unsupported type: " + aArrayType);		
+
+//		ArrayList<T> list = new ArrayList<>();
 
 //		 && (fieldType.getComponentType() == Integer.class || fieldType.getComponentType() == Integer.TYPE)
 
-		return null;
+//		return null;
 	}
 
 
