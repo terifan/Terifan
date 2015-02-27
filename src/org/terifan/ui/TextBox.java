@@ -245,7 +245,7 @@ public class TextBox implements Cloneable
 			throw new IllegalArgumentException("aBounds is null");
 		}
 
-		mBounds = aBounds;
+		mBounds = new Rectangle(aBounds);
 		mDirty = true;
 		return this;
 	}
@@ -413,6 +413,11 @@ public class TextBox implements Cloneable
 
 	public Rectangle measure()
 	{
+		if (mBounds.isEmpty())
+		{
+			mBounds.setBounds(0, 0, Short.MAX_VALUE, Short.MAX_VALUE);
+		}
+
 		if (mDirty)
 		{
 			layout();

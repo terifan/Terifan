@@ -6,6 +6,9 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Arrays;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -549,7 +552,7 @@ public class XmlNode
 	{
 		try
 		{
-			TransformerFactory.newInstance().newTransformer().transform(new DOMSource(mNode), new StreamResult(aFile));
+			newTransformer().transform(new DOMSource(mNode), new StreamResult(aFile));
 		}
 		catch (TransformerException e)
 		{
@@ -562,7 +565,7 @@ public class XmlNode
 	{
 		try
 		{
-			TransformerFactory.newInstance().newTransformer().transform(new DOMSource(mNode), new StreamResult(aWriter));
+			newTransformer().transform(new DOMSource(mNode), new StreamResult(aWriter));
 		}
 		catch (TransformerException e)
 		{
@@ -575,7 +578,7 @@ public class XmlNode
 	{
 		try
 		{
-			TransformerFactory.newInstance().newTransformer().transform(new DOMSource(mNode), new StreamResult(aOutputStream));
+			newTransformer().transform(new DOMSource(mNode), new StreamResult(aOutputStream));
 		}
 		catch (TransformerException e)
 		{
@@ -589,13 +592,21 @@ public class XmlNode
 		try
 		{
 			CharArrayWriter cw = new CharArrayWriter();
-			TransformerFactory.newInstance().newTransformer().transform(new DOMSource(mNode), new StreamResult(cw));
+			newTransformer().transform(new DOMSource(mNode), new StreamResult(cw));
 			return cw.toString();
 		}
 		catch (TransformerException e)
 		{
 			throw new IllegalStateException(e);
 		}
+	}
+
+
+	private static Transformer newTransformer() throws TransformerConfigurationException
+	{
+		Transformer transformer = TransformerFactory.newInstance().newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		return transformer;
 	}
 
 
