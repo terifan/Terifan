@@ -561,6 +561,11 @@ public class TextBox implements Cloneable
 
 	private synchronized void layout()
 	{
+		if (mText == null)
+		{
+			throw new IllegalStateException("Text is null");
+		}
+
 		layoutLines();
 		layoutBounds();
 
