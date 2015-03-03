@@ -69,7 +69,7 @@ public abstract class DragAndDrop
 
 
 	/**
-	 * Handles drags. This implementation does nothing and returns null.
+	 * Called when a drag is recognized. This implementation returns null.
 	 *
 	 * @param aDragOrigin
 	 *   the position on the component where the drag occurred.
@@ -81,26 +81,27 @@ public abstract class DragAndDrop
 
 
 	/**
-	 * Handles drops. This implementation does nothing.
+	 * Return true if the drop is accepted. This method always return false and must be replaced in order for drops to be allowed.
 	 *
 	 * @param aDropEvent
 	 *   an object containing details about the drop.
+	 * @return
+	 *   true if the drop is allowed
 	 */
 	public boolean canDrop(DropEvent aDropEvent)
 	{
-		return true;
+		return false;
 	}
 
 
 	/**
-	 * Handles drops. This implementation does nothing.
+	 * Called when a drop occur. This implementation does nothing.
 	 *
 	 * @param aDropEvent
 	 *   an object containing details about the drop.
 	 */
-	public boolean drop(DropEvent aDropEvent)
+	public void drop(DropEvent aDropEvent)
 	{
-		return false;
 	}
 
 
@@ -129,9 +130,9 @@ public abstract class DragAndDrop
 					{
 						dragEnd(aDragSourceDropEvent.getDropSuccess(), aDragSourceDropEvent.getDragSourceContext().getTransferable().getTransferData(javaSerializedObjectMimeType));
 					}
-					catch (Exception e)
+					catch (UnsupportedFlavorException | IOException e)
 					{
-						e.printStackTrace(Log.out);
+						throw new IllegalStateException(e);
 					}
 				}
 			});
@@ -281,9 +282,9 @@ public abstract class DragAndDrop
 				}
 
 				@Override
-				public void dragEnd(boolean aSuccess, Object aDropValue)
+				public void dragEnd(boolean aSuccess, Object aTransferData)
 				{
-					Log.out.println(aSuccess+" "+aDropValue);
+					Log.out.println(aSuccess+" "+aTransferData);
 				}
 			};
 
@@ -296,14 +297,13 @@ public abstract class DragAndDrop
 				}
 
 				@Override
-				public boolean drop(DropEvent aDropEvent)
+				public void drop(DropEvent aDropEvent)
 				{
 					JLabel label = new JLabel(aDropEvent.getTransferData().toString());
 					label.setLocation(aDropEvent.getDropLocation());
 					label.setSize(100,20);
 					panel.add(label);
 					panel.repaint();
-					return true;
 				}
 			};
 
