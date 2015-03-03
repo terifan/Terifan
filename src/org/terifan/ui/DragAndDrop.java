@@ -110,9 +110,8 @@ public abstract class DragAndDrop
 	 * @param aDropEvent
 	 *   an object containing details about the drop.
 	 */
-	public void transferFinished(boolean aSuccess, Object aDropValue)
+	public void dragEnd(boolean aSuccess, Object aDropValue)
 	{
-		Log.out.println(aSuccess+" "+aDropValue);
 	}
 
 
@@ -128,7 +127,7 @@ public abstract class DragAndDrop
 				{
 					try
 					{
-						transferFinished(aDragSourceDropEvent.getDropSuccess(), aDragSourceDropEvent.getDragSourceContext().getTransferable().getTransferData(javaSerializedObjectMimeType));
+						dragEnd(aDragSourceDropEvent.getDropSuccess(), aDragSourceDropEvent.getDragSourceContext().getTransferable().getTransferData(javaSerializedObjectMimeType));
 					}
 					catch (Exception e)
 					{
@@ -280,6 +279,12 @@ public abstract class DragAndDrop
 				{
 					return tree.getClosestPathForLocation(aDragOrigin.x, aDragOrigin.y).getLastPathComponent().toString();
 				}
+
+				@Override
+				public void dragEnd(boolean aSuccess, Object aDropValue)
+				{
+					Log.out.println(aSuccess+" "+aDropValue);
+				}
 			};
 
 			new DragAndDrop(panel)
@@ -287,13 +292,13 @@ public abstract class DragAndDrop
 				@Override
 				public boolean canDrop(DropEvent aDropEvent)
 				{
-					return !"food".equals(aDropEvent.getTransferData());
+					return !"food".equals(aDropEvent.getTransferData().toString());
 				}
 
 				@Override
 				public boolean drop(DropEvent aDropEvent)
 				{
-					JLabel label = new JLabel("" + aDropEvent.getTransferData());
+					JLabel label = new JLabel(aDropEvent.getTransferData().toString());
 					label.setLocation(aDropEvent.getDropLocation());
 					label.setSize(100,20);
 					panel.add(label);
