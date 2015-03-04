@@ -7,7 +7,7 @@ import java.awt.LayoutManager;
 import java.awt.Rectangle;
 
 
-public class NullLayoutManager implements LayoutManager
+public class NullLayout implements LayoutManager
 {
 	@Override
 	public void addLayoutComponent(String aName, Component aComp)
@@ -46,7 +46,11 @@ public class NullLayoutManager implements LayoutManager
 
 		for (int i = 1; i < aParent.getComponentCount(); i++)
 		{
-			bounds.add(aParent.getComponent(i).getBounds());
+			Component component = aParent.getComponent(i);
+			if (component.isVisible())
+			{
+				bounds.add(component.getBounds());
+			}
 		}
 
 		return new Dimension(bounds.x + bounds.width, bounds.y + bounds.height);

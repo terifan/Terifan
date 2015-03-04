@@ -109,44 +109,44 @@ public class ColumnLayout implements LayoutManager
 
 
 	@Override
-	public void addLayoutComponent(String name, Component comp)
+	public void addLayoutComponent(String aName, Component aComp)
 	{
 	}
 
 
 	@Override
-	public void removeLayoutComponent(Component comp)
+	public void removeLayoutComponent(Component aComp)
 	{
 	}
 
 
 	@Override
-	public Dimension preferredLayoutSize(Container parent)
+	public Dimension preferredLayoutSize(Container aParent)
 	{
-		return computeSize(parent, true, new int[mColumns], null);
+		return computeSize(aParent, true, new int[mColumns], null);
 	}
 
 
 	@Override
-	public Dimension minimumLayoutSize(Container parent)
+	public Dimension minimumLayoutSize(Container aParent)
 	{
-		return computeSize(parent, false, new int[mColumns], null);
+		return computeSize(aParent, false, new int[mColumns], null);
 	}
 
 
 	@Override
-	public void layoutContainer(Container parent)
+	public void layoutContainer(Container aParent)
 	{
-		synchronized (parent.getTreeLock())
+		synchronized (aParent.getTreeLock())
 		{
-			Insets insets = parent.getInsets();
-			int w = parent.getWidth();
-			int h = parent.getHeight();
+			Insets insets = aParent.getInsets();
+			int w = aParent.getWidth();
+			int h = aParent.getHeight();
 
-			int n = parent.getComponentCount();
+			int n = aParent.getComponentCount();
 			int[] widths = new int[mColumns];
 			int[] heights = new int[n / mColumns];
-			Dimension prefSize = computeSize(parent, true, widths, heights);
+			Dimension prefSize = computeSize(aParent, true, widths, heights);
 
 			int extraHeight = mFillVertical ? Math.max(0, (h - prefSize.height) / heights.length) : 0;
 
@@ -172,7 +172,7 @@ public class ColumnLayout implements LayoutManager
 
 				for (int column = 0; column < mColumns; column++, i++)
 				{
-					Component comp = parent.getComponent(i);
+					Component comp = aParent.getComponent(i);
 
 					if (comp.isVisible())
 					{
@@ -208,11 +208,11 @@ public class ColumnLayout implements LayoutManager
 	}
 
 
-	private Dimension computeSize(Container parent, boolean aPreferred, int[] widths, int[] heights)
+	private Dimension computeSize(Container aParent, boolean aPreferred, int[] aWidths, int[] aHeights)
 	{
-		synchronized (parent.getTreeLock())
+		synchronized (aParent.getTreeLock())
 		{
-			int n = parent.getComponentCount();
+			int n = aParent.getComponentCount();
 
 			if ((n % mColumns) != 0)
 			{
@@ -227,7 +227,7 @@ public class ColumnLayout implements LayoutManager
 
 				for (int column = 0; column < mColumns; column++, i++)
 				{
-					Component comp = parent.getComponent(i);
+					Component comp = aParent.getComponent(i);
 
 					if (comp.isVisible())
 					{
@@ -255,13 +255,13 @@ public class ColumnLayout implements LayoutManager
 						}
 
 						h = Math.max(h, d.height);
-						widths[column] = Math.max(widths[column], d.width);
+						aWidths[column] = Math.max(aWidths[column], d.width);
 					}
 				}
 
-				if (heights != null)
+				if (aHeights != null)
 				{
-					heights[row] = h;
+					aHeights[row] = h;
 				}
 
 				height += h;
@@ -273,7 +273,7 @@ public class ColumnLayout implements LayoutManager
 			}
 
 			int width = 0;
-			for (int w : widths)
+			for (int w : aWidths)
 			{
 				if (w > 0 && width > 0)
 				{
@@ -282,7 +282,7 @@ public class ColumnLayout implements LayoutManager
 				width += w;
 			}
 
-			Insets insets = parent.getInsets();
+			Insets insets = aParent.getInsets();
 
 			return new Dimension(width + insets.left + insets.right, height + insets.top + insets.bottom);
 		}
