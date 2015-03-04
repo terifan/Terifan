@@ -256,6 +256,12 @@ public abstract class DragAndDrop
 		}
 
 
+		public <E> E getTransferData(Class<E> aType)
+		{
+			return (E)mTransferData;
+		}
+
+
 		@Override
 		public String toString()
 		{
