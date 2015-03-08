@@ -6,16 +6,13 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.util.Arrays;
-import javax.swing.JComponent;
+import org.terifan.util.log.Log;
 
 
 /**
  * This layout combines a flow layout and grid layout.
- *
- * aaa | bb    | cccc
- * dd  | eeeee | f
  */
-public class FlowLayout implements LayoutManager
+public class ColumnLayout implements LayoutManager
 {
 	private int mHorGap;
 	private int mVerGap;
@@ -27,7 +24,7 @@ public class FlowLayout implements LayoutManager
 	private Dimension[] mColumnMinimumSize;
 
 
-	public FlowLayout(int aColumns, int aHorGap, int aVerGap)
+	public ColumnLayout(int aColumns, int aHorGap, int aVerGap)
 	{
 		if (aColumns < 1)
 		{
@@ -46,7 +43,7 @@ public class FlowLayout implements LayoutManager
 	}
 
 
-	public FlowLayout setColumnMinimumSize(int aColumnIndex, Dimension aDimension)
+	public ColumnLayout setColumnMinimumSize(int aColumnIndex, Dimension aDimension)
 	{
 		mColumnMinimumSize[aColumnIndex] = aDimension;
 		return this;
@@ -59,7 +56,7 @@ public class FlowLayout implements LayoutManager
 	}
 
 
-	public FlowLayout setFillVertical(boolean aFillVertical)
+	public ColumnLayout setFillVertical(boolean aFillVertical)
 	{
 		mFillVertical = aFillVertical;
 		return this;
@@ -72,7 +69,7 @@ public class FlowLayout implements LayoutManager
 	}
 
 
-	public FlowLayout setColumnResizeWeight(int aColumnIndex, double aWeight)
+	public ColumnLayout setColumnResizeWeight(int aColumnIndex, double aWeight)
 	{
 		mColumnResizeWeight[aColumnIndex] = aWeight;
 		return this;
@@ -85,7 +82,7 @@ public class FlowLayout implements LayoutManager
 	}
 
 
-	public FlowLayout setColumnMargin(int aColumnIndex, Insets aInsets)
+	public ColumnLayout setColumnMargin(int aColumnIndex, Insets aInsets)
 	{
 		mColumnMargin[aColumnIndex] = aInsets;
 		return this;
@@ -98,7 +95,7 @@ public class FlowLayout implements LayoutManager
 	}
 
 
-	public FlowLayout setColumnPadding(int aColumnIndex, Insets aInsets)
+	public ColumnLayout setColumnPadding(int aColumnIndex, Insets aInsets)
 	{
 		mColumnPadding[aColumnIndex] = aInsets;
 		return this;
@@ -112,46 +109,46 @@ public class FlowLayout implements LayoutManager
 
 
 	@Override
-	public void addLayoutComponent(String name, Component comp)
+	public void addLayoutComponent(String aName, Component aComp)
 	{
 	}
 
 
 	@Override
-	public void removeLayoutComponent(Component comp)
+	public void removeLayoutComponent(Component aComp)
 	{
 	}
 
 
 	@Override
-	public Dimension preferredLayoutSize(Container parent)
+	public Dimension preferredLayoutSize(Container aParent)
 	{
-		return computeSize(parent, true, new int[mColumns], null);
+		return computeSize(aParent, true, new int[mColumns], null);
 	}
 
 
 	@Override
-	public Dimension minimumLayoutSize(Container parent)
+	public Dimension minimumLayoutSize(Container aParent)
 	{
-		return computeSize(parent, false, new int[mColumns], null);
+		return computeSize(aParent, false, new int[mColumns], null);
 	}
 
 
 	@Override
-	public void layoutContainer(Container parent)
+	public void layoutContainer(Container aParent)
 	{
-		synchronized (parent.getTreeLock())
+		synchronized (aParent.getTreeLock())
 		{
-			Insets insets = parent.getInsets();
-			int w = parent.getWidth();
-			int h = parent.getHeight();
+			Insets insets = aParent.getInsets();
+			int w = aParent.getWidth();
+			int h = aParent.getHeight();
 
+			int n = aParent.getComponentCount();
 			int[] widths = new int[mColumns];
-			int[] heights = new int[parent.getComponentCount() / mColumns];
-			Dimension prefSize = computeSize(parent, true, widths, heights);
+			int[] heights = new int[n / mColumns];
+			Dimension prefSize = computeSize(aParent, true, widths, heights);
 
 			int extraHeight = mFillVertical ? Math.max(0, (h - prefSize.height) / heights.length) : 0;
-			int n = parent.getComponentCount();
 
 			double totalWeight = 0;
 			for (double rw : mColumnResizeWeight)
@@ -175,7 +172,7 @@ public class FlowLayout implements LayoutManager
 
 				for (int column = 0; column < mColumns; column++, i++)
 				{
-					Component comp = parent.getComponent(i);
+					Component comp = aParent.getComponent(i);
 
 					if (comp.isVisible())
 					{
@@ -211,16 +208,17 @@ public class FlowLayout implements LayoutManager
 	}
 
 
-	private Dimension computeSize(Container parent, boolean aPreferred, int[] widths, int[] heights)
+	private Dimension computeSize(Container aParent, boolean aPreferred, int[] aWidths, int[] aHeights)
 	{
-		synchronized (parent.getTreeLock())
+		synchronized (aParent.getTreeLock())
 		{
-			if ((parent.getComponentCount() % mColumns) != 0)
+			int n = aParent.getComponentCount();
+
+			if ((n % mColumns) != 0)
 			{
-				throw new IllegalStateException("Number of items must be dividable by the number of columns: item count=" + parent.getComponentCount() + ", columns=" + mColumns);
+				throw new IllegalStateException("Number of items must be dividable by the number of columns: item count=" + n + ", columns=" + mColumns);
 			}
 
-			int n = parent.getComponentCount();
 			int height = 0;
 
 			for (int row = 0, i = 0; i < n; row++)
@@ -229,21 +227,11 @@ public class FlowLayout implements LayoutManager
 
 				for (int column = 0; column < mColumns; column++, i++)
 				{
-					Component comp = parent.getComponent(i);
+					Component comp = aParent.getComponent(i);
 
 					if (comp.isVisible())
 					{
 						Dimension d = aPreferred ? comp.getPreferredSize() : comp.getMinimumSize();
-
-//						if (comp instanceof JComponent)
-//						{
-//							Insets z = ((JComponent)comp).getInsets();
-//							if (z != null)
-//							{
-//								d.width += z.left + z.right;
-//								d.height += z.top + z.bottom;
-//							}
-//						}
 
 						Insets m = mColumnMargin[column];
 						if (m != null)
@@ -267,13 +255,13 @@ public class FlowLayout implements LayoutManager
 						}
 
 						h = Math.max(h, d.height);
-						widths[column] = Math.max(widths[column], d.width);
+						aWidths[column] = Math.max(aWidths[column], d.width);
 					}
 				}
 
-				if (heights != null)
+				if (aHeights != null)
 				{
-					heights[row] = h;
+					aHeights[row] = h;
 				}
 
 				height += h;
@@ -285,7 +273,7 @@ public class FlowLayout implements LayoutManager
 			}
 
 			int width = 0;
-			for (int w : widths)
+			for (int w : aWidths)
 			{
 				if (w > 0 && width > 0)
 				{
@@ -294,7 +282,7 @@ public class FlowLayout implements LayoutManager
 				width += w;
 			}
 
-			Insets insets = parent.getInsets();
+			Insets insets = aParent.getInsets();
 
 			return new Dimension(width + insets.left + insets.right, height + insets.top + insets.bottom);
 		}
