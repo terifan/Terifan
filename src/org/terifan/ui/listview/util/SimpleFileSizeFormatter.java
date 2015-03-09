@@ -1,5 +1,6 @@
 package org.terifan.ui.listview.util;
 
+import org.terifan.ui.listview.util.Formatter;
 
 public class SimpleFileSizeFormatter implements Formatter<Long>
 {
