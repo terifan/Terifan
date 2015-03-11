@@ -24,12 +24,10 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.MemoryImageSource;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -112,7 +110,7 @@ public class ImagePane extends JPanel
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace(System.out);
+					e.printStackTrace(Log.out);
 				}
 			}
 		}

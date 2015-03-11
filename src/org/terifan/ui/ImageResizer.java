@@ -38,7 +38,7 @@ public class ImageResizer
 		boolean opaque = aSourceImage.getTransparency() == Transparency.OPAQUE;
 		int type = opaque ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
 
-		Log.out.println("/////"+aDstWidth+" "+aDstHeight+" "+aSourceImage.getWidth()+" " +aSourceImage.getHeight());
+//		Log.out.println("/////"+aDstWidth+" "+aDstHeight+" "+aSourceImage.getWidth()+" " +aSourceImage.getHeight());
 		if (aDstWidth > aSourceImage.getWidth() || aDstHeight > aSourceImage.getHeight())
 		{
 			aSourceImage = resizeDown(aSourceImage, aDstWidth, aDstHeight, InterpolationMode.BICUBIC, type);
@@ -52,7 +52,7 @@ public class ImageResizer
 		int srcWidth = aSourceImage.getWidth();
 		int srcHeight = aSourceImage.getHeight();
 
-		Log.out.println(aSourceImage.getWidth()+" "+aSourceImage.getHeight());
+//		Log.out.println(aSourceImage.getWidth()+" "+aSourceImage.getHeight());
 
 		BufferedImage outputImage = new BufferedImage(aDstWidth, aDstHeight, type);
 
