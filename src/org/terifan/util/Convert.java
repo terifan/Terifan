@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import org.terifan.io.ByteArray;
 import org.terifan.util.bundle.Bundle;
-import org.terifan.util.bundle.BundleExternalizable;
+import org.terifan.util.bundle.Bundlable;
 import org.terifan.util.log.Log;
 
 
@@ -685,76 +685,6 @@ public class Convert
 			return q;
 		}
 		throw new IllegalArgumentException("Failed to convert object to int array: type: " + type);
-	}
-
-
-	public static <T> T[] asArray(Class<T> aArrayType, Object aObject)
-	{
-//		Log.out.println(aArrayType);
-
-		if (List.class.isAssignableFrom(aObject.getClass()))
-		{
-			List list = (List)aObject;
-
-			Object array = Array.newInstance(aArrayType, list.size());
-
-			for (int i = 0; i < list.size(); i++)
-			{
-				if (aArrayType == Integer.class)
-				{
-					Array.set(array, i, ((Number)list.get(i)).intValue());
-				}
-				else if (BundleExternalizable.class.isAssignableFrom(aArrayType))
-				{
-					try
-					{
-						BundleExternalizable be = (BundleExternalizable)aArrayType.newInstance();
-						Bundle b = (Bundle)list.get(i);
-						b.getObject(be);
-
-						Array.set(array, i, be);
-					}
-					catch (Exception e)
-					{
-						e.printStackTrace(Log.out);
-						throw new RuntimeException(e);
-					}
-				}
-				else
-				{
-					throw new IllegalStateException("Unsupported type: " + aArrayType);
-				}
-			}
-			return (T[])array;
-		}
-
-		throw new IllegalStateException("Unsupported type: " + aArrayType);		
-
-//		ArrayList<T> list = new ArrayList<>();
-
-//		 && (fieldType.getComponentType() == Integer.class || fieldType.getComponentType() == Integer.TYPE)
-
-//		return null;
-	}
-
-
-	public static <T> List<T> asList(Class<T> aListType, Object aObject)
-	{
-		if (List.class.isAssignableFrom(aObject.getClass()))
-		{
-			aObject = ((List)aObject).toArray();
-		}
-
-		ArrayList<T> list = new ArrayList<>();
-		for (int i = 0; i < Array.getLength(aObject); i++)
-		{
-			if (aListType == Integer.class)
-			{
-				list.add((T)(Integer)((Number)Array.get(aObject, i)).intValue());
-			}
-		}
-
-		return list;
 	}
 
 

@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import org.terifan.util.Convert;
-import org.terifan.util.bundle.BundleExternalizable.Bundlable;
 import org.terifan.util.log.Log;
 
 
@@ -171,6 +170,205 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			return (ArrayList<Bundle>)typeWarning(aKey, o, "ArrayList<Bundle>", null, e);
 		}
 	}
+
+
+	public Bundlable getBundlable(String aKey, Bundlable aInstance) throws IOException
+	{
+		aInstance.readExternal(getBundle(aKey));
+
+		return aInstance;
+	}
+
+
+	public <T extends Bundlable> T getBundlable(String aKey, Class<T> aType) throws IOException
+	{
+		try
+		{
+			Bundle bundle = getBundle(aKey);
+			
+			if (bundle == null)
+			{
+				return null;
+			}
+			
+			T instance = aType.newInstance();
+
+			instance.readExternal(bundle);
+
+			return (T)instance;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+	}
+
+
+	public <T extends Bundlable> T[] getBundlableArray(String aKey, Class<T> aType) throws IOException
+	{
+		try
+		{
+			Bundle[] bundles = getBundleArray(aKey);
+
+			if (bundles == null)
+			{
+				return null;
+			}
+
+			Object items = Array.newInstance(aType, bundles.length);
+
+			for (int i = 0; i < bundles.length; i++)
+			{
+				T instance = aType.newInstance();
+
+				instance.readExternal(bundles[i]);
+
+				Array.set(items, i, (T)instance);
+			}
+
+			return (T[])items;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+	}
+
+
+	public <T extends Bundlable> T[] getBundlableArray(String aKey, Class<T> aType, BundlableObjectFactory<T> aFactory) throws IOException
+	{
+		Bundle[] bundles = getBundleArray(aKey);
+
+		if (bundles == null)
+		{
+			return null;
+		}
+
+		Object items = Array.newInstance(aType, bundles.length);
+
+		for (int i = 0; i < bundles.length; i++)
+		{
+			T instance = aFactory.newInstance();
+
+			instance.readExternal(bundles[i]);
+
+			Array.set(items, i, (T)instance);
+		}
+
+		return (T[])items;
+	}
+
+
+	public <T extends Bundlable> ArrayList<T> getBundlableArrayList(String aKey, Class<T> aType) throws IOException
+	{
+		try
+		{
+			ArrayList<Bundle> bundles = getBundleArrayList(aKey);
+
+			if (bundles == null)
+			{
+				return null;
+			}
+
+			ArrayList<T> items = new ArrayList<>();
+			
+			for (Bundle bundle : bundles)
+			{
+				T instance = aType.newInstance();
+
+				instance.readExternal(bundle);
+
+				items.add((T)instance);
+			}
+
+			return items;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new IOException(e);
+		}
+	}
+
+
+	public <T extends Bundlable> ArrayList<T> getBundlableArrayList(String aKey, BundlableObjectFactory<T> aFactory) throws IOException
+	{
+		ArrayList<Bundle> bundles = getBundleArrayList(aKey);
+
+		if (bundles == null)
+		{
+			return null;
+		}
+
+		ArrayList<T> items = new ArrayList<>();
+
+		for (Bundle bundle : bundles)
+		{
+			T instance = aFactory.newInstance();
+
+			instance.readExternal(bundle);
+
+			items.add((T)instance);
+		}
+
+		return items;
+	}
+
+
+//	/**
+//	 * Returns the value associated with the given key, or aDefaultValue if no mapping of the desired type exists for the given key.
+//	 */
+//	public Bundle getBundle(String aKey, Bundle aDefaultValue)
+//	{
+//		Object o = mValues.get(aKey);
+//		if (o == null)
+//		{
+//			return aDefaultValue;
+//		}
+//		try
+//		{
+//			return ((Bundle)o).setStrict(mStrict);
+//		}
+//		catch (ClassCastException e)
+//		{
+//			return (Bundle)typeWarning(aKey, o, "Bundle", aDefaultValue, e);
+//		}
+//	}
+//
+//
+//	/**
+//	 * Returns the value associated with the given key, or null if no mapping of the desired type exists for the given key or a null value
+//	 * is explicitly associated with the key.
+//	 */
+//	public Bundle[] getBundleArray(String aKey)
+//	{
+//		Object o = mValues.get(aKey);
+//		try
+//		{
+//			return (Bundle[])o;
+//		}
+//		catch (ClassCastException e)
+//		{
+//			return (Bundle[])typeWarning(aKey, o, "Bundle[]", null, e);
+//		}
+//	}
+//
+//
+//	/**
+//	 * Returns the value associated with the given key, or null if no mapping of the desired type exists for the given key or a null value
+//	 * is explicitly associated with the key.
+//	 */
+//	public ArrayList<Bundle> getBundleArrayList(String aKey)
+//	{
+//		Object o = mValues.get(aKey);
+//		try
+//		{
+//			return (ArrayList<Bundle>)o;
+//		}
+//		catch (ClassCastException e)
+//		{
+//			return (ArrayList<Bundle>)typeWarning(aKey, o, "ArrayList<Bundle>", null, e);
+//		}
+//	}
 
 
 	/**
@@ -946,6 +1144,42 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	}
 
 
+	public Bundle putBundlable(String aKey, Bundlable aValue) throws IOException
+	{
+		Bundle bundle = new Bundle();
+		aValue.writeExternal(bundle);
+		put(aKey, bundle);
+		return this;
+	}
+
+
+	public Bundle putBundlableArray(String aKey, Bundlable... aValues) throws IOException
+	{
+		Bundle[] bundles = new Bundle[aValues.length];
+		for (int i = 0; i < aValues.length; i++)
+		{
+			bundles[i] = new Bundle();
+			aValues[i].writeExternal(bundles[i]);
+		}
+		put(aKey, bundles);
+		return this;
+	}
+
+
+	public Bundle putBundlableArrayList(String aKey, ArrayList<? extends Bundlable> aValues) throws IOException
+	{
+		ArrayList<Bundle> bundles = new ArrayList<>(aValues.size());
+		for (Bundlable value : aValues)
+		{
+			Bundle bundle = new Bundle();
+			value.writeExternal(bundle);
+			bundles.add(bundle);
+		}
+		put(aKey, bundles);
+		return this;
+	}
+
+
 	/**
 	 * Inserts a Boolean value into the mapping of this Bundle, replacing any existing value for the given key.
 	 */
@@ -1422,277 +1656,5 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			out.writeUTF(key);
 			out.writeObject(mValues.get(key));
 		}
-	}
-
-
-	public Bundle getObject(BundleExternalizable aObject) throws IOException
-	{
-		bundleToObject(aObject);
-		aObject.readExternal(this);
-		return this;
-	}
-
-
-	public <T extends BundleExternalizable> T getObject(Class<T> aType, String aName) throws IOException
-	{
-		try
-		{
-			T instance = aType.newInstance();
-			Bundle bundle = getBundle(aName);
-			if (bundle == null)
-			{
-				throw new IllegalArgumentException("Bundle not found: name: " + aName);
-			}
-			bundle.bundleToObject(instance);
-			instance.readExternal(bundle);
-			return instance;
-		}
-		catch (InstantiationException | IllegalAccessException e)
-		{
-			throw new IOException(e);
-		}
-	}
-
-
-	public <T> T[] getObjectArray(Class aType, String aName) throws IOException
-	{
-		try
-		{
-			ArrayList<Bundle> bundleArray = getBundleArrayList(aName);
-			if (bundleArray == null)
-			{
-				return null;
-			}
-			Object array = Array.newInstance(aType, bundleArray.size());
-			for (int i = 0; i < bundleArray.size(); i++)
-			{
-				BundleExternalizable instance = (BundleExternalizable)aType.newInstance();
-				Bundle bundle = bundleArray.get(i);
-				bundle.bundleToObject(instance);
-				instance.readExternal(bundle);
-				Array.set(array, i, instance);
-			}
-			return (T[])array;
-		}
-		catch (InstantiationException | IllegalAccessException e)
-		{
-			throw new IOException(e);
-		}
-	}
-
-
-	public <T extends BundleExternalizable> ArrayList<T> getObjectArrayList(Class<T> aType, String aName) throws IOException
-	{
-		ArrayList<Bundle> bundleArrayList = getBundleArrayList(aName);
-
-		if (bundleArrayList == null)
-		{
-			return null;
-		}
-
-		try
-		{
-			ArrayList<T> list = new ArrayList<>();
-			for (Bundle bundle : bundleArrayList)
-			{
-				T instance = aType.newInstance();
-				bundle.bundleToObject(instance);
-				instance.readExternal(bundle);
-				list.add(instance);
-			}
-			return list;
-		}
-		catch (InstantiationException | IllegalAccessException e)
-		{
-			throw new IOException(e);
-		}
-	}
-
-
-	public Bundle putObject(BundleExternalizable aObject) throws IOException
-	{
-		objectToBundle(aObject);
-		aObject.writeExternal(this);
-		return this;
-	}
-
-
-	public Bundle putObject(String aName, BundleExternalizable aObject) throws IOException
-	{
-		Bundle bundle = new Bundle();
-		bundle.objectToBundle(aObject);
-		aObject.writeExternal(bundle);
-		putBundle(aName, bundle);
-		return this;
-	}
-
-
-	public Bundle putObjectArray(String aName, BundleExternalizable[] aArray) throws IOException
-	{
-		if (aArray != null)
-		{
-			Bundle[] array = new Bundle[aArray.length];
-			for (int i = 0; i < array.length; i++)
-			{
-				Bundle bundle = new Bundle();
-				array[i] = bundle;
-
-				BundleExternalizable item = aArray[i];
-
-				if (item != null)
-				{
-					bundle.objectToBundle(item);
-					item.writeExternal(bundle);
-				}
-			}
-			putBundleArray(aName, array);
-		}
-		return this;
-	}
-
-
-	public Bundle putObjectArrayList(String aName, ArrayList<? extends BundleExternalizable> aList) throws IOException
-	{
-		ArrayList<Bundle> list = new ArrayList<>(aList.size());
-		for (BundleExternalizable entry : aList)
-		{
-			Bundle bundle = new Bundle();
-			list.add(bundle);
-			bundle.objectToBundle(entry);
-			entry.writeExternal(bundle);
-		}
-		putBundleArrayList(aName, list);
-		return this;
-	}
-
-
-	private void bundleToObject(BundleExternalizable aObject)
-	{
-		for (Field field : aObject.getClass().getDeclaredFields())
-		{
-			try
-			{
-				field.setAccessible(true);
-				if (field.getAnnotation(Bundlable.class) != null)
-				{
-					updateField(field, aObject);
-				}
-			}
-			catch (Exception e)
-			{
-				throw new IllegalArgumentException("Error updating field: " + field, e);
-			}
-		}
-	}
-
-
-	private void objectToBundle(BundleExternalizable aObject) throws IOException
-	{
-		try
-		{
-			for (Field field : aObject.getClass().getDeclaredFields())
-			{
-				field.setAccessible(true);
-				if (field.getAnnotation(Bundlable.class) != null)
-				{
-					putField(field, aObject);
-				}
-			}
-		}
-		catch (SecurityException | IllegalAccessException | ClassNotFoundException e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-	}
-
-
-	private void updateField(Field aField, BundleExternalizable aObject) throws IllegalAccessException, ClassNotFoundException, InstantiationException, IOException
-	{
-		String fieldName = aField.getName();
-		Object fieldValue = get(fieldName);
-		Class fieldType = aField.getType();
-
-		if (fieldValue == null)
-		{
-			if (containsKey(fieldName) && !fieldType.isPrimitive())
-			{
-				aField.set(aObject, fieldValue);
-			}
-		}
-		else if (fieldValue instanceof Bundle)
-		{
-			BundleExternalizable instance = (BundleExternalizable)aField.get(aObject);
-			if (instance == null)
-			{
-				instance = (BundleExternalizable)fieldType.newInstance();
-			}
-			Bundle bundle = (Bundle)fieldValue;
-			instance.readExternal(bundle);
-			bundle.bundleToObject(instance);
-			aField.set(aObject, instance);
-		}
-		else if (fieldType.isArray())
-		{
-			aField.set(aObject, Convert.asArray(fieldType.getComponentType(), fieldValue));
-		}
-		else if (List.class.isAssignableFrom(fieldType))
-		{
-			aField.set(aObject, Convert.asList(getParameterizedType(aField, 0), fieldValue));
-		}
-		else if (aField.getType() == Integer.class || aField.getType() == Integer.TYPE)
-		{
-			aField.set(aObject, ((Number)fieldValue).intValue());
-		}
-		else
-		{
-			aField.set(aObject, fieldValue);
-		}
-	}
-
-
-	private void putField(Field aField, Object aObject) throws IOException, ClassNotFoundException, IllegalAccessException
-	{
-		Object value = aField.get(aObject);
-		Class fieldType = aField.getType();
-		String name = aField.getName();
-
-		if (isSupportedType(fieldType) 
-			|| fieldType.isArray() && isSupportedType(fieldType.getComponentType()) 
-			|| ArrayList.class.isAssignableFrom(fieldType) && isSupportedType(getParameterizedType(aField, 0)))
-		{
-			put(name, value);
-		}
-		else if (BundleExternalizable.class.isAssignableFrom(fieldType))
-		{
-			BundleExternalizable externalizable = (BundleExternalizable)value;
-			externalizable.writeExternal(this);
-			putObject(name, externalizable);
-		}
-		else if (fieldType.isArray() && BundleExternalizable.class.isAssignableFrom(fieldType.getComponentType()))
-		{
-			putObjectArray(name, (BundleExternalizable[])value);
-		}
-		else if (ArrayList.class.isAssignableFrom(fieldType) && BundleExternalizable.class.isAssignableFrom(getParameterizedType(aField, 0)))
-		{
-			putObjectArrayList(name, (ArrayList<BundleExternalizable>)value);
-		}
-		else
-		{
-			throw new IllegalArgumentException("Unsupported type: " + aField);
-		}
-	}
-
-
-	private static boolean isSupportedType(Class aFieldType)
-	{
-		return aFieldType == Boolean.class || aFieldType == Boolean.TYPE || aFieldType == Short.class || aFieldType == Short.TYPE || aFieldType == Character.class || aFieldType == Character.TYPE || aFieldType == Integer.class || aFieldType == Integer.TYPE || aFieldType == Long.class || aFieldType == Long.TYPE || aFieldType == Float.class || aFieldType == Float.TYPE || aFieldType == Double.class || aFieldType == Double.TYPE || aFieldType == String.class || aFieldType == Date.class || aFieldType == Bundle.class;
-	}
-
-
-	private Class getParameterizedType(Field aField, int aIndex) throws ClassNotFoundException
-	{
-		ParameterizedType paramType = (ParameterizedType)aField.getGenericType();
-		Class valueType = Class.forName(paramType.getActualTypeArguments()[aIndex].getTypeName());
-		return valueType;
 	}
 }
