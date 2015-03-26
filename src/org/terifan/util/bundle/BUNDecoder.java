@@ -513,6 +513,29 @@ public class BUNDecoder
 			Bundle unmarshaled = new BUNDecoder().unmarshal(s);
 
 			Log.out.println(unmarshaled);
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			bundle.writeExternal(oos);
+			oos.close();
+
+			bundle = new Bundle();
+			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			bundle.readExternal(ois);
+			ois.close();
+
+
+
+//			baos = new ByteArrayOutputStream();
+//			new BinaryEncoder().marshal(bundle, baos);
+//
+//			Debug.hexDump(baos.toByteArray());
+//
+//			bais = new ByteArrayInputStream(baos.toByteArray());
+//			Bundle unbundled = new BinaryDecoder().unmarshal(bais);
+//
+//			Log.out.println(unbundled);
 		}
 		catch (Throwable e)
 		{
