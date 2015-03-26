@@ -4,15 +4,13 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Reader;
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -185,12 +183,12 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 		try
 		{
 			Bundle bundle = getBundle(aKey);
-			
+
 			if (bundle == null)
 			{
 				return null;
 			}
-			
+
 			T instance = aType.newInstance();
 
 			instance.readExternal(bundle);
@@ -271,7 +269,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 			}
 
 			ArrayList<T> items = new ArrayList<>();
-			
+
 			for (Bundle bundle : bundles)
 			{
 				T instance = aType.newInstance();
@@ -1640,9 +1638,53 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
 	{
 		int size = in.readInt();
+
 		for (int i = 0; i < size; i++)
 		{
-			put(in.readUTF(), in.readObject());
+			String key = in.readUTF();
+
+			Object value;
+
+			switch (in.read())
+			{
+				case 'S':
+					value = in.readUTF();
+					break;
+				case 'x':
+					value = in.readBoolean();
+					break;
+				case 'b':
+					value = in.readByte();
+					break;
+				case 's':
+					value = in.readShort();
+					break;
+				case 'c':
+					value = in.readChar();
+					break;
+				case 'i':
+					value = in.readInt();
+					break;
+				case 'l':
+					value = in.readLong();
+					break;
+				case 'f':
+					value = in.readFloat();
+					break;
+				case 'd':
+					value = in.readDouble();
+					break;
+				case 'n':
+					value = null;
+					break;
+				case 'O':
+					value = in.readObject();
+					break;
+				default:
+					throw new IOException();
+			}
+
+			put(key, value);
 		}
 	}
 
@@ -1651,10 +1693,67 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	public void writeExternal(ObjectOutput out) throws IOException
 	{
 		out.writeInt(size());
+
 		for (String key : this)
 		{
 			out.writeUTF(key);
-			out.writeObject(mValues.get(key));
+
+			Object value = mValues.get(key);
+
+			if (value instanceof String)
+			{
+				out.write('S');
+				out.writeUTF((String)value);
+			}
+			else if (value instanceof Boolean)
+			{
+				out.write('x');
+				out.writeBoolean((Boolean)value);
+			}
+			else if (value instanceof Byte)
+			{
+				out.write('b');
+				out.writeByte((Byte)value);
+			}
+			else if (value instanceof Short)
+			{
+				out.write('s');
+				out.writeShort((Short)value);
+			}
+			else if (value instanceof Character)
+			{
+				out.write('c');
+				out.writeChar((Character)value);
+			}
+			else if (value instanceof Integer)
+			{
+				out.write('i');
+				out.writeInt((Integer)value);
+			}
+			else if (value instanceof Long)
+			{
+				out.write('l');
+				out.writeLong((Long)value);
+			}
+			else if (value instanceof Float)
+			{
+				out.write('f');
+				out.writeFloat((Float)value);
+			}
+			else if (value instanceof Double)
+			{
+				out.write('d');
+				out.writeDouble((Double)value);
+			}
+			else if (value == null)
+			{
+				out.write('n');
+			}
+			else
+			{
+				out.write('O');
+				out.writeObject(value);
+			}
 		}
 	}
 }

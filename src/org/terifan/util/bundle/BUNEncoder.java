@@ -5,10 +5,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import org.terifan.util.log.Log;
 
 
-public class JSONEncoder
+public class BUNEncoder
 {
 	private SimpleDateFormat mDateFormatter;
 	private int mIndent;
@@ -59,19 +63,8 @@ public class JSONEncoder
 
 		if (!aBundle.isEmpty())
 		{
+			boolean simple = isSimple(aBundle);
 			boolean first = true;
-			boolean simple = true;
-
-			for (String key : aBundle.keySet())
-			{
-				Object value = aBundle.get(key);
-				FieldType fieldType = FieldType.valueOf(value);
-				if (value != null && (fieldType == FieldType.BUNDLE || value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())))
-				{
-					simple = false;
-					break;
-				}
-			}
 
 			if (!simple)
 			{
@@ -81,13 +74,12 @@ public class JSONEncoder
 
 			for (String key : aBundle.keySet())
 			{
-				if (key.contains("\""))
+				if (key.contains("\"") || key.contains("'"))
 				{
 					throw new IOException("Name contains illegal character: " + key);
 				}
 
 				Object value = aBundle.get(key);
-				FieldType fieldType = FieldType.valueOf(value);
 
 				if (!first)
 				{
@@ -107,37 +99,32 @@ public class JSONEncoder
 				}
 				first = false;
 
-				mAppendable.append("\""+key+"\": ");
-
 				if (value == null)
 				{
+					mAppendable.append("\"").append(key).append("\": ");
 					mAppendable.append("null");
 				}
 				else
 				{
 					Class<? extends Object> cls = value.getClass();
+					boolean isList = List.class.isAssignableFrom(cls);
 
-					if (cls.isArray() || List.class.isAssignableFrom(cls))
+					if (cls.isArray() || isList)
 					{
-						if (List.class.isAssignableFrom(cls))
+						mAppendable.append("\"").append(key).append("\": ");
+						if (isList)
 						{
 							value = ((List)value).toArray();
+							mAppendable.append("<");
 						}
-						mAppendable.append("[");
+						else
+						{
+							mAppendable.append("[");
+						}
 						int len = Array.getLength(value);
 						if (len > 0)
 						{
-							boolean simpleArray = true;
-							for (int i = 0; i < len; i++)
-							{
-								Object v = Array.get(value, i);
-								fieldType = FieldType.valueOf(v);
-								if (v != null && (fieldType == FieldType.BUNDLE || v.getClass().isArray() || List.class.isAssignableFrom(v.getClass())))
-								{
-									simpleArray = false;
-									break;
-								}
-							}
+							boolean simpleArray = isSimple(len, value);
 
 							if (!simpleArray)
 							{
@@ -161,7 +148,7 @@ public class JSONEncoder
 								{
 									indent();
 								}
-								writeValue(Array.get(value, i), fieldType);
+								writeValue(Array.get(value, i));
 							}
 							if (!simpleArray)
 							{
@@ -170,11 +157,12 @@ public class JSONEncoder
 								indent();
 							}
 						}
-						mAppendable.append("]");
+						mAppendable.append(isList ? ">" : "]");
 					}
 					else
 					{
-						writeValue(value, fieldType);
+						mAppendable.append("\"").append(key).append("\": ");
+						writeValue(value);
 					}
 				}
 			}
@@ -190,7 +178,40 @@ public class JSONEncoder
 	}
 
 
-	private void writeValue(Object aValue, FieldType aFieldType) throws IOException
+	private boolean isSimple(int aLen, Object aValue) throws ArrayIndexOutOfBoundsException, IllegalArgumentException
+	{
+		boolean simpleArray = true;
+		for (int i = 0; i < aLen; i++)
+		{
+			Object v = Array.get(aValue, i);
+			if (v != null && (v instanceof Bundle || v.getClass().isArray() || List.class.isAssignableFrom(v.getClass())))
+			{
+				simpleArray = false;
+				break;
+			}
+		}
+		return simpleArray;
+	}
+
+
+	private boolean isSimple(Bundle aBundle)
+	{
+		boolean simple = true;
+		for (String key : aBundle.keySet())
+		{
+			Object value = aBundle.get(key);
+			FieldType fieldType = FieldType.valueOf(value);
+			if (value != null && (fieldType == FieldType.BUNDLE || value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())))
+			{
+				simple = false;
+				break;
+			}
+		}
+		return simple;
+	}
+
+
+	private void writeValue(Object aValue) throws IOException
 	{
 		if (aValue == null)
 		{
@@ -198,27 +219,62 @@ public class JSONEncoder
 			return;
 		}
 
-		switch (aFieldType)
+		if (aValue instanceof String)
 		{
-			case BUNDLE:
-				writeBundle((Bundle)aValue);
-				break;
-			case STRING:
-				mAppendable.append("\"" + escapeString(aValue.toString()) + "\"");
-				break;
-			case DATE:
-				if (mDateFormatter == null)
-				{
-					mDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				}
-				mAppendable.append("\"" + mDateFormatter.format(aValue) + "\"");
-				break;
-			case CHAR:
-				mAppendable.append("\"" + (int)(Character)aValue + "\"");
-				break;
-			default:
-				mAppendable.append(aValue.toString());
-				break;
+			mAppendable.append("\"").append(escapeString(aValue.toString())).append("\"");
+		}
+		else if (aValue instanceof Integer)
+		{
+			mAppendable.append(aValue.toString());
+		}
+		else if (aValue instanceof Double)
+		{
+			String v = aValue.toString();
+			if (!v.contains("."))
+			{
+				v += ".0";
+			}
+			mAppendable.append(v);
+		}
+		else if (aValue instanceof Long)
+		{
+			mAppendable.append(aValue + "L");
+		}
+		else if (aValue instanceof Float)
+		{
+			mAppendable.append(aValue + "f");
+		}
+		else if (aValue instanceof Character)
+		{
+			mAppendable.append((int)(Character)aValue + "c");
+		}
+		else if (aValue instanceof Short)
+		{
+			mAppendable.append(aValue + "s");
+		}
+		else if (aValue instanceof Byte)
+		{
+			mAppendable.append(aValue + "b");
+		}
+		else if (aValue instanceof Boolean)
+		{
+			mAppendable.append(aValue.toString());
+		}
+		else if (aValue instanceof Bundle)
+		{
+			writeBundle((Bundle)aValue);
+		}
+		else if (aValue instanceof Date)
+		{
+			if (mDateFormatter == null)
+			{
+				mDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			}
+			mAppendable.append("#").append(mDateFormatter.format(aValue)).append("#");
+		}
+		else
+		{
+			throw new IllegalArgumentException("Bad type: " + aValue.getClass());
 		}
 	}
 
