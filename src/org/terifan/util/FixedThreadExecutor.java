@@ -24,8 +24,8 @@ public class FixedThreadExecutor implements AutoCloseable
 
 
 	/**
-	 * 
-	 * @param aThreads 
+	 *
+	 * @param aThreads
 	 *   number of threads expressed as a number between 0 and 1 out of total available CPUs
 	 */
 	public FixedThreadExecutor(float aThreads)
@@ -33,7 +33,7 @@ public class FixedThreadExecutor implements AutoCloseable
 		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * (aThreads - (int)(aThreads - 0.000001)))));
-		
+
 		init();
 	}
 
