@@ -1144,8 +1144,16 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	public Bundle putBundlable(String aKey, Bundlable aValue) throws IOException
 	{
-		Bundle bundle = new Bundle();
-		aValue.writeExternal(bundle);
+		Bundle bundle;
+		if (aValue == null)
+		{
+			bundle = null;
+		}
+		else
+		{
+			bundle = new Bundle();
+			aValue.writeExternal(bundle);
+		}
 		put(aKey, bundle);
 		return this;
 	}
@@ -1153,12 +1161,21 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	public Bundle putBundlableArray(String aKey, Bundlable... aValues) throws IOException
 	{
-		Bundle[] bundles = new Bundle[aValues.length];
-		for (int i = 0; i < aValues.length; i++)
+		Bundle[] bundles;
+
+		if (aValues == null)
 		{
-			bundles[i] = new Bundle();
-			aValues[i].writeExternal(bundles[i]);
+			bundles = null;
 		}
+		else
+		{
+			bundles = new Bundle[aValues.length];
+			for (int i = 0; i < aValues.length; i++)
+			{
+				bundles[i] = new Bundle();
+				aValues[i].writeExternal(bundles[i]);
+			}
+		}		
 		put(aKey, bundles);
 		return this;
 	}
@@ -1166,12 +1183,21 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	public Bundle putBundlableArrayList(String aKey, ArrayList<? extends Bundlable> aValues) throws IOException
 	{
-		ArrayList<Bundle> bundles = new ArrayList<>(aValues.size());
-		for (Bundlable value : aValues)
+		ArrayList<Bundle> bundles;
+
+		if (aValues == null)
 		{
-			Bundle bundle = new Bundle();
-			value.writeExternal(bundle);
-			bundles.add(bundle);
+			bundles = null;
+		}
+		else
+		{
+			bundles = new ArrayList<>(aValues.size());
+			for (Bundlable value : aValues)
+			{
+				Bundle bundle = new Bundle();
+				value.writeExternal(bundle);
+				bundles.add(bundle);
+			}
 		}
 		put(aKey, bundles);
 		return this;
