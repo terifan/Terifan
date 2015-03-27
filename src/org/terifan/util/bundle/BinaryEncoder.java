@@ -5,11 +5,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import org.terifan.util.Convert;
 import org.terifan.io.BitOutputStream;
 import org.terifan.io.ByteBufferOutputStream;
@@ -17,35 +15,12 @@ import org.terifan.io.ByteBufferOutputStream;
 
 public class BinaryEncoder
 {
-	private TreeSet<String> mKnownKeys;
-	private TreeMap<String,Integer> mBundleKeys;
+	private TreeMap<String,Integer> mKeys;
 	private BitOutputStream mOutput;
 
 
 	public BinaryEncoder()
 	{
-		mKnownKeys = new TreeSet<>();
-	}
-
-
-	/**
-	 * Add predetermined key names to minimize the size of the encoded data. The same keys must be provided when decoding the encoded message.
-	 *
-	 * Note: The list can include keys not found in the Bundle.
-	 *
-	 * @param aKeys
-	 *   a list of key names
-	 * @return
-	 *   this instance
-	 */
-	public BinaryEncoder addKeys(String... aKeys)
-	{
-		if (aKeys != null)
-		{
-			mKnownKeys.addAll(Arrays.asList(aKeys));
-		}
-
-		return this;
 	}
 
 
@@ -66,25 +41,7 @@ public class BinaryEncoder
 	public void marshal(Bundle aBundle, OutputStream aOutputStream) throws IOException
 	{
 		mOutput = new BitOutputStream(aOutputStream);
-
-		mBundleKeys = new TreeMap<>();
-
-		for (String key : mKnownKeys)
-		{
-			mBundleKeys.put(key, mBundleKeys.size());
-		}
-		for (String key : collectKeys(aBundle, new TreeSet<>()))
-		{
-			if (!mBundleKeys.containsKey(key))
-			{
-				byte[] buffer = Convert.encodeUTF8(key);
-				mOutput.writeVariableInt(buffer.length, 7, 0, false);
-				mOutput.write(buffer);
-				mBundleKeys.put(key, mBundleKeys.size());
-			}
-		}
-
-		mOutput.writeVariableInt(0, 7, 0, false); // terminator
+		mKeys = new TreeMap<>();
 
 		writeBundle(aBundle);
 
@@ -92,94 +49,80 @@ public class BinaryEncoder
 	}
 
 
-	private TreeSet<String> collectKeys(Bundle aBundle, TreeSet<String> aKeys) throws IOException
-	{
-		if (aBundle != null)
-		{
-			for (String key : aBundle)
-			{
-				Object value = aBundle.get(key);
-				FieldType fieldType = FieldType.valueOf(value);
-
-				if (fieldType != null)
-				{
-					aKeys.add(key);
-
-					if (fieldType == FieldType.BUNDLE)
-					{
-						Class<? extends Object> cls = value.getClass();
-
-						if (List.class.isAssignableFrom(cls))
-						{
-							for (Object item : (List)value)
-							{
-								collectKeys((Bundle)item, aKeys);
-							}
-						}
-						else if (cls.isArray())
-						{
-							for (int i = 0; i < Array.getLength(value); i++)
-							{
-								collectKeys((Bundle)Array.get(value, i), aKeys);
-							}
-						}
-						else
-						{
-							collectKeys((Bundle)value, aKeys);
-						}
-					}
-				}
-			}
-		}
-
-		return aKeys;
-	}
-
-
 	private void writeBundle(Bundle aBundle) throws IOException
 	{
-		for (String key : aBundle)
+		String[] keys = writeBundleKeys(aBundle);
+
+		for (String key : keys)
 		{
 			Object value = aBundle.get(key);
 			FieldType fieldType = FieldType.valueOf(value);
+			Class<? extends Object> cls = value.getClass();
 
-			if (fieldType != null)
+			mOutput.writeBits(fieldType.ordinal(), 4);
+
+			if (cls.isArray())
 			{
-//				Log.out.println("ENCODE: " + fieldType+" "+key);
-
-				mOutput.writeBits(fieldType.ordinal(), 4);
-				mOutput.writeBitsInRange(mBundleKeys.get(key), mBundleKeys.size());
-
-				Class<? extends Object> cls = value.getClass();
-
-				if (cls.isArray())
+				mOutput.writeBits(0b11, 2);
+				if (fieldType == FieldType.BYTE)
 				{
-					mOutput.writeBits(0b00, 2);
-					if (fieldType == FieldType.BYTE)
-					{
-						mOutput.writeVariableInt(((byte[])value).length, 3, 0, false);
-						mOutput.align();
-						mOutput.write((byte[])value);
-					}
-					else
-					{
-						writeList(fieldType, value);
-					}
-				}
-				else if (List.class.isAssignableFrom(cls))
-				{
-					mOutput.writeBits(0b01, 2);
-					writeList(fieldType, ((List)value).toArray());
+					mOutput.writeVariableInt(((byte[])value).length, 3, 4, false);
+					mOutput.align();
+					mOutput.write((byte[])value);
 				}
 				else
 				{
-					mOutput.writeBits(0b1, 1);
-					writeValue(fieldType, value);
+					writeList(fieldType, value);
 				}
+			}
+			else if (List.class.isAssignableFrom(cls))
+			{
+				mOutput.writeBits(0b10, 2);
+				writeList(fieldType, ((List)value).toArray());
+			}
+			else
+			{
+				mOutput.writeBits(0b0, 1);
+				writeValue(fieldType, value);
+			}
+		}
+	}
+
+
+	private String[] writeBundleKeys(Bundle aBundle) throws IOException
+	{
+		mOutput.writeVariableInt(aBundle.size(), 3, 0, false);
+
+		ByteArrayOutputStream keyData = new ByteArrayOutputStream();
+
+		String[] keys = aBundle.keySet().toArray(new String[aBundle.size()]);
+
+		for (String key : keys)
+		{
+			if (mKeys.containsKey(key))
+			{
+				mOutput.writeBit(0);
+				mOutput.writeVariableInt(mKeys.get(key), 3, 0, false);
+			}
+			else
+			{
+				mOutput.writeBit(1);
+				byte[] buffer = Convert.encodeUTF8(key);
+				mOutput.writeVariableInt(buffer.length, 3, 0, false);
+
+				keyData.write(buffer);
+				mKeys.put(key, mKeys.size());
 			}
 		}
 
-		mOutput.writeBits(FieldType.TERMINATOR.ordinal(), 4);
+		if (keyData.size() > 0)
+		{
+			mOutput.align();
+
+			keyData.writeTo(mOutput);
+		}
+
+		return keys;
 	}
 
 
@@ -233,7 +176,7 @@ public class BinaryEncoder
 				mOutput.writeVariableInt((Character)aValue, 3, 0, false);
 				break;
 			case INT:
-				mOutput.writeVariableInt((Integer)aValue, 3, 0, true);
+				mOutput.writeVariableInt((Integer)aValue, 3, 4, true);
 				break;
 			case LONG:
 				mOutput.writeVariableLong((Long)aValue, 7, 0, true);
@@ -245,7 +188,10 @@ public class BinaryEncoder
 				mOutput.writeVariableLong(Double.doubleToLongBits((Double)aValue), 7, 0, false);
 				break;
 			case STRING:
-				writeString((String)aValue);
+				byte[] buffer = Convert.encodeUTF8((String)aValue);
+				mOutput.writeVariableInt(buffer.length, 3, 4, false);
+				mOutput.align();
+				mOutput.write(buffer);
 				break;
 			case DATE:
 				mOutput.writeVariableLong(((Date)aValue).getTime(), 7, 0, false);
@@ -256,14 +202,5 @@ public class BinaryEncoder
 			default:
 				throw new UnsupportedOperationException("Unsupported field type: " + aFieldType);
 		}
-	}
-
-
-	private void writeString(String aValue) throws IOException
-	{
-		byte[] buffer = Convert.encodeUTF8(aValue);
-		mOutput.writeVariableInt(buffer.length, 3, 0, false);
-		mOutput.align();
-		mOutput.write(buffer);
 	}
 }

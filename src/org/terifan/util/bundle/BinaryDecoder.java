@@ -6,43 +6,23 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import org.terifan.io.BitInputStream;
 import org.terifan.io.ByteBufferInputStream;
+import org.terifan.util.Convert;
+import org.terifan.util.Debug;
+import org.terifan.util.log.Log;
 
 
 public class BinaryDecoder
 {
-	private TreeSet<String> mKnownKeys;
-	private TreeMap<Integer,String> mBundleKeys;
+	private TreeMap<Integer,String> mKeys;
 	private BitInputStream mInput;
 
 
 	public BinaryDecoder()
 	{
-		mKnownKeys = new TreeSet<>();
-	}
-
-
-	/**
-	 * Add words to the internal dictionary. The same words must be added in identical order when encoding the message.
-	 *
-	 * @param aKeys
-	 *   a list of Strings
-	 * @return
-	 *   this instance
-	 */
-	public BinaryDecoder addKeys(String... aKeys)
-	{
-		if (aKeys != null)
-		{
-			mKnownKeys.addAll(Arrays.asList(aKeys));
-		}
-
-		return this;
 	}
 
 
@@ -65,27 +45,8 @@ public class BinaryDecoder
 
 	public Bundle unmarshal(InputStream aInputStream) throws IOException
 	{
+		mKeys = new TreeMap<>();
 		mInput = new BitInputStream(aInputStream);
-
-		mBundleKeys = new TreeMap<>();
-
-		for (String key : mKnownKeys)
-		{
-			mBundleKeys.put(mBundleKeys.size(), key);
-		}
-		for (;;)
-		{
-			int len = mInput.readVariableInt(7, 0, false);
-
-			if (len == 0)
-			{
-				break;
-			}
-
-			String key = readString(len);
-
-			mBundleKeys.put(mBundleKeys.size(), key);
-		}
 
 		return readBundle(new Bundle());
 	}
@@ -93,43 +54,34 @@ public class BinaryDecoder
 
 	private Bundle readBundle(Bundle aBundle) throws IOException
 	{
-		for (;;)
+		String[] keys = readBundleKeys();
+
+		for (String key : keys)
 		{
 			FieldType fieldType = FieldType.values()[(int)mInput.readBits(4)];
-
-			if (fieldType == FieldType.TERMINATOR)
-			{
-				break;
-			}
-
-			String key = mBundleKeys.get((int)mInput.readBitsInRange(mBundleKeys.size()));
-
-//			Log.out.println("DECODE: " + fieldType+" "+key);
-
 			Object value;
 
-			if (mInput.readBit() == 1)
+			if (mInput.readBit() == 0)
 			{
 				value = readValue(fieldType);
 			}
-			else if (mInput.readBit() == 1)
+			else if (mInput.readBit() == 0)
 			{
 				value = readList(fieldType);
 			}
 			else if (fieldType == FieldType.BYTE)
 			{
-				value = new byte[mInput.readVariableInt(3, 0, false)];
+				value = new byte[mInput.readVariableInt(3, 4, false)];
 				mInput.align();
 				mInput.read((byte[])value);
 			}
 			else
 			{
 				ArrayList list = readList(fieldType);
-
-				value = Array.newInstance(fieldType.getNumberType(), list.size());
-				for (int j = 0; j < list.size(); j++)
+				value = Array.newInstance(fieldType.getPrimitiveType(), list.size());
+				for (int i = 0; i < list.size(); i++)
 				{
-					Array.set(value, j, list.get(j));
+					Array.set(value, i, list.get(i));
 				}
 			}
 
@@ -137,6 +89,45 @@ public class BinaryDecoder
 		}
 
 		return aBundle;
+	}
+
+
+	private String[] readBundleKeys() throws IOException
+	{
+		int keyCount = mInput.readVariableInt(3, 0, false);
+
+		String[] keys = new String[keyCount];
+		ArrayList<int[]> newKeys = new ArrayList<>();
+
+		for (int i = 0; i < keyCount; i++)
+		{
+			boolean flag = mInput.readBit() == 0;
+			int value = (int)mInput.readVariableInt(3, 0, false);
+
+			if (flag)
+			{
+				keys[i] = mKeys.get(value);
+			}
+			else
+			{
+				newKeys.add(new int[]{i, value});
+			}
+		}
+
+		if (newKeys.size() > 0)
+		{
+			mInput.align();
+
+			for (int[] entry : newKeys)
+			{
+				int i = entry[0];
+				String key = readString(entry[1]);
+				keys[i] = key;
+				mKeys.put(mKeys.size(), key);
+			}
+		}
+
+		return keys;
 	}
 
 
@@ -181,7 +172,7 @@ public class BinaryDecoder
 			case CHAR:
 				return (char)mInput.readVariableInt(3, 0, false);
 			case INT:
-				return mInput.readVariableInt(3, 0, true);
+				return mInput.readVariableInt(3, 4, true);
 			case LONG:
 				return mInput.readVariableLong(7, 0, true);
 			case FLOAT:
@@ -189,7 +180,9 @@ public class BinaryDecoder
 			case DOUBLE:
 				return Double.longBitsToDouble(mInput.readVariableLong(7, 0, false));
 			case STRING:
-				return readString(mInput.readVariableInt(3, 0, false));
+				int len = mInput.readVariableInt(3, 4, false);
+				mInput.align();
+				return readString(len);
 			case DATE:
 				return new Date(mInput.readVariableLong(7, 0, false));
 			case BUNDLE:
@@ -204,13 +197,49 @@ public class BinaryDecoder
 	{
 		byte[] buf = new byte[aLength];
 
-		mInput.align();
-
 		if (mInput.read(buf) != buf.length)
 		{
 			throw new IOException("Unexpected end of stream");
 		}
 
-		return new String(buf, "utf-8");
+		return Convert.decodeUTF8(buf, 0, aLength);
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			Bundle bundle = new Bundle()
+				.putBundle("lalala", new Bundle()
+					.putInt("dolphine", 1)
+					.putInt("bear", 1)
+					.putInt("donkey", 1)
+				)
+				.putBundle("blabla", new Bundle()
+					.putInt("cat", 1)
+					.putInt("dolphine", 1)
+					.putInt("dog", 1)
+				)
+				.putBundle("ough", new Bundle()
+					.putInt("donkey", 1)
+					.putInt("dolphine", 1)
+					.putInt("cat", 1)
+				);
+
+			Log.out.println(bundle);
+
+			byte[] data = new BinaryEncoder().marshal(bundle);
+			Debug.hexDump(data);
+			Log.out.println("length=" + data.length);
+
+			Bundle unbundled = new BinaryDecoder().unmarshal(data);
+
+			Log.out.println(unbundled);
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }

@@ -6,7 +6,6 @@ import java.util.List;
 
 enum FieldType
 {
-	TERMINATOR(null,null),
 	BOOLEAN(Boolean.class, Boolean.TYPE),
 	BYTE(Byte.class, Byte.TYPE),
 	SHORT(Short.class, Short.TYPE),
@@ -21,19 +20,19 @@ enum FieldType
 	UNDEFINED(null,null);
 
 	private final Class mComponentType;
-	private final Class mNumberType;
+	private final Class mPrimitiveType;
 
 
-	private FieldType(Class aComponentType, Class aNumberType)
+	private FieldType(Class aComponentType, Class aPrimitiveType)
 	{
 		mComponentType = aComponentType;
-		mNumberType = aNumberType;
+		mPrimitiveType = aPrimitiveType;
 	}
 
 
-	public Class getNumberType()
+	public Class getPrimitiveType()
 	{
-		return mNumberType;
+		return mPrimitiveType;
 	}
 
 
@@ -72,7 +71,7 @@ enum FieldType
 		}
 		for (FieldType fieldType : values())
 		{
-			if (fieldType.mComponentType != null && (fieldType.mComponentType.isAssignableFrom(cls) || fieldType.mNumberType.isAssignableFrom(cls)))
+			if (fieldType.mComponentType != null && (fieldType.mComponentType.isAssignableFrom(cls) || fieldType.mPrimitiveType.isAssignableFrom(cls)))
 			{
 				return fieldType;
 			}

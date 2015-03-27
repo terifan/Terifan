@@ -35,7 +35,7 @@ public class Debug
 
 	public static void hexDump(InputStream aInputStream, int aLength)
 	{
-		int LW = 32;
+		int LW = 24;
 
 		try
 		{

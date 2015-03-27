@@ -128,7 +128,7 @@ public class XMLDecoder
 //								}
 //							}
 
-							Object array = Array.newInstance(fieldType.getNumberType(), itemCount);
+							Object array = Array.newInstance(fieldType.getPrimitiveType(), itemCount);
 
 							for (int j = 0; j < list2.getLength(); j++)
 							{
