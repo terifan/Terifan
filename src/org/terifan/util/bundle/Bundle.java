@@ -172,7 +172,12 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 
 	public Bundlable getBundlable(String aKey, Bundlable aInstance) throws IOException
 	{
-		aInstance.readExternal(getBundle(aKey));
+		Bundle bundle = getBundle(aKey);
+
+		if (bundle != null)
+		{
+			aInstance.readExternal(bundle);
+		}
 
 		return aInstance;
 	}
