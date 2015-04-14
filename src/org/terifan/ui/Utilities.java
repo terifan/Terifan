@@ -617,12 +617,12 @@ public final class Utilities
 		}
 		else if (aWidth > 0)
 		{
-			list = new ArrayList<String>();
+			list = new ArrayList<>();
 			list.add(clipString(aString, font, aWidth));
 		}
 		else
 		{
-			list = new ArrayList<String>();
+			list = new ArrayList<>();
 			list.add(aString);
 		}
 
@@ -706,7 +706,7 @@ public final class Utilities
 
 	public static ArrayList<String> lineBreakText(String aString, Font aFont, int aWidth)
 	{
-		ArrayList<String> list = new ArrayList<String>();
+		ArrayList<String> list = new ArrayList<>();
 
 		for (String str : aString.split("\n"))
 		{
