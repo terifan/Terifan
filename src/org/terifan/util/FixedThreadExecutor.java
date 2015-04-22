@@ -19,7 +19,6 @@ public class FixedThreadExecutor implements AutoCloseable
 	public FixedThreadExecutor(int aThreads)
 	{
 		mThreads = aThreads;
-		init();
 	}
 
 
@@ -33,34 +32,29 @@ public class FixedThreadExecutor implements AutoCloseable
 		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * (aThreads - (int)(aThreads - 0.000001)))));
-
-		init();
 	}
 
 
 	public void submit(Runnable aRunnable)
 	{
-		init();
-		mExecutorService.submit(aRunnable);
+		init().submit(aRunnable);
 	}
 
 
 	public void submit(Runnable... aRunnables)
 	{
-		init();
 		for (Runnable r : aRunnables)
 		{
-			mExecutorService.submit(r);
+			init().submit(r);
 		}
 	}
 
 
 	public void submit(Iterable<? extends Runnable> aRunnables)
 	{
-		init();
 		for (Runnable r : aRunnables)
 		{
-			mExecutorService.submit(r);
+			init().submit(r);
 		}
 	}
 
@@ -72,32 +66,39 @@ public class FixedThreadExecutor implements AutoCloseable
 	}
 
 
-	private boolean close(long aWaitMillis)
+	private synchronized boolean close(long aWaitMillis)
 	{
-		try
+		if (mExecutorService != null)
 		{
-			mExecutorService.shutdown();
+			try
+			{
+				mExecutorService.shutdown();
 
-			mExecutorService.awaitTermination(aWaitMillis, TimeUnit.MILLISECONDS);
+				mExecutorService.awaitTermination(aWaitMillis, TimeUnit.MILLISECONDS);
 
-			return false;
+				return false;
+			}
+			catch (InterruptedException e)
+			{
+				return true;
+			}
+			finally
+			{
+				mExecutorService = null;
+			}
 		}
-		catch (InterruptedException e)
-		{
-			return true;
-		}
-		finally
-		{
-			mExecutorService = null;
-		}
+
+		return false;
 	}
 
 
-	private void init()
+	private synchronized ExecutorService init()
 	{
 		if (mExecutorService == null)
 		{
 			mExecutorService = Executors.newFixedThreadPool(mThreads);
 		}
+
+		return mExecutorService;
 	}
 }

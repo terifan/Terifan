@@ -29,10 +29,8 @@ public class Cache<K,V> implements Iterable<K>
 {
 	private long mCapacity;
 	private long mUsedSize;
-//	private ArrayList<CacheStateListener<K,V>> mListeners;
 	private LinkedList<K> mCacheOrder;
 	private HashMap<K,Entry<K,V>> mKeyValueMap;
-//	private CacheBackend<K,V> mCacheBackend;
 	private int mExpireTime;
 
 
@@ -57,7 +55,6 @@ public class Cache<K,V> implements Iterable<K>
 		mCapacity = aCapacity;
 		mKeyValueMap = new HashMap<>();
 		mCacheOrder = new LinkedList<>();
-//		mListeners = new ArrayList<>();
 		mExpireTime = Integer.MAX_VALUE;
 	}
 
@@ -72,54 +69,6 @@ public class Cache<K,V> implements Iterable<K>
 	{
 		mExpireTime = aExpireTime;
 	}
-
-
-//	/**
-//	 * Gets the CacheBackend for this Cache.
-//	 *
-//	 * @return
-//	 *   the CacheBackend or null if none exists
-//	 */
-//	public CacheBackend<K,V> getCacheBackend()
-//	{
-//		return mCacheBackend;
-//	}
-//
-//
-//	/**
-//	 * Sets the CacheBackend for this Cache.
-//	 *
-//	 * @param aCacheBackend
-//	 *   the CacheBackend or null
-//	 */
-//	public void setCacheBackend(CacheBackend<K,V> aCacheBackend)
-//	{
-//		mCacheBackend = aCacheBackend;
-//	}
-
-
-//	/**
-//	 * Adds a CacheStateListener to this cache.
-//	 *
-//	 * @param aCacheStateListener
-//	 *   the listener instance.
-//	 */
-//	public void addCacheStateListener(CacheStateListener<K,V> aCacheStateListener)
-//	{
-//		mListeners.add(aCacheStateListener);
-//	}
-//
-//
-//	/**
-//	 * Removes a CacheStateListener from this cache.
-//	 *
-//	 * @param aCacheStateListener
-//	 *   the listener instance.
-//	 */
-//	public void removeCacheStateListener(CacheStateListener<K,V> aCacheStateListener)
-//	{
-//		mListeners.remove(aCacheStateListener);
-//	}
 
 
 	/**
@@ -197,11 +146,6 @@ public class Cache<K,V> implements Iterable<K>
 			entry.time = System.currentTimeMillis();
 
 			shrink();
-
-//			for (CacheStateListener listener : mListeners)
-//			{
-//				listener.entryUpdated(this, aKey, aValue);
-//			}
 		}
 		else
 		{
@@ -218,16 +162,11 @@ public class Cache<K,V> implements Iterable<K>
 			mKeyValueMap.put(aKey, entry);
 
 			shrink();
-
-//			for (CacheStateListener listener : mListeners)
-//			{
-//				listener.entryAdded(this, aKey, aValue);
-//			}
 		}
 
-		if (aValue instanceof CacheItem)
+		if (aValue instanceof CacheObjectListener)
 		{
-			((CacheItem)aValue).entryAdded(this, aKey);
+			((CacheObjectListener)aValue).cacheStateChanged(this, aKey, aValue, CacheObjectListener.ADDED);
 		}
 
 		return prevValue;
@@ -288,10 +227,6 @@ public class Cache<K,V> implements Iterable<K>
 
 			return entry.value;
 		}
-//		else if (mCacheBackend != null && mCacheBackend.retrieveItem(this, aKey))
-//		{
-//			return get(aKey);
-//		}
 
 		return null;
 	}
@@ -342,13 +277,6 @@ public class Cache<K,V> implements Iterable<K>
 			mCacheOrder.remove(aKey);
 			mCacheOrder.addFirst(aKey);
 		}
-//		else if (mCacheBackend != null)
-//		{
-//			// the CacheBackend is responsible for re-inserting the item which
-//			// positions it at the top of the MRU so no reorder is necessary.
-//
-//			b = mCacheBackend.retrieveItem(this, aKey);
-//		}
 
 		return b;
 	}
@@ -410,27 +338,10 @@ public class Cache<K,V> implements Iterable<K>
 		mCacheOrder.remove(aKey);
 		mUsedSize -= entry.size;
 
-		if (entry instanceof CacheItem)
+		if (entry.value instanceof CacheObjectListener)
 		{
-			((CacheItem)entry).entryRemoved(this, aKey);
+			((CacheObjectListener)entry).cacheStateChanged(this, aKey, entry.value, aDropped ? CacheObjectListener.DROPPED : CacheObjectListener.REMOVED);
 		}
-
-//		for (CacheStateListener listener : mListeners)
-//		{
-//			if (aDropped)
-//			{
-//				listener.entryDropped(this, aKey, entry);
-//			}
-//			else
-//			{
-//				listener.entryRemoved(this, aKey, entry);
-//			}
-//		}
-
-//		if (mCacheBackend != null)
-//		{
-//			mCacheBackend.itemRemoved(this, aKey);
-//		}
 
 		return entry.value;
 	}
@@ -479,18 +390,6 @@ public class Cache<K,V> implements Iterable<K>
 
 
 	/**
-	 * Removes all mappings from this map without calling any listeners or the
-	 * CacheBackend if one exists.
-	 */
-	public synchronized void clearQuiet()
-	{
-		mUsedSize = 0;
-		mKeyValueMap.clear();
-		mCacheOrder.clear();
-	}
-
-
-	/**
 	 * Returns true if this map contains no key-value mappings.
 	 *
 	 * @return
@@ -500,18 +399,6 @@ public class Cache<K,V> implements Iterable<K>
 	{
 		return mKeyValueMap.isEmpty();
 	}
-
-
-//	/**
-//	 * Returns a collection view of the values contained in this map.
-//	 *
-//	 * @return
-//	 *   a collection view of the values contained in this map.
-//	 */
-//	public synchronized Collection<V> values()
-//	{
-//		return mKeyValueMap.values();
-//	}
 
 
 	/**
@@ -524,32 +411,6 @@ public class Cache<K,V> implements Iterable<K>
 	{
 		return mKeyValueMap.keySet();
 	}
-
-
-//	/**
-//	 * Returns true if this map maps one or more keys to the specified value.
-//	 *
-//	 * @param aValue
-//	 *   the value to look for
-//	 * @return
-//	 *   true if value exists
-//	 */
-//	public synchronized boolean containsValue(V aValue)
-//	{
-//		return mKeyValueMap.containsValue(aValue);
-//	}
-//
-//
-//	/**
-//	 * Returns a collection view of the mappings contained in this map.
-//	 *
-//	 * @return
-//	 *   a collection view of the mappings contained in this map.
-//	 */
-//	public synchronized Set<Map.Entry<K,V>> entrySet()
-//	{
-//		return mKeyValueMap.entrySet();
-//	}
 
 
 	/**
