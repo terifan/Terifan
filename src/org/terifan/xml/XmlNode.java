@@ -6,11 +6,13 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Arrays;
+import javax.xml.transform.ErrorListener;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPathConstants;
@@ -593,20 +595,12 @@ public class XmlNode
 		{
 			CharArrayWriter cw = new CharArrayWriter();
 			newTransformer().transform(new DOMSource(mNode), new StreamResult(cw));
-			return cw.toString();
+			return cw.toString().trim();
 		}
 		catch (TransformerException e)
 		{
 			throw new IllegalStateException(e);
 		}
-	}
-
-
-	private static Transformer newTransformer() throws TransformerConfigurationException
-	{
-		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		return transformer;
 	}
 
 
@@ -700,5 +694,45 @@ public class XmlNode
 	private Document getOwner()
 	{
 		return (Document)((mNode instanceof Document) ? mNode : mNode.getOwnerDocument());
+	}
+
+
+	static Transformer newTransformer() throws TransformerConfigurationException, TransformerFactoryConfigurationError
+	{
+		return newTransformer(null);
+	}
+
+
+	static Transformer newTransformer(XmlDocument aTemplate) throws TransformerConfigurationException, TransformerFactoryConfigurationError
+	{
+		Transformer transformer;
+		if (aTemplate == null)
+		{
+			transformer = TransformerFactory.newInstance().newTransformer();
+		}
+		else
+		{
+			transformer = TransformerFactory.newInstance().newTransformer(new DOMSource(aTemplate.getInternalNode()));
+		}
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "5");
+		transformer.setErrorListener(new ErrorListener() {
+			@Override
+			public void warning(TransformerException aException) throws TransformerException
+			{
+				throw new RuntimeException("XSLT warning while transforming document.", aException);
+			}
+			@Override
+			public void error(TransformerException aException) throws TransformerException
+			{
+				throw new RuntimeException("XSLT error while transforming document.", aException);
+			}
+			@Override
+			public void fatalError(TransformerException aException) throws TransformerException
+			{
+				throw new RuntimeException("XSLT fatal error while transforming document.", aException);
+			}
+		});
+		return transformer;
 	}
 }

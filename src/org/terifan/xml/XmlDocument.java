@@ -12,15 +12,12 @@ import java.net.URL;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.ErrorListener;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.terifan.util.log.Log;
+import static org.terifan.xml.XmlNode.newTransformer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -123,15 +120,7 @@ public class XmlDocument extends XmlNode
 				}
 			}
         }
-        catch (ParserConfigurationException e)
-        {
-            throw new XmlException(e);
-        }
-        catch (SAXException e)
-        {
-            throw new XmlException(e);
-        }
-        catch (IOException e)
+        catch (ParserConfigurationException | SAXException | IOException e)
         {
             throw new XmlException(e);
         }
@@ -183,8 +172,7 @@ public class XmlDocument extends XmlNode
     {
 		try
 		{
-			Transformer transformer = TransformerFactory.newInstance().newTransformer(new DOMSource(aTemplate.getInternalNode()));
-			transformer.transform(new DOMSource(mNode), new StreamResult(aOutput));
+			newTransformer(aTemplate).transform(new DOMSource(mNode), new StreamResult(aOutput));
 		}
 		catch (TransformerException e)
 		{
@@ -201,30 +189,6 @@ public class XmlDocument extends XmlNode
 		DocumentBuilder documentBuilder = factory.newDocumentBuilder();
 
 		return documentBuilder;
-	}
-
-
-	private static Transformer newTransformer(XmlDocument aTemplate) throws TransformerConfigurationException, TransformerFactoryConfigurationError
-	{
-		Transformer transformer = TransformerFactory.newInstance().newTransformer(new DOMSource(aTemplate.getInternalNode()));
-		transformer.setErrorListener(new ErrorListener() {
-			@Override
-			public void warning(TransformerException aException) throws TransformerException
-			{
-				throw new RuntimeException("XSLT warning while transforming document.", aException);
-			}
-			@Override
-			public void error(TransformerException aException) throws TransformerException
-			{
-				throw new RuntimeException("XSLT error while transforming document.", aException);
-			}
-			@Override
-			public void fatalError(TransformerException aException) throws TransformerException
-			{
-				throw new RuntimeException("XSLT fatal error while transforming document.", aException);
-			}
-		});
-		return transformer;
 	}
 
 
@@ -278,5 +242,18 @@ public class XmlDocument extends XmlNode
 		}
 
 		return null;
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			Log.out.println(new XmlDocument().appendElement("test").appendTextNode("v", "x").toXmlString());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }

@@ -26,6 +26,19 @@ public final class SecretKey
 	}
 
 
+	/**
+	 * Copies the key bytes to the output buffer provided.
+	 *
+	 * @return
+	 *   the output buffer
+	 */
+	public byte[] bytes(byte[] aOutputBuffer)
+	{
+		System.arraycopy(mKeyBytes, 0, aOutputBuffer, 0, mKeyBytes.length);
+		return aOutputBuffer;
+	}
+
+
 	public void reset()
 	{
 		Arrays.fill(mKeyBytes, (byte)0);
