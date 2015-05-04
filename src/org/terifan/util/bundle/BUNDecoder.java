@@ -342,10 +342,10 @@ public class BUNDecoder
 					throw new IOException("Array contains mixed types: expected=" + type + ", found=" + other);
 				}
 
-				if (value instanceof String)
-				{
-					value = processValue((String)value);
-				}
+//				if (value instanceof String)
+//				{
+//					value = processValue((String)value);
+//				}
 			}
 
 			list.add(value);
@@ -504,6 +504,7 @@ public class BUNDecoder
 				)
 				.putIntArray("ints", 1,2,3)
 				.putByteArray("bytes", (byte)1,(byte)2,(byte)3)
+				.putStringArray("strings", "a", "b", "c")
 				.putIntArrayList("intList", new ArrayList<>(Arrays.asList(1,2,3)));
 
 			String s = new BUNEncoder().marshal(bundle);
