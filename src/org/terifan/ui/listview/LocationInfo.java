@@ -1,11 +1,11 @@
 package org.terifan.ui.listview;
 
 
-public class LocationInfo
+public class LocationInfo<T extends ListViewItem>
 {
 	private ListViewGroup mGroup;
 	private boolean mGroupButton;
-	private ListViewItem mItem;
+	private T mItem;
 
 
 	protected LocationInfo()
@@ -25,13 +25,13 @@ public class LocationInfo
 	}
 
 
-	public void setItem(ListViewItem aItem)
+	public void setItem(T aItem)
 	{
 		mItem = aItem;
 	}
 
 
-	public ListViewItem getItem()
+	public T getItem()
 	{
 		return mItem;
 	}

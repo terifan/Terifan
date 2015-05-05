@@ -4,11 +4,11 @@ import org.terifan.util.SortedMap;
 import java.util.ArrayList;
 
 
-public class ListViewGroup
+public class ListViewGroup<T extends ListViewItem>
 {
-	protected ListViewGroup mParent;
-	protected SortedMap<Object,ListViewGroup> mChildren;
-	protected ArrayList<ListViewItem> mItems;
+	protected ListViewGroup<T> mParent;
+	protected SortedMap<Object,ListViewGroup<T>> mChildren;
+	protected ArrayList<T> mItems;
 	protected int mItemCount;
 	protected int mGroupCount;
 	protected boolean mCollapsed;
@@ -37,13 +37,13 @@ public class ListViewGroup
 	}
 
 
-	public ListViewGroup getChildGroupByIndex(int aIndex)
+	public ListViewGroup<T> getChildGroupByIndex(int aIndex)
 	{
 		return mChildren.get(mChildren.getKeys().get(aIndex));
 	}
 
 
-	public SortedMap<Object,ListViewGroup> getChildren()
+	public SortedMap<Object,ListViewGroup<T>> getChildren()
 	{
 		return mChildren;
 	}
@@ -55,25 +55,25 @@ public class ListViewGroup
 	}
 
 
-	public void setChildren(SortedMap<Object,ListViewGroup> aChildren)
+	public void setChildren(SortedMap<Object,ListViewGroup<T>> aChildren)
 	{
 		mChildren = aChildren;
 	}
 
 
-	public void setItems(ArrayList<ListViewItem> aItems)
+	public void setItems(ArrayList<T> aItems)
 	{
 		mItems = aItems;
 	}
 
 
-	public ArrayList<ListViewItem> getItems()
+	public ArrayList<T> getItems()
 	{
 		return mItems;
 	}
 
 
-	public ListViewItem getItem(int aIndex)
+	public T getItem(int aIndex)
 	{
 		return mItems.get(aIndex);
 	}
@@ -161,7 +161,7 @@ public class ListViewGroup
 	}
 
 
-	public ListViewGroup findContainingGroup(ListViewItem aItem)
+	public ListViewGroup findContainingGroup(T aItem)
 	{
 		if (mItems != null)
 		{
@@ -248,13 +248,13 @@ public class ListViewGroup
 	private ListViewGroup mTempGroup;
 	private boolean mTempBoolean;
 
-	private synchronized ListViewGroup getSiblingGroupHeavy(ListViewGroup aGroup, int aDirection, boolean aVisibleOnly)
+	private synchronized ListViewGroup getSiblingGroupHeavy(ListViewGroup<T> aGroup, int aDirection, boolean aVisibleOnly)
 	{
 		if (aGroup.mChildren != null)
 		{
 			for (Object key : aGroup.mChildren.getKeys())
 			{
-				ListViewGroup group = aGroup.mChildren.get(key);
+				ListViewGroup<T> group = aGroup.mChildren.get(key);
 
 				if (aDirection == -1 && group == this)
 				{

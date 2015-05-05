@@ -12,11 +12,11 @@ import javax.swing.SortOrder;
 import org.terifan.util.log.Log;
 
 
-public class ListViewModel implements Iterable<ListViewItem>
+public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 {
 	protected ArrayList<ListViewColumn> mColumns;
 	protected ArrayList<Integer> mGroups;
-	protected ArrayList<ListViewItem> mItems;
+	protected ArrayList<T> mItems;
 	protected ListViewGroup mTree;
 	protected ListViewColumn mSortedColumn;
 
@@ -37,7 +37,7 @@ public class ListViewModel implements Iterable<ListViewItem>
 
 	// -- Items -----------------
 
-	public ListViewItem addItem(ListViewItem aItem)
+	public T addItem(T aItem)
 	{
 		if (aItem == null)
 		{
@@ -49,19 +49,19 @@ public class ListViewModel implements Iterable<ListViewItem>
 	}
 
 
-	public void removeItem(ListViewItem aItem)
+	public void removeItem(T aItem)
 	{
 		mItems.remove(aItem);
 	}
 
 
-	public void removeItems(Collection<ListViewItem> aItems)
+	public void removeItems(Collection<T> aItems)
 	{
 		mItems.removeAll(aItems);
 	}
 
 
-	public ListViewItem getItem(int aIndex)
+	public T getItem(int aIndex)
 	{
 		if (aIndex < 0 || aIndex >= mItems.size())
 		{
@@ -72,18 +72,18 @@ public class ListViewModel implements Iterable<ListViewItem>
 	}
 
 
-	public ListViewItem getSortedItem(final int aIndex)
+	public T getSortedItem(final int aIndex)
 	{
 		if (aIndex < 0 || aIndex >= mItems.size())
 		{
 			throw new IllegalArgumentException("Index out of range: index: " + aIndex + ", size: " + mItems.size());
 		}
 
-		return (ListViewItem)visitItems(false, new ItemVisitor()
+		return (T)visitItems(false, new ItemVisitor<T>()
 		{
 			int index;
 			@Override
-			public Object visit(ListViewItem aItem)
+			public Object visit(T aItem)
 			{
 				return index++ == aIndex ? aItem : null;
 			}
@@ -97,7 +97,7 @@ public class ListViewModel implements Iterable<ListViewItem>
 	}
 
 
-	public int indexOf(ListViewItem aItem)
+	public int indexOf(T aItem)
 	{
 		return mItems.indexOf(aItem);
 	}
@@ -115,9 +115,9 @@ public class ListViewModel implements Iterable<ListViewItem>
 	}
 
 
-	public ListViewItem findItem(int aColumnIndex, Object aObject)
+	public T findItem(int aColumnIndex, Object aObject)
 	{
-		for (ListViewItem item : mItems)
+		for (T item : mItems)
 		{
 			if (item.getValue(aColumnIndex).equals(aObject))
 			{
@@ -129,7 +129,7 @@ public class ListViewModel implements Iterable<ListViewItem>
 
 
 	@Override
-	public Iterator<ListViewItem> iterator()
+	public Iterator<T> iterator()
 	{
 		return mItems.iterator();
 	}
@@ -462,7 +462,7 @@ public class ListViewModel implements Iterable<ListViewItem>
 		if (groupCount == 0)
 		{
 			ListViewGroup root = new ListViewGroup(null,0,null);
-			ArrayList<ListViewItem> items = new ArrayList<>();
+			ArrayList<T> items = new ArrayList<>();
 			root.setItems(items);
 
 			for (int i = 0; i < mItems.size(); i++)
@@ -476,14 +476,14 @@ public class ListViewModel implements Iterable<ListViewItem>
 		}
 		else
 		{
-			ListViewGroup root = new ListViewGroup(null,0,null);
+			ListViewGroup<T> root = new ListViewGroup<T>(null,0,null);
 			root.setChildren(new SortedMap<>());
 
-			for (ListViewItem item : mItems)
+			for (T item : mItems)
 			{
 				assert item != null : "ListViewModel contains an item that is null";
 
-				ListViewGroup group = root;
+				ListViewGroup<T> group = root;
 
 				for (int groupIndex = 0; groupIndex < groupCount; groupIndex++)
 				{
@@ -497,7 +497,7 @@ public class ListViewModel implements Iterable<ListViewItem>
 						groupKey = formatter.format(groupKey);
 					}
 
-					ListViewGroup next = group.getChildren().get(groupKey);
+					ListViewGroup<T> next = group.getChildren().get(groupKey);
 
 					if (next == null)
 					{
@@ -528,9 +528,9 @@ public class ListViewModel implements Iterable<ListViewItem>
 			mTree = root;
 		}
 	}
-	
-	
-	public boolean contains(ListViewItem aItem)
+
+
+	public boolean contains(T aItem)
 	{
 		return mItems.contains(aItem);
 	}
@@ -565,7 +565,7 @@ public class ListViewModel implements Iterable<ListViewItem>
 	}
 
 
-	public Object visitItems(boolean aVisitCollapsedGroups, ItemVisitor aVisitor)
+	public Object visitItems(boolean aVisitCollapsedGroups, ItemVisitor<T> aVisitor)
 	{
 		if (aVisitor == null)
 		{
@@ -603,9 +603,9 @@ public class ListViewModel implements Iterable<ListViewItem>
 	}
 
 
-	private Object visitItems(boolean aVisitCollapsedGroups, ItemVisitor aVisitor, ListViewGroup aGroup)
+	private Object visitItems(boolean aVisitCollapsedGroups, ItemVisitor<T> aVisitor, ListViewGroup<T> aGroup)
 	{
-		SortedMap<Object,ListViewGroup> children = aGroup.getChildren();
+		SortedMap<Object,ListViewGroup<T>> children = aGroup.getChildren();
 
 		if (children != null)
 		{
@@ -624,7 +624,7 @@ public class ListViewModel implements Iterable<ListViewItem>
 		}
 		else
 		{
-			for (ListViewItem item : aGroup.getItems())
+			for (T item : aGroup.getItems())
 			{
 				Object o = aVisitor.visit(item);
 				if (o != null)
@@ -666,8 +666,8 @@ public class ListViewModel implements Iterable<ListViewItem>
 
 			if (!(mComparator instanceof ListViewItemComparator) && (t1 instanceof ListViewItem))
 			{
-				v1 = ((ListViewItem)t1).getValue(mColumnIndex);
-				v2 = ((ListViewItem)t2).getValue(mColumnIndex);
+				v1 = ((T)t1).getValue(mColumnIndex);
+				v2 = ((T)t2).getValue(mColumnIndex);
 			}
 
 			if (v1 == null && v2 != null)

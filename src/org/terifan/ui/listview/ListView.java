@@ -45,11 +45,11 @@ import org.terifan.ui.listview.util.ListViewFactory;
 import org.terifan.util.log.Log;
 
 
-public class ListView extends JComponent implements Scrollable
+public class ListView<T extends ListViewItem> extends JComponent implements Scrollable
 {
-	private ListViewModel mModel;
-	private LocationInfo mRolloverInfo;
-	private ListViewItem mFocusItem;
+	private ListViewModel<T> mModel;
+	private LocationInfo<T> mRolloverInfo;
+	private T mFocusItem;
 	private ListViewGroup mFocusGroup;
 	private ListViewHeaderRenderer mHeaderRenderer;
 	private ListViewBarRenderer mBarRenderer;
@@ -59,7 +59,7 @@ public class ListView extends JComponent implements Scrollable
 	private boolean mRolloverEnabled;
 	private boolean mIsConfigured;
 	private StyleSheet mStylesheet;
-	private ListViewItem mAnchorItem;
+	private T mAnchorItem;
 	private ArrayList<ListViewListener> mEventListeners;
 	private TextRenderer mTextRenderer;
 	private ListViewGroupRenderer mGroupRenderer;
@@ -68,8 +68,8 @@ public class ListView extends JComponent implements Scrollable
 	private PopupFactory<ListView> mPopupFactory;
 
 	private final Rectangle mSelectionRectangle = new Rectangle();
-	private final HashSet<ListViewItem> mSelectedItems;
-//	private final HashSet<ListViewItem> mSelectedItemsClone;
+	private final HashSet<T> mSelectedItems;
+//	private final HashSet<T> mSelectedItemsClone;
 
 
 	public ListView()
@@ -208,7 +208,7 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	public ListViewModel getModel()
+	public ListViewModel<T> getModel()
 	{
 		return mModel;
 	}
@@ -260,19 +260,19 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	public ListViewItem getFocusItem()
+	public T getFocusItem()
 	{
 		return mFocusItem;
 	}
 
 
-	public void setFocusItem(ListViewItem aItem)
+	public void setFocusItem(T aItem)
 	{
 		setFocusItem(aItem, false);
 	}
 
 
-	public void setFocusItem(ListViewItem aItem, boolean aSetAnchor)
+	public void setFocusItem(T aItem, boolean aSetAnchor)
 	{
 		mFocusItem = aItem;
 		if (aSetAnchor)
@@ -535,7 +535,7 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	public boolean isItemSelected(ListViewItem aItem)
+	public boolean isItemSelected(T aItem)
 	{
 		return mSelectedItems.contains(aItem);
 //		return mSelectedItems.contains(aItem) ^ mSelectedItemsClone.contains(aItem);
@@ -545,7 +545,7 @@ public class ListView extends JComponent implements Scrollable
 	/**
 	 * Return true if an unselected item was selected or if an selected item was unselected.
 	 */
-	public boolean setItemSelected(ListViewItem aItem, boolean aSelected)
+	public boolean setItemSelected(T aItem, boolean aSelected)
 	{
 		if (aSelected)
 		{
@@ -605,7 +605,7 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	public void invertItemSelection(ListViewItem aItem)
+	public void invertItemSelection(T aItem)
 	{
 		if (mSelectedItems.contains(aItem))
 		{
@@ -777,7 +777,7 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	public void ensureItemIsVisible(ListViewItem aItem)
+	public void ensureItemIsVisible(T aItem)
 	{
 		Rectangle rect = new Rectangle();
 		mLayout.getItemBounds(aItem, rect);
@@ -792,13 +792,13 @@ public class ListView extends JComponent implements Scrollable
 	 * @return
 	 *   a list of all selected items.
 	 */
-	public ArrayList<ListViewItem> getSelectedItems()
+	public ArrayList<T> getSelectedItems()
 	{
-		final ArrayList<ListViewItem> list = new ArrayList<>(mSelectedItems.size());
+		final ArrayList<T> list = new ArrayList<>(mSelectedItems.size());
 
-		ItemVisitor visitor = new ItemVisitor() {
+		ItemVisitor<T> visitor = new ItemVisitor<T>() {
 			@Override
-			public Object visit(ListViewItem aItem)
+			public Object visit(T aItem)
 			{
 				if (mSelectedItems.contains(aItem))
 				{
@@ -821,13 +821,13 @@ public class ListView extends JComponent implements Scrollable
 	 * @return
 	 *   a list of all items.
 	 */
-	public ArrayList<ListViewItem> getItems()
+	public ArrayList<T> getItems()
 	{
-		final ArrayList<ListViewItem> list = new ArrayList<>(mModel.getItemCount());
+		final ArrayList<T> list = new ArrayList<>(mModel.getItemCount());
 
-		ItemVisitor visitor = new ItemVisitor() {
+		ItemVisitor<T> visitor = new ItemVisitor<T>() {
 			@Override
-			public Object visit(ListViewItem aItem)
+			public Object visit(T aItem)
 			{
 				list.add(aItem);
 				return null;
@@ -859,7 +859,7 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	public ListViewItem getRolloverItem()
+	public T getRolloverItem()
 	{
 		return mRolloverInfo == null ? null : mRolloverInfo.getItem();
 	}
@@ -900,7 +900,7 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	public boolean isItemDisplayable(ListViewItem aItem)
+	public boolean isItemDisplayable(T aItem)
 	{
 		Rectangle itemRect = new Rectangle();
 
@@ -934,25 +934,25 @@ public class ListView extends JComponent implements Scrollable
 	}
 
 
-	protected ListViewItem getAnchorItem()
+	protected T getAnchorItem()
 	{
 		return mAnchorItem;
 	}
 
 
-	protected void setAnchorItem(ListViewItem aItem)
+	protected void setAnchorItem(T aItem)
 	{
 		mAnchorItem = aItem;
 	}
 
 
-	protected HashSet<ListViewItem> getSelectedItemsMap()
+	protected HashSet<T> getSelectedItemsMap()
 	{
 		return mSelectedItems;
 	}
 
 
-//	protected HashSet<ListViewItem> getSelectedItemsClone()
+//	protected HashSet<T> getSelectedItemsClone()
 //	{
 //		return mSelectedItemsClone;
 //	}
