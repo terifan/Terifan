@@ -1,6 +1,6 @@
 package org.terifan.ui.listview;
 
-public interface GroupVisitor
+public interface GroupVisitor<T extends ListViewItem>
 {
 	/**
 	 * Visits a group.
@@ -11,5 +11,5 @@ public interface GroupVisitor
 	 *   a non-null Object if the visitor should stop visiting any more groups.
 	 *   The Object is returned by the Model visitor method.
 	 */
-	public Object visit(ListViewGroup aGroup);
+	public Object visit(ListViewGroup<T> aGroup);
 }

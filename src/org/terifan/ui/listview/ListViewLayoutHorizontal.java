@@ -13,12 +13,12 @@ import org.terifan.ui.StyleSheet;
 import org.terifan.ui.Utilities;
 
 
-public class ListViewLayoutHorizontal extends AbstractListViewLayout
+public class ListViewLayoutHorizontal<T extends ListViewItem> extends AbstractListViewLayout<T>
 {
 	protected Dimension mPreferredSize;
 
 
-	public ListViewLayoutHorizontal(ListView aListView)
+	public ListViewLayoutHorizontal(ListView<T> aListView)
 	{
 		mListView = aListView;
 		mPreferredSize = new Dimension(1, 1);
@@ -45,7 +45,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 		int x = 0;
 
-		SortedMap<Object,ListViewGroup> children = root.getChildren();
+		SortedMap<Object,ListViewGroup<T>> children = root.getChildren();
 
 		if (children != null)
 		{
@@ -65,7 +65,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 	}
 
 
-	private int paintList(Graphics2D aGraphics, ListViewGroup aGroup, int aLevel, int aOriginX)
+	private int paintList(Graphics2D aGraphics, ListViewGroup<T> aGroup, int aLevel, int aOriginX)
 	{
 		int horizontalBarHeight = mListView.getStylesheet().getInt("horizontalBarHeight");
 		int groupWidth = mListView.getStylesheet().getInt("groupWidth");
@@ -80,7 +80,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 			if (!aGroup.isCollapsed())
 			{
-				SortedMap<Object,ListViewGroup> children = aGroup.getChildren();
+				SortedMap<Object,ListViewGroup<T>> children = aGroup.getChildren();
 
 				if (children != null)
 				{
@@ -179,7 +179,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 		int columnDividerWidth = mListView.getStylesheet().getInt("columnDividerWidth");
 
 		ListViewItemRenderer renderer = mListView.getItemRenderer();
-		ArrayList<ListViewItem> items = aGroup.getItems();
+		ArrayList<T> items = aGroup.getItems();
 
 		Rectangle clip = aGraphics.getClipBounds();
 
@@ -194,7 +194,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 			for (int rowIndex = 0; lastIndex < items.size(); lastIndex++, rowIndex++)
 			{
-				ListViewItem item = items.get(lastIndex);
+				T item = items.get(lastIndex);
 				int height = renderer.getItemHeight(mListView, item);
 
 				if (y+height > mListView.getHeight() && rowIndex > 0)
@@ -216,7 +216,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 				for (; itemIndex < lastIndex; itemIndex++)
 				{
-					ListViewItem item = items.get(itemIndex);
+					T item = items.get(itemIndex);
 
 					item.loadState();
 
@@ -332,14 +332,14 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 
 	// TODO: prettify
-	private LocationInfo getComponentAtImplPoint(ListViewGroup aGroup, int aLevel, int aOriginX, int aLocationX, int aLocationY)
+	private LocationInfo getComponentAtImplPoint(ListViewGroup<T> aGroup, int aLevel, int aOriginX, int aLocationX, int aLocationY)
 	{
 		int horizontalBarHeight = mListView.getStylesheet().getInt("horizontalBarHeight");
 
 		double y = aLocationY - horizontalBarHeight * aLevel;
 		int x = aLocationX - aOriginX;
 
-		ArrayList<ListViewItem> items = aGroup.getItems();
+		ArrayList<T> items = aGroup.getItems();
 		int tempWidth = 0;
 		int itemY = 0;
 		double itemHeight = getItemHeight();
@@ -386,7 +386,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 		if (row > -1 && row < itemsPerColumn && index >= 0 && index < aGroup.getItems().size())
 		{
-			LocationInfo info = new LocationInfo();
+			LocationInfo<T> info = new LocationInfo<>();
 			info.setItem(aGroup.getItems().get(index));
 			return info;
 		}
@@ -406,7 +406,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 		int horizontalBarHeight = mListView.getStylesheet().getInt("horizontalBarHeight");
 		int columnDividerWidth = mListView.getStylesheet().getInt("columnDividerWidth");
 
-		SortedMap<Object,ListViewGroup> children = aGroup.getChildren();
+		SortedMap<Object,ListViewGroup<T>> children = aGroup.getChildren();
 
 		if (children != null)
 		{
@@ -431,7 +431,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 		}
 		else
 		{
-			ArrayList<ListViewItem> items = aGroup.getItems();
+			ArrayList<T> items = aGroup.getItems();
 			int width = 0;
 			int tempWidth = 0;
 			int maxY = mListView.getHeight()-horizontalBarHeight*Math.max(mListView.getModel().getGroupCount()-1,0);
@@ -439,7 +439,7 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 			ListViewItemRenderer renderer = mListView.getItemRenderer();
 
-			for (ListViewItem item : items)
+			for (T item : items)
 			{
 				int height = renderer.getItemHeight(mListView, item);
 
@@ -525,28 +525,28 @@ public class ListViewLayoutHorizontal extends AbstractListViewLayout
 
 
 	@Override
-	public ListViewItem getItemRelativeTo(ListViewItem aItem, int aDiffX, int aDiffY)
+	public T getItemRelativeTo(T aItem, int aDiffX, int aDiffY)
 	{
 		throw new RuntimeException("not implemented");
 	}
 
 
 	@Override
-	public ArrayList<ListViewItem> getItemsIntersecting(ListViewItem aFromItem, ListViewItem aToItem)
+	public ArrayList<T> getItemsIntersecting(T aFromItem, T aToItem)
 	{
 		throw new RuntimeException("not implemented");
 	}
 
 
 	@Override
-	public ArrayList<ListViewItem> getItemsIntersecting(int x1, int y1, int x2, int y2, ArrayList<ListViewItem> aList)
+	public ArrayList<T> getItemsIntersecting(int x1, int y1, int x2, int y2, ArrayList<T> aList)
 	{
 		throw new RuntimeException("not implemented");
 	}
 
 
 	@Override
-	public boolean getItemBounds(ListViewItem aItem, Rectangle aRectangle)
+	public boolean getItemBounds(T aItem, Rectangle aRectangle)
 	{
 		throw new RuntimeException("not implemented");
 	}

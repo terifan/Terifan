@@ -1,16 +1,16 @@
 package org.terifan.ui.listview;
 
 
-public abstract class AbstractListViewLayout implements ListViewLayout
+public abstract class AbstractListViewLayout<T extends ListViewItem> implements ListViewLayout<T>
 {
-	protected ListView mListView;
+	protected ListView<T> mListView;
 
 
-	private class FirstItemVisitor implements GroupVisitor
+	private class FirstItemVisitor<T extends ListViewItem> implements GroupVisitor<T>
 	{
-		ListViewItem mItem;
+		T mItem;
 		@Override
-		public Object visit(ListViewGroup aGroup)
+		public Object visit(ListViewGroup<T> aGroup)
 		{
 			if (aGroup.getItemCount() > 0)
 			{
@@ -23,19 +23,19 @@ public abstract class AbstractListViewLayout implements ListViewLayout
 
 
 	@Override
-	public ListViewItem getFirstItem()
+	public T getFirstItem()
 	{
-		FirstItemVisitor v = new FirstItemVisitor();
+		FirstItemVisitor<T> v = new FirstItemVisitor<>();
 		mListView.getModel().visitGroups(false, true, v);
 		return v.mItem;
 	}
 
 
-	private class LastItemVisitor implements GroupVisitor
+	private class LastItemVisitor<T extends ListViewItem> implements GroupVisitor<T>
 	{
-		ListViewItem mItem;
+		T mItem;
 		@Override
-		public Object visit(ListViewGroup aGroup)
+		public Object visit(ListViewGroup<T> aGroup)
 		{
 			if (aGroup.getItemCount() > 0)
 			{
@@ -48,9 +48,9 @@ public abstract class AbstractListViewLayout implements ListViewLayout
 
 
 	@Override
-	public ListViewItem getLastItem()
+	public T getLastItem()
 	{
-		LastItemVisitor v = new LastItemVisitor();
+		LastItemVisitor<T> v = new LastItemVisitor<>();
 		mListView.getModel().visitGroups(false, true, v);
 		return v.mItem;
 	}

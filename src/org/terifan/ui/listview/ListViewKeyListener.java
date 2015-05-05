@@ -4,12 +4,12 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 
-class ListViewKeyListener extends KeyAdapter
+class ListViewKeyListener<T extends ListViewItem> extends KeyAdapter
 {
-	private ListView mListView;
+	private ListView<T> mListView;
 
 
-	public ListViewKeyListener(ListView aListView)
+	public ListViewKeyListener(ListView<T> aListView)
 	{
 		mListView = aListView;
 	}
@@ -20,9 +20,9 @@ class ListViewKeyListener extends KeyAdapter
 	{
 		try
 		{
-			ListViewLayout layout = mListView.getListViewLayout();
-			ListViewItem newFocusItem = null;
-			ListViewItem focusItem = mListView.getFocusItem();
+			ListViewLayout<T> layout = mListView.getListViewLayout();
+			T newFocusItem = null;
+			T focusItem = mListView.getFocusItem();
 
 			if (focusItem == null)
 			{
@@ -63,7 +63,7 @@ class ListViewKeyListener extends KeyAdapter
 						}
 						if (aEvent.isShiftDown())
 						{
-							for (ListViewItem item : layout.getItemsIntersecting(mListView.getAnchorItem(), mListView.getFocusItem()))
+							for (T item : layout.getItemsIntersecting(mListView.getAnchorItem(), mListView.getFocusItem()))
 							{
 								mListView.setItemSelected(item, true);
 							}
@@ -109,7 +109,7 @@ class ListViewKeyListener extends KeyAdapter
 			{
 				mListView.setItemsSelected(false);
 
-				for (ListViewItem item : layout.getItemsIntersecting(mListView.getAnchorItem(), mListView.getFocusItem()))
+				for (T item : layout.getItemsIntersecting(mListView.getAnchorItem(), mListView.getFocusItem()))
 				{
 					mListView.setItemSelected(item, true);
 				}

@@ -3,7 +3,7 @@ package org.terifan.ui.listview;
 
 public class LocationInfo<T extends ListViewItem>
 {
-	private ListViewGroup mGroup;
+	private ListViewGroup<T> mGroup;
 	private boolean mGroupButton;
 	private T mItem;
 
@@ -13,13 +13,13 @@ public class LocationInfo<T extends ListViewItem>
 	}
 
 
-	public void setGroup(ListViewGroup aGroup)
+	public void setGroup(ListViewGroup<T> aGroup)
 	{
 		mGroup = aGroup;
 	}
 
 
-	public ListViewGroup getGroup()
+	public ListViewGroup<T> getGroup()
 	{
 		return mGroup;
 	}

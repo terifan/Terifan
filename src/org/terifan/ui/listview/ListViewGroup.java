@@ -17,7 +17,7 @@ public class ListViewGroup<T extends ListViewItem>
 	protected boolean mIsSelected;
 
 
-	protected ListViewGroup(ListViewGroup aParent, int aLevel, Object aGroupValue)
+	protected ListViewGroup(ListViewGroup<T> aParent, int aLevel, Object aGroupValue)
 	{
 		mParent = aParent;
 		mLevel = aLevel;

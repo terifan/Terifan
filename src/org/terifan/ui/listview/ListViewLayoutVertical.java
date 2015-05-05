@@ -12,7 +12,7 @@ import org.terifan.ui.StyleSheet;
 import org.terifan.util.log.Log;
 
 
-public class ListViewLayoutVertical extends AbstractListViewLayout
+public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractListViewLayout<T>
 {
 	protected Dimension mPreferredSize;
 	protected Dimension mMinimumSize;
@@ -276,7 +276,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 
 
 	// TODO: prettify
-	private LocationInfo getComponentAtImplPoint(ListViewGroup aGroup, int aLevel, int aOriginY, int aLocationX, int aLocationY)
+	private LocationInfo getComponentAtImplPoint(ListViewGroup<T> aGroup, int aLevel, int aOriginY, int aLocationX, int aLocationY)
 	{
 		if (aLocationX < 0 || aLocationX >= mListView.getWidth())
 		{
@@ -294,7 +294,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 		}
 
 		ListViewItemRenderer renderer = mListView.getItemRenderer();
-		ArrayList<ListViewItem> items = aGroup.getItems();
+		ArrayList<T> items = aGroup.getItems();
 		double itemWidth = getItemWidth();
 		int itemsPerRow = getItemsPerRun();
 		int tempHeight = 0;
@@ -339,7 +339,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 
 		if (col > -1 && col < itemsPerRow && index >= 0 && index < aGroup.getItems().size())
 		{
-			LocationInfo info = new LocationInfo();
+			LocationInfo<T> info = new LocationInfo<>();
 			info.setItem(aGroup.getItems().get(index));
 			return info;
 		}
@@ -461,7 +461,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 
 
 	@Override
-	public ListViewItem getItemRelativeTo(ListViewItem aItem, int aDiffX, int aDiffY)
+	public T getItemRelativeTo(T aItem, int aDiffX, int aDiffY)
 	{
 		if (aItem == null)
 		{
@@ -472,7 +472,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 			throw new IllegalArgumentException("Motion only in one direction allowed.");
 		}
 
-		ListViewGroup containingGroup = mListView.getModel().getRoot().findContainingGroup(aItem);
+		ListViewGroup<T> containingGroup = mListView.getModel().getRoot().findContainingGroup(aItem);
 
 		if (containingGroup == null)
 		{
@@ -539,9 +539,9 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 
 
 	@Override
-	public ArrayList<ListViewItem> getItemsIntersecting(ListViewItem aFromItem, ListViewItem aToItem)
+	public ArrayList<T> getItemsIntersecting(T aFromItem, T aToItem)
 	{
-		ArrayList<ListViewItem> list = new ArrayList<ListViewItem>();
+		ArrayList<T> list = new ArrayList<>();
 
 		Rectangle r1 = new Rectangle();
 		Rectangle r2 = new Rectangle();
@@ -561,11 +561,11 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 
 
 	@Override
-	public ArrayList<ListViewItem> getItemsIntersecting(int x1, int y1, int x2, int y2, ArrayList<ListViewItem> aList)
+	public ArrayList<T> getItemsIntersecting(int x1, int y1, int x2, int y2, ArrayList<T> aList)
 	{
 		if (aList == null)
 		{
-			aList = new ArrayList<ListViewItem>();
+			aList = new ArrayList<T>();
 		}
 
 		if (y2 < y1)
@@ -581,7 +581,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 	}
 
 
-	private void getItemsIntersectingImpl(int x1, int y1, int x2, int y2, ArrayList<ListViewItem> aList, ListViewGroup aGroup, int aOffsetY)
+	private void getItemsIntersectingImpl(int x1, int y1, int x2, int y2, ArrayList<T> aList, ListViewGroup aGroup, int aOffsetY)
 	{
 		SortedMap<Object, ListViewGroup> children = aGroup.getChildren();
 
@@ -620,7 +620,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 			x2 = Math.max(0, Math.min(itemsPerRun - 1, (int)((x2 - verticalIndent) / itemWidth)));
 
 			ListViewItemRenderer renderer = mListView.getItemRenderer();
-			ArrayList<ListViewItem> items = aGroup.getItems();
+			ArrayList<T> items = aGroup.getItems();
 			int localY = 0;
 			int rowHeight = 0;
 			int itemX = 0;
@@ -662,13 +662,13 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 
 
 	@Override
-	public boolean getItemBounds(ListViewItem aItem, Rectangle aRectangle)
+	public boolean getItemBounds(T aItem, Rectangle aRectangle)
 	{
 		return getItemBoundsImpl(aItem, aRectangle, mListView.getModel().getRoot(), 0);
 	}
 
 
-	private boolean getItemBoundsImpl(ListViewItem aItem, Rectangle aRectangle, ListViewGroup aGroup, int aOffsetY)
+	private boolean getItemBoundsImpl(T aItem, Rectangle aRectangle, ListViewGroup aGroup, int aOffsetY)
 	{
 		SortedMap<Object, ListViewGroup> children = aGroup.getChildren();
 
@@ -736,7 +736,7 @@ public class ListViewLayoutVertical extends AbstractListViewLayout
 	private int getRowHeight(ListViewGroup aGroup, int aItemIndex)
 	{
 		int itemsPerRun = getItemsPerRun();
-		ArrayList<ListViewItem> items = aGroup.getItems();
+		ArrayList<T> items = aGroup.getItems();
 		ListViewItemRenderer renderer = mListView.getItemRenderer();
 		int height = 0;
 

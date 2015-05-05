@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import org.terifan.ui.Orientation;
 
 
-public interface ListViewLayout
+public interface ListViewLayout<T extends ListViewItem>
 {
 	public Orientation getLayoutOrientation();
 
@@ -24,15 +24,15 @@ public interface ListViewLayout
 
 	public int getItemsPerRun();
 
-	public ListViewItem getItemRelativeTo(ListViewItem aItem, int aDiffX, int aDiffY);
+	public T getItemRelativeTo(T aItem, int aDiffX, int aDiffY);
 
-	public ArrayList<ListViewItem> getItemsIntersecting(ListViewItem aFromItem, ListViewItem aToItem);
+	public ArrayList<T> getItemsIntersecting(T aFromItem, T aToItem);
 
-	public ArrayList<ListViewItem> getItemsIntersecting(int x1, int y1, int x2, int y2, ArrayList<ListViewItem> aList);
+	public ArrayList<T> getItemsIntersecting(int x1, int y1, int x2, int y2, ArrayList<T> aList);
 
-	public boolean getItemBounds(ListViewItem aItem, Rectangle aRectangle);
+	public boolean getItemBounds(T aItem, Rectangle aRectangle);
 
-	public ListViewItem getFirstItem();
+	public T getFirstItem();
 
-	public ListViewItem getLastItem();
+	public T getLastItem();
 }

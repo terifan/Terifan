@@ -10,17 +10,17 @@ import java.util.HashSet;
 import javax.swing.SwingUtilities;
 
 
-class ListViewMouseListener extends MouseAdapter implements MouseMotionListener
+class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter implements MouseMotionListener
 {
-	private HashSet<ListViewItem> mSelectedItemsClone;
+	private HashSet<T> mSelectedItemsClone;
 	private Rectangle mTempScrollRect = new Rectangle();
-	private ListView mListView;
+	private ListView<T> mListView;
 	private Point mDragStart;
 	private boolean mIsControlDown;
 	private boolean mIsShiftDown;
 
 
-	public ListViewMouseListener(ListView aListView)
+	public ListViewMouseListener(ListView<T> aListView)
 	{
 		mListView = aListView;
 		mDragStart = new Point();
@@ -121,11 +121,11 @@ class ListViewMouseListener extends MouseAdapter implements MouseMotionListener
 			}
 		}
 
-		ListViewLayout layout = mListView.getListViewLayout();
+		ListViewLayout<T> layout = mListView.getListViewLayout();
 
-		LocationInfo info = layout.getLocationInfo(x, y);
+		LocationInfo<T> info = layout.getLocationInfo(x, y);
 		boolean isItem = info != null && info.isItem();
-		ListViewItem selectedItem = info == null ? null : info.getItem();
+		T selectedItem = info == null ? null : info.getItem();
 
 		// click on expand/collapse button
 		if (!aDragged && info != null && info.isGroup() && info.isGroupButton())
@@ -157,7 +157,7 @@ class ListViewMouseListener extends MouseAdapter implements MouseMotionListener
 			}
 			if (isItem)
 			{
-				for (ListViewItem item : layout.getItemsIntersecting(mListView.getAnchorItem(), selectedItem))
+				for (T item : layout.getItemsIntersecting(mListView.getAnchorItem(), selectedItem))
 				{
 					mListView.setItemSelected(item, true);
 				}
@@ -176,12 +176,12 @@ class ListViewMouseListener extends MouseAdapter implements MouseMotionListener
 			mListView.setFocusItem(selectedItem);
 		}
 
-		ArrayList<ListViewItem> items = layout.getItemsIntersecting(mDragStart.x, mDragStart.y, x, y, null);
+		ArrayList<T> items = layout.getItemsIntersecting(mDragStart.x, mDragStart.y, x, y, null);
 
 		if (items.isEmpty())
 		items = layout.getItemsIntersecting(mDragStart.x, mDragStart.y, x, y, null);
 
-		for (ListViewItem item : items)
+		for (T item : items)
 		{
 			if (mIsControlDown)
 			{
