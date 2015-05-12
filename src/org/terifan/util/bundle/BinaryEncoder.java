@@ -59,7 +59,8 @@ public class BinaryEncoder
 			FieldType fieldType = FieldType.valueOf(value);
 			Class<? extends Object> cls = value.getClass();
 
-			mOutput.writeBits(fieldType.ordinal(), 4);
+//			mOutput.writeBits(fieldType.ordinal(), 4);
+			mOutput.writeBits(fieldType.getSymbol(), fieldType.getSymbolLength());
 
 			if (cls.isArray())
 			{
@@ -91,26 +92,27 @@ public class BinaryEncoder
 
 	private String[] writeBundleKeys(Bundle aBundle) throws IOException
 	{
-		mOutput.writeVariableInt(aBundle.size(), 3, 0, false);
-
+		int initialKeyCount = mKeys.size();
+		String[] keys = aBundle.keySet().toArray(new String[aBundle.size()]);
 		ByteArrayOutputStream keyData = new ByteArrayOutputStream();
 
-		String[] keys = aBundle.keySet().toArray(new String[aBundle.size()]);
+		mOutput.writeVariableInt(keys.length, 3, 0, false);
 
 		for (String key : keys)
 		{
 			if (mKeys.containsKey(key))
 			{
 				mOutput.writeBit(0);
-				mOutput.writeVariableInt(mKeys.get(key), 3, 0, false);
+				mOutput.writeBitsInRange(mKeys.get(key), initialKeyCount);
 			}
 			else
 			{
-				mOutput.writeBit(1);
 				byte[] buffer = Convert.encodeUTF8(key);
+				keyData.write(buffer);
+
+				mOutput.writeBit(1);
 				mOutput.writeVariableInt(buffer.length, 3, 0, false);
 
-				keyData.write(buffer);
 				mKeys.put(key, mKeys.size());
 			}
 		}

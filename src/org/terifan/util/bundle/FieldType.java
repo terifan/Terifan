@@ -6,27 +6,48 @@ import java.util.List;
 
 enum FieldType
 {
-	BOOLEAN(Boolean.class, Boolean.TYPE),
-	BYTE(Byte.class, Byte.TYPE),
-	SHORT(Short.class, Short.TYPE),
-	CHAR(Character.class, Character.TYPE),
-	INT(Integer.class, Integer.TYPE),
-	LONG(Long.class, Long.TYPE),
-	FLOAT(Float.class, Float.TYPE),
-	DOUBLE(Double.class, Double.TYPE),
-	STRING(String.class, String.class),
-	BUNDLE(Bundle.class, Bundle.class),
-	DATE(Date.class, Date.class),
-	UNDEFINED(null,null);
+	BOOLEAN(Boolean.class, Boolean.TYPE, 5, 0b11000),
+	BYTE(Byte.class, Byte.TYPE, 5, 0b11001),
+	SHORT(Short.class, Short.TYPE, 5, 0b11010),
+	CHAR(Character.class, Character.TYPE, 5, 0b11011),
+	INT(Integer.class, Integer.TYPE, 2, 0b00),
+	LONG(Long.class, Long.TYPE, 5, 0b11100),
+	FLOAT(Float.class, Float.TYPE, 5, 0b11101),
+	DOUBLE(Double.class, Double.TYPE, 2, 0b01),
+	STRING(String.class, String.class, 2, 0b10),
+	BUNDLE(Bundle.class, Bundle.class, 5, 0b11110),
+	DATE(Date.class, Date.class, 6, 0b111110),
+	EMPTYLIST(null,null, 6, 0b111111);
 
 	private final Class mComponentType;
 	private final Class mPrimitiveType;
+	private final int mSymbolLength;
+	private final int mSymbol;
+
+	final static FieldType[] DECODER_ORDER =
+	{
+		INT, DOUBLE, STRING, BOOLEAN, BYTE, SHORT, CHAR, LONG, FLOAT, BUNDLE, DATE, EMPTYLIST
+	};
 
 
-	private FieldType(Class aComponentType, Class aPrimitiveType)
+	private FieldType(Class aComponentType, Class aPrimitiveType, int aSymbolLength, int aSymbol)
 	{
 		mComponentType = aComponentType;
 		mPrimitiveType = aPrimitiveType;
+		mSymbolLength = aSymbolLength;
+		mSymbol = aSymbol;
+	}
+
+
+	public int getSymbol()
+	{
+		return mSymbol;
+	}
+
+
+	public int getSymbolLength()
+	{
+		return mSymbolLength;
 	}
 
 
@@ -62,7 +83,7 @@ enum FieldType
 			}
 			if (cls == null)
 			{
-				return UNDEFINED;
+				return EMPTYLIST;
 			}
 		}
 		if (cls.isArray())
@@ -82,7 +103,7 @@ enum FieldType
 
 	public String getJavaName()
 	{
-		if (this == UNDEFINED)
+		if (this == EMPTYLIST)
 		{
 			return name();
 		}

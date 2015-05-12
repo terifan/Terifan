@@ -1,10 +1,10 @@
-package org.terifan.io.serialization;
+package deprecated.org.terifan.io.serialization;
 
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayDeque;
-import org.terifan.io.serialization.ObjectSerializer.Serialize;
+import deprecated.org.terifan.io.serialization.ObjectSerializer.Serialize;
 import org.terifan.util.log.Log;
 
 

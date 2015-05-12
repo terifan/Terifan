@@ -18,7 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import org.terifan.util.Debug;
 import org.terifan.util.log.Log;
 
 

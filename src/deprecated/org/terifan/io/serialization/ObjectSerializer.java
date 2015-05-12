@@ -1,4 +1,4 @@
-package org.terifan.io.serialization;
+package deprecated.org.terifan.io.serialization;
 
 import java.io.IOException;
 import static java.lang.annotation.ElementType.FIELD;

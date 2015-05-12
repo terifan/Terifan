@@ -58,7 +58,8 @@ public class BinaryDecoder
 
 		for (String key : keys)
 		{
-			FieldType fieldType = FieldType.values()[(int)mInput.readBits(4)];
+//			FieldType fieldType = FieldType.values()[(int)mInput.readBits(4)];
+			FieldType fieldType = decodeFieldType();
 			Object value;
 
 			if (mInput.readBit() == 0)
@@ -92,6 +93,34 @@ public class BinaryDecoder
 	}
 
 
+	private FieldType decodeFieldType() throws IOException
+	{
+		switch ((int)mInput.readBits(2))
+		{
+			case 0b00: return FieldType.DECODER_ORDER[0];
+			case 0b01: return FieldType.DECODER_ORDER[1];
+			case 0b10: return FieldType.DECODER_ORDER[2];
+			default:
+				switch ((int)mInput.readBits(3))
+				{
+					case 0b000: return FieldType.DECODER_ORDER[3];
+					case 0b001: return FieldType.DECODER_ORDER[4];
+					case 0b010: return FieldType.DECODER_ORDER[5];
+					case 0b011: return FieldType.DECODER_ORDER[6];
+					case 0b100: return FieldType.DECODER_ORDER[7];
+					case 0b101: return FieldType.DECODER_ORDER[8];
+					case 0b110: return FieldType.DECODER_ORDER[9];
+					default:
+						switch (mInput.readBit())
+						{
+							case 0b00: return FieldType.DECODER_ORDER[10];
+							default: return FieldType.DECODER_ORDER[11];
+						}
+				}
+		}
+	}
+
+
 	private String[] readBundleKeys() throws IOException
 	{
 		int keyCount = mInput.readVariableInt(3, 0, false);
@@ -101,16 +130,13 @@ public class BinaryDecoder
 
 		for (int i = 0; i < keyCount; i++)
 		{
-			boolean flag = mInput.readBit() == 0;
-			int value = (int)mInput.readVariableInt(3, 0, false);
-
-			if (flag)
+			if (mInput.readBit() == 0)
 			{
-				keys[i] = mKeys.get(value);
+				keys[i] = mKeys.get((int)mInput.readBitsInRange(mKeys.size()));
 			}
 			else
 			{
-				newKeys.add(new int[]{i, value});
+				newKeys.add(new int[]{i, (int)mInput.readVariableInt(3, 0, false)});
 			}
 		}
 
@@ -120,10 +146,7 @@ public class BinaryDecoder
 
 			for (int[] entry : newKeys)
 			{
-				int i = entry[0];
-				String key = readString(entry[1]);
-				keys[i] = key;
-				mKeys.put(mKeys.size(), key);
+				mKeys.put(mKeys.size(), keys[entry[0]] = readString(entry[1]));
 			}
 		}
 
@@ -211,23 +234,48 @@ public class BinaryDecoder
 		try
 		{
 			Bundle bundle = new Bundle()
-				.putBundle("lalala", new Bundle()
+				.putBundleArray("bundle-array", new Bundle()
 					.putInt("dolphine", 1)
 					.putInt("bear", 1)
 					.putInt("donkey", 1)
-				)
-				.putBundle("blabla", new Bundle()
+
+					.putBoolean("boolean", true)
+					.putByte("byte", 100)
+					.putShort("short", -654)
+					.putChar("char", 'x')
+					.putInt("int", 654321)
+					.putLong("long", 987654321L)
+					.putFloat("float", 321.321f)
+					.putDouble("double", 654321.654321)
+					.putDate("date", new Date(0))
+					.putString("string", "hello")
+					.putBundle("bundle", new Bundle().putString("key", "value"))
+
+					.putBooleanArray("boolean-array", true, false)
+					.putByteArray("byte-array", Byte.MAX_VALUE,(byte)0,Byte.MIN_VALUE)
+					.putShortArray("short-array", Short.MAX_VALUE,(short)0,Short.MIN_VALUE)
+					.putCharArray("char-array", (char)65535,'a',(char)0)
+					.putIntArray("int-array", Integer.MAX_VALUE,0,Integer.MIN_VALUE)
+					.putLongArray("long-array", Long.MAX_VALUE,0L,Long.MIN_VALUE)
+					.putFloatArray("float-array", 321.321f,0f,-321.321f)
+					.putDoubleArray("double-array", 654321.654321,0.0,-654321.654321)
+					.putDateArray("date-array", new Date(0), null, new Date())
+					.putStringArray("string-array", "hello", null, "world")
+				, new Bundle()
 					.putInt("cat", 1)
 					.putInt("dolphine", 1)
 					.putInt("dog", 1)
-				)
-				.putBundle("ough", new Bundle()
+				, new Bundle()
 					.putInt("donkey", 1)
 					.putInt("dolphine", 1)
 					.putInt("cat", 1)
+					.putBundle("red", new Bundle()
+						.putInt("bear", 2)
+					)
 				);
 
-			Log.out.println(bundle);
+			String expected = new BUNEncoder().marshal(bundle).replace("\t", "").replace("\n", "");
+			Log.out.println(expected);
 
 			byte[] data = new BinaryEncoder().marshal(bundle);
 			Debug.hexDump(data);
@@ -235,7 +283,11 @@ public class BinaryDecoder
 
 			Bundle unbundled = new BinaryDecoder().unmarshal(data);
 
-			Log.out.println(unbundled);
+			String actual = new BUNEncoder().marshal(unbundled).replace("\t", "").replace("\n", "");
+			Log.out.println(actual);
+
+			Log.out.println();
+			Log.out.println("result: " + expected.equals(actual));
 		}
 		catch (Throwable e)
 		{

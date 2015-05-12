@@ -1,4 +1,4 @@
-package org.terifan.io.serialization;
+package deprecated.org.terifan.io.serialization;
 
 import java.io.OutputStream;
 import java.lang.reflect.Field;

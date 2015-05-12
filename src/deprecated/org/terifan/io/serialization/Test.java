@@ -1,4 +1,4 @@
-package org.terifan.io.serialization;
+package deprecated.org.terifan.io.serialization;
 
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import org.terifan.io.serialization.ObjectSerializer.Serialize;
+import deprecated.org.terifan.io.serialization.ObjectSerializer.Serialize;
 import org.terifan.util.Calendar;
 import org.terifan.xml.XmlDocument;
 
