@@ -16,34 +16,7 @@ import java.nio.ByteBuffer;
 
 
 /**
- * Utility class that simplifies stream handling. The transfer methods accept:
- * <p>
- * Input:
- * <ol>
- * <li>java.io.InputStream</li>
- * <li>java.io.File</li>
- * <li>java.lang.String (file path)</li>
- * <li>java.lang.CharSequence</li>
- * <li>java.net.URL</li>
- * <li>byte array</li>
- * <li>java.nio.ByteBuffer</li>
- * </ol>
- *
- * Output:
- * <ol>
- * <li>java.io.OutputStream</li>
- * <li>java.io.File</li>
- * <li>java.lang.String (file path)</li>
- * <li>java.net.URL</li>
- * <li>java.nio.ByteBuffer</li>
- * </ol>
- *
- * This sample will copy a file:
- *
- * <pre>
- * Streams.transfer("myfile.txt", "copy of myfile.txt"));
- * </pre>
- * </p>
+ * Utility class that simplifies stream handling.
  */
 public final class Streams
 {
@@ -53,12 +26,7 @@ public final class Streams
 
 
 	/**
-	 * Transfers bytes from the InputStream to the OutputStreams until end of stream is reached. Streams are closed when the transfer has
-	 * completed.
-	 *
-	 * @param aInput an input to read from
-	 * @param aOutput one or more outputs to write to
-	 * @return number of bytes actually transfered.
+	 * Read all bytes from the input.
 	 */
 	public static byte[] fetch(Object aInput) throws IOException
 	{
@@ -69,35 +37,69 @@ public final class Streams
 
 
 	/**
-	 * Transfers bytes from the InputStream to the OutputStreams until end of stream is reached.
+	 * Transfers bytes from the input to the output.<p>
 	 *
-	 * @param aCloseInput if true, calls the closeInput method when transfer is complete.
-	 * @param aCloseOutput if true, calls the closeOutput method when transfer is complete.
-	 * @return number of bytes actually transfered.
+	 * Input:
+	 * <ol>
+	 * <li>java.io.InputStream</li>
+	 * <li>java.io.File</li>
+	 * <li>java.lang.String (file path)</li>
+	 * <li>java.lang.CharSequence</li>
+	 * <li>java.net.URL</li>
+	 * <li>byte array</li>
+	 * <li>java.nio.ByteBuffer</li>
+	 * </ol>
+	 *
+	 * Output:
+	 * <ol>
+	 * <li>java.io.OutputStream</li>
+	 * <li>java.io.File</li>
+	 * <li>java.lang.String (file path)</li>
+	 * <li>java.net.URL</li>
+	 * <li>java.nio.ByteBuffer</li>
+	 * </ol>
+	 *
+	 * This sample will copy a file:
+	 *
+	 * <pre>
+	 * Streams.transfer("myfile.txt", "copy of myfile.txt"));
+	 * </pre>
+	 *
+	 * @return 
+	 *   number of bytes transfered
 	 */
 	public static long transfer(Object aInput, Object aOutput) throws IOException
 	{
-		InputStream inputStream = null;
-		OutputStream outputStream = null;
+		try (InputStream inputStream = createInputStream(aInput); OutputStream outputStream = createOutputStream(aOutput))
+		{
+			return transfer(inputStream, outputStream, false, Long.MAX_VALUE);
+		}
+	}
 
+	
+	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams) throws IOException
+	{
+		return transfer(aInput, aOutput, aCloseStreams, Long.MAX_VALUE);
+	}
+
+	
+	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams, long aLimitLength) throws IOException
+	{
 		try
 		{
-			inputStream = createInputStream(aInput);
-			outputStream = createOutputStream(aOutput);
-
 			long total = 0;
 			byte[] buffer = new byte[4096];
 
 			for (;;)
 			{
-				int len = inputStream.read(buffer);
+				int len = aInput.read(buffer);
 
 				if (len <= 0)
 				{
 					break;
 				}
 
-				outputStream.write(buffer, 0, len);
+				aOutput.write(buffer, 0, len);
 
 				total += len;
 			}
@@ -106,24 +108,27 @@ public final class Streams
 		}
 		finally
 		{
-			if (inputStream != null)
+			if (aCloseStreams)
 			{
-				try
+				if (aInput != null)
 				{
-					inputStream.close();
+					try
+					{
+						aInput.close();
+					}
+					catch (Throwable e)
+					{
+					}
 				}
-				catch (Throwable e)
+				if (aOutput != null)
 				{
-				}
-			}
-			if (outputStream != null)
-			{
-				try
-				{
-					outputStream.close();
-				}
-				catch (Throwable e)
-				{
+					try
+					{
+						aOutput.close();
+					}
+					catch (Throwable e)
+					{
+					}
 				}
 			}
 		}
