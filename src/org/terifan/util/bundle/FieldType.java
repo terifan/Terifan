@@ -16,8 +16,9 @@ enum FieldType
 	DOUBLE(Double.class, Double.TYPE, 2, 0b01),
 	STRING(String.class, String.class, 2, 0b10),
 	BUNDLE(Bundle.class, Bundle.class, 5, 0b11110),
-	DATE(Date.class, Date.class, 6, 0b111110),
-	EMPTYLIST(null,null, 6, 0b111111);
+	NULL(null,null, 6, 0b111110),
+	EMPTY_LIST(null,null, 7, 0b1111110),
+	DATE(Date.class, Date.class, 7, 0b1111111);
 
 	private final Class mComponentType;
 	private final Class mPrimitiveType;
@@ -26,7 +27,10 @@ enum FieldType
 
 	final static FieldType[] DECODER_ORDER =
 	{
-		INT, DOUBLE, STRING, BOOLEAN, BYTE, SHORT, CHAR, LONG, FLOAT, BUNDLE, DATE, EMPTYLIST
+		INT, DOUBLE, STRING, // 2 bits
+		BOOLEAN, BYTE, SHORT, CHAR, LONG, FLOAT, BUNDLE, // 5 bits
+		NULL, // 6 bits
+		EMPTY_LIST, DATE // 7 bits
 	};
 
 
@@ -67,7 +71,7 @@ enum FieldType
 	{
 		if (aObject == null)
 		{
-			return null;
+			return NULL;
 		}
 		Class cls = aObject.getClass();
 		if (List.class.isAssignableFrom(cls))
@@ -83,7 +87,7 @@ enum FieldType
 			}
 			if (cls == null)
 			{
-				return EMPTYLIST;
+				return EMPTY_LIST;
 			}
 		}
 		if (cls.isArray())
@@ -103,7 +107,7 @@ enum FieldType
 
 	public String getJavaName()
 	{
-		if (this == EMPTYLIST)
+		if (this == EMPTY_LIST)
 		{
 			return name();
 		}

@@ -51,10 +51,10 @@ public class DefaultListViewItem extends AbstractListViewItem
 	@Override
 	public Icon getIcon(int aIndex)
 	{
-		if (aIndex < 0 || aIndex >= mValues.length)
-		{
-			throw new IllegalArgumentException("Item don't have column index: " + aIndex);
-		}
+//		if (aIndex < 0 || aIndex >= mValues.length)
+//		{
+//			throw new IllegalArgumentException("Item don't have column index: " + aIndex);
+//		}
 
 		if (aIndex >= mValues.length)
 		{

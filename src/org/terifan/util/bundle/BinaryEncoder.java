@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import org.terifan.util.Convert;
 import org.terifan.io.BitOutputStream;
 import org.terifan.io.ByteBufferOutputStream;
+import org.terifan.util.log.Log;
 
 
 public class BinaryEncoder
@@ -57,10 +58,16 @@ public class BinaryEncoder
 		{
 			Object value = aBundle.get(key);
 			FieldType fieldType = FieldType.valueOf(value);
-			Class<? extends Object> cls = value.getClass();
 
 //			mOutput.writeBits(fieldType.ordinal(), 4);
 			mOutput.writeBits(fieldType.getSymbol(), fieldType.getSymbolLength());
+
+			if (fieldType == FieldType.NULL || fieldType == FieldType.EMPTY_LIST)
+			{
+				continue;
+			}
+
+			Class<? extends Object> cls = value.getClass();
 
 			if (cls.isArray())
 			{
@@ -196,13 +203,13 @@ public class BinaryEncoder
 				mOutput.write(buffer);
 				break;
 			case DATE:
-				mOutput.writeVariableLong(((Date)aValue).getTime(), 7, 0, false);
+				mOutput.writeVariableLong(((Date)aValue).getTime(), 7, 8, false);
 				break;
 			case BUNDLE:
 				writeBundle((Bundle)aValue);
 				break;
 			default:
-				throw new UnsupportedOperationException("Unsupported field type: " + aFieldType);
+				throw new IOException("Unsupported field type: " + aFieldType);
 		}
 	}
 }

@@ -62,7 +62,15 @@ public class BinaryDecoder
 			FieldType fieldType = decodeFieldType();
 			Object value;
 
-			if (mInput.readBit() == 0)
+			if (fieldType == FieldType.NULL)
+			{
+				value = null;
+			}
+			else if (fieldType == FieldType.EMPTY_LIST)
+			{
+				value = new ArrayList();
+			}
+			else if (mInput.readBit() == 0)
 			{
 				value = readValue(fieldType);
 			}
@@ -113,8 +121,13 @@ public class BinaryDecoder
 					default:
 						switch (mInput.readBit())
 						{
-							case 0b00: return FieldType.DECODER_ORDER[10];
-							default: return FieldType.DECODER_ORDER[11];
+							case 0b0: return FieldType.DECODER_ORDER[10];
+							default:
+								switch (mInput.readBit())
+								{
+									case 0b0: return FieldType.DECODER_ORDER[11];
+									default: return FieldType.DECODER_ORDER[12];
+								}
 						}
 				}
 		}
@@ -207,11 +220,11 @@ public class BinaryDecoder
 				mInput.align();
 				return readString(len);
 			case DATE:
-				return new Date(mInput.readVariableLong(7, 0, false));
+				return new Date(mInput.readVariableLong(7, 8, false));
 			case BUNDLE:
 				return readBundle(new Bundle());
 			default:
-				throw new UnsupportedOperationException("Unsupported field type: " + aFieldType);
+				throw new IOException("Unsupported field type: " + aFieldType);
 		}
 	}
 
@@ -226,72 +239,5 @@ public class BinaryDecoder
 		}
 
 		return Convert.decodeUTF8(buf, 0, aLength);
-	}
-
-
-	public static void main(String ... args)
-	{
-		try
-		{
-			Bundle bundle = new Bundle()
-				.putBundleArray("bundle-array", new Bundle()
-					.putInt("dolphine", 1)
-					.putInt("bear", 1)
-					.putInt("donkey", 1)
-
-					.putBoolean("boolean", true)
-					.putByte("byte", 100)
-					.putShort("short", -654)
-					.putChar("char", 'x')
-					.putInt("int", 654321)
-					.putLong("long", 987654321L)
-					.putFloat("float", 321.321f)
-					.putDouble("double", 654321.654321)
-					.putDate("date", new Date(0))
-					.putString("string", "hello")
-					.putBundle("bundle", new Bundle().putString("key", "value"))
-
-					.putBooleanArray("boolean-array", true, false)
-					.putByteArray("byte-array", Byte.MAX_VALUE,(byte)0,Byte.MIN_VALUE)
-					.putShortArray("short-array", Short.MAX_VALUE,(short)0,Short.MIN_VALUE)
-					.putCharArray("char-array", (char)65535,'a',(char)0)
-					.putIntArray("int-array", Integer.MAX_VALUE,0,Integer.MIN_VALUE)
-					.putLongArray("long-array", Long.MAX_VALUE,0L,Long.MIN_VALUE)
-					.putFloatArray("float-array", 321.321f,0f,-321.321f)
-					.putDoubleArray("double-array", 654321.654321,0.0,-654321.654321)
-					.putDateArray("date-array", new Date(0), null, new Date())
-					.putStringArray("string-array", "hello", null, "world")
-				, new Bundle()
-					.putInt("cat", 1)
-					.putInt("dolphine", 1)
-					.putInt("dog", 1)
-				, new Bundle()
-					.putInt("donkey", 1)
-					.putInt("dolphine", 1)
-					.putInt("cat", 1)
-					.putBundle("red", new Bundle()
-						.putInt("bear", 2)
-					)
-				);
-
-			String expected = new BUNEncoder().marshal(bundle).replace("\t", "").replace("\n", "");
-			Log.out.println(expected);
-
-			byte[] data = new BinaryEncoder().marshal(bundle);
-			Debug.hexDump(data);
-			Log.out.println("length=" + data.length);
-
-			Bundle unbundled = new BinaryDecoder().unmarshal(data);
-
-			String actual = new BUNEncoder().marshal(unbundled).replace("\t", "").replace("\n", "");
-			Log.out.println(actual);
-
-			Log.out.println();
-			Log.out.println("result: " + expected.equals(actual));
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
 	}
 }
