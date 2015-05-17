@@ -12,16 +12,16 @@ public abstract class AbstractListViewItem implements ListViewItem
 	}
 
 
-	@Override
-	public void setIcon(int aIndex, Icon aIcon)
-	{
-	}
-
-
-	@Override
-	public void setValue(int aIndex, Object aValue)
-	{
-	}
+//	@Override
+//	public void setIcon(int aIndex, Icon aIcon)
+//	{
+//	}
+//
+//
+//	@Override
+//	public void setValue(int aIndex, Object aValue)
+//	{
+//	}
 	
 	
 	@Override
@@ -29,7 +29,7 @@ public abstract class AbstractListViewItem implements ListViewItem
 	{
 		return null;
 	}
-	
+
 
 	/**
 	 * Override this method to lazily load the item when it becomes visible.
@@ -39,7 +39,7 @@ public abstract class AbstractListViewItem implements ListViewItem
 	 * This implementation does nothing.
 	 */
 	@Override
-	public void loadState()
+	public void loadState(boolean aItemVisible)
 	{
 	}
 }

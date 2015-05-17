@@ -5,21 +5,27 @@ import org.terifan.ui.Icon;
 
 public interface ListViewItem
 {
-	public Object getValue(int aIndex);
+	Object getValue(int aIndex);
 
-	public void setValue(int aIndex, Object aValue);
+//	void setValue(int aIndex, Object aValue);
 
-	public Icon getIcon(int aIndex);
+	Icon getIcon(int aIndex);
 
-	public void setIcon(int aIndex, Icon aIcon);
+//	void setIcon(int aIndex, Icon aIcon);
 
-	public Object getRenderingHint(Object aKey);
-
-	@Override
-	public boolean equals(Object aObject);
+	Object getRenderingHint(Object aKey);
 
 	@Override
-	public int hashCode();
+	boolean equals(Object aObject);
 
-	public void loadState();
+	@Override
+	int hashCode();
+
+	/**
+	 * Item will be rendered, load any state necessary for it.
+	 * 
+	 * @param aItemVisible 
+	 *   true if it is within the visible rect and is rendered and false if it is neighbouring the visible rect (ie a row/column above/below).
+	 */
+	void loadState(boolean aItemVisible);
 }

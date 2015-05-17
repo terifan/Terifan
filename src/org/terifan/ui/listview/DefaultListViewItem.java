@@ -36,7 +36,7 @@ public class DefaultListViewItem extends AbstractListViewItem
 	}
 
 
-	@Override
+//	@Override
 	public void setValue(int aIndex, Object aValue)
 	{
 		if (aIndex < 0 || aIndex >= mValues.length)
@@ -65,7 +65,7 @@ public class DefaultListViewItem extends AbstractListViewItem
 	}
 
 
-	@Override
+//	@Override
 	public void setIcon(int aIndex, Icon aIcon)
 	{
 		if (aIndex < 0 || aIndex >= mValues.length)

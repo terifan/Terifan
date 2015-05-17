@@ -900,7 +900,17 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	}
 
 
-	public boolean isItemDisplayable(T aItem)
+	/**
+	 * Return true if the item is currently probably visible. TODO: only jscrollpane supported!!!
+	 * 
+	 * @param aItem
+	 *   the item
+	 * @param aExpandView
+	 *   include neighbouring items
+	 * @return 
+	 *   true if the item is probably visible
+	 */
+	public boolean isItemDisplayable(T aItem, boolean aExpandView)
 	{
 		Rectangle itemRect = new Rectangle();
 
@@ -924,6 +934,14 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 					int y = scrollPane.getVerticalScrollBar().getValue();
 					int w = viewport.getWidth();
 					int h = viewport.getHeight();
+					
+					if (aExpandView)
+					{
+						x -= itemRect.width;
+						y -= itemRect.height;
+						w += itemRect.width * 2;
+						h += itemRect.height * 2;
+					}
 
 					return !SwingUtilities.computeIntersection(x, y, w, h, itemRect).isEmpty();
 				}

@@ -38,7 +38,6 @@ public class ImageResizer
 		boolean opaque = aSourceImage.getTransparency() == Transparency.OPAQUE;
 		int type = opaque ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
 
-//		Log.out.println("/////"+aDstWidth+" "+aDstHeight+" "+aSourceImage.getWidth()+" " +aSourceImage.getHeight());
 		if (aDstWidth > aSourceImage.getWidth() || aDstHeight > aSourceImage.getHeight())
 		{
 			aSourceImage = resizeDown(aSourceImage, aDstWidth, aDstHeight, InterpolationMode.BICUBIC, type);
@@ -49,12 +48,10 @@ public class ImageResizer
 			return aSourceImage;
 		}
 
+		BufferedImage outputImage = new BufferedImage(aDstWidth, aDstHeight, type);
+
 		int srcWidth = aSourceImage.getWidth();
 		int srcHeight = aSourceImage.getHeight();
-
-//		Log.out.println(aSourceImage.getWidth()+" "+aSourceImage.getHeight());
-
-		BufferedImage outputImage = new BufferedImage(aDstWidth, aDstHeight, type);
 
 		double scaleX = srcWidth / (double)aDstWidth;
 		double scaleY = srcHeight / (double)aDstHeight;
@@ -74,6 +71,12 @@ public class ImageResizer
 
 	private static void processHorizontal(BufferedImage aSourceImage, int aSrcWidth, int aSrcHeight, int aDstWidth, int[] aWorkPixels, double aScaleX, int[] aFilter, AtomicBoolean aAbortProcess)
 	{
+		if (aDstWidth == aSrcWidth)
+		{
+			aSourceImage.getRGB(0, 0, aSrcWidth, aSrcHeight, aWorkPixels, 0, aSrcWidth);
+			return;
+		}
+		
 		int[] intBuffer = new int[aSrcWidth];
 		byte[] byteBuffer = new byte[4 * aSrcWidth];
 
@@ -203,7 +206,11 @@ public class ImageResizer
 
 	private static void processVertical(BufferedImage aOutputImage, int aSrcHeight, int aDstWidth, int aDstHeight, int[] aWorkPixels, double aScaleY, int[] aFilter, AtomicBoolean aAbortProcess)
 	{
-		int[] dstPixels = new int[aDstHeight];
+		if (aDstHeight == aSrcHeight)
+		{
+			aOutputImage.setRGB(0, 0, aDstWidth, aDstHeight, aWorkPixels, 0, aDstWidth);
+			return;
+		}
 
 		int filterSize = aFilter.length / 2;
 		int scale = (int)(aScaleY / 2);
@@ -233,7 +240,7 @@ public class ImageResizer
 				for (int z = min, wp = sy * aDstWidth + dx; z <= max; z++, wp+=aDstWidth)
 				{
 					int c = aWorkPixels[wp];
-					float weight = aFilter[z];
+					int weight = aFilter[z];
 					sample0 += weight * (0xff & (c >> 16));
 					sample1 += weight * (0xff & (c >> 8));
 					sample2 += weight * (0xff & (c));
@@ -241,10 +248,8 @@ public class ImageResizer
 					sum += weight;
 				}
 
-				dstPixels[dy] = toRGB(sample0, sample1, sample2, sample3, sum);
+				aOutputImage.setRGB(dx, dy, toRGB(sample0, sample1, sample2, sample3, sum));
 			}
-
-			aOutputImage.setRGB(dx, 0, 1, aDstHeight, dstPixels, 0, 1);
 		}
 	}
 

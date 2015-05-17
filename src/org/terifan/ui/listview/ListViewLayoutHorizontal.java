@@ -208,6 +208,11 @@ public class ListViewLayoutHorizontal<T extends ListViewItem> extends AbstractLi
 
 			if (x >= clip.x+clip.width)
 			{
+//				for (; itemIndex < lastIndex; itemIndex++)
+//				{
+//					items.get(itemIndex).loadState(false);
+//				}
+			
 				break;
 			}
 			else if (clip.x <= x+colWidth)
@@ -218,7 +223,7 @@ public class ListViewLayoutHorizontal<T extends ListViewItem> extends AbstractLi
 				{
 					T item = items.get(itemIndex);
 
-					item.loadState();
+					item.loadState(true);
 
 					int itemHeight = renderer.getItemHeight(mListView, item);
 

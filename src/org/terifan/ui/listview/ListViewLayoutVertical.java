@@ -149,9 +149,14 @@ public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractList
 
 			if (y >= clip.y + clip.height)
 			{
+				for (int itemRowIndex = 0; itemIndex < itemCount && itemRowIndex < itemsPerRow; itemIndex++, itemRowIndex++)
+				{
+					items.get(itemIndex).loadState(false);
+				}
+
 				break;
 			}
-			else if (clip.y <= y + rowHeight)
+			else if (y >= clip.y - rowHeight)
 			{
 				double x = verticalBarWidth * aLevel;
 				double error = 0;
@@ -159,10 +164,7 @@ public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractList
 				for (int itemRowIndex = 0; itemIndex < itemCount && itemRowIndex < itemsPerRow; itemIndex++, itemRowIndex++)
 				{
 					ListViewItem item = items.get(itemIndex);
-
-					item.loadState();
-
-//					int itemHeight = renderer.getItemHeight(mListView, item);
+					item.loadState(true);
 
 					int tmpWidth = (int)(itemWidth + error);
 
@@ -170,6 +172,13 @@ public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractList
 
 					x += tmpWidth;
 					error += itemWidth - tmpWidth;
+				}
+			}
+			else if (y >= clip.y - 2 * rowHeight)
+			{
+				for (int itemRowIndex = 0; itemIndex < itemCount && itemRowIndex < itemsPerRow; itemIndex++, itemRowIndex++)
+				{
+					items.get(itemIndex).loadState(false);
 				}
 			}
 			else

@@ -5,9 +5,9 @@ import org.terifan.ui.StyleSheet;
 import org.terifan.ui.Utilities;
 
 
-public class ListViewGroupRenderer
+public class ListViewGroupRenderer<T extends ListViewItem>
 {
-	public void paintGroup(ListView aListView, Graphics2D aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListViewGroup aGroup)
+	public void paintGroup(ListView aListView, Graphics2D aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListViewGroup<T> aGroup)
 	{
 		Utilities.enableTextAntialiasing(aGraphics);
 
