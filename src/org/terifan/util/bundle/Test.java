@@ -17,7 +17,7 @@ public class Test
 		{
 			Bundle bundle = newBundle();
 
-			String expected = new BUNEncoder().marshal(bundle).replace("\t", "").replace("\n", "");
+			String expected = new BUNEncoder().marshal(bundle, true);
 			Log.out.println(expected);
 
 			byte[] data = new BinaryEncoder().marshal(bundle);
@@ -25,7 +25,7 @@ public class Test
 
 			Bundle unbundled = new BinaryDecoder().unmarshal(data);
 
-			String actual = new BUNEncoder().marshal(unbundled).replace("\t", "").replace("\n", "");
+			String actual = new BUNEncoder().marshal(unbundled, true);
 			Log.out.println(actual);
 
 			Log.out.println(new BUNEncoder().marshal(unbundled));
@@ -85,6 +85,7 @@ public class Test
 			.putDateArray("date-array", new Date(0), null, new Date())
 			.putStringArray("string-array-1", "hello", null, "", "world")
 			.putStringArray("string-array-2")
+			.putStringArray("string-array-3", null)
 
 			.putBooleanArrayList("boolean-arraylist", new ArrayList<>(Arrays.asList(true, false)))
 			.putByteArrayList("byte-arraylist", new ArrayList<>(Arrays.asList(Byte.MAX_VALUE, (byte)0, Byte.MIN_VALUE)))
@@ -97,6 +98,7 @@ public class Test
 			.putDateArrayList("date-arraylist", new ArrayList<>(Arrays.asList(new Date(0), null, new Date())))
 			.putStringArrayList("string-arraylist-1", new ArrayList<>(Arrays.asList("hello", null, "", "world")))
 			.putStringArrayList("string-arraylist-2", new ArrayList<>())
+			.putStringArrayList("string-arraylist-3", null)
 			;
 	}
 }

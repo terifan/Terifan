@@ -12,16 +12,29 @@ import java.util.List;
 public class BUNEncoder
 {
 	private SimpleDateFormat mDateFormatter;
-	private int mIndent;
 	private Appendable mAppendable;
+	private boolean mFlat;
+	private int mIndent;
 
 
 	public void marshal(Bundle aBundle, File aOutput) throws IOException
 	{
+		marshal(aBundle, aOutput, false);
+	}
+
+
+	public void marshal(Bundle aBundle, File aOutput, boolean aFlat) throws IOException
+	{
 		try (FileWriter fw = new FileWriter(aOutput))
 		{
-			marshal(aBundle, fw);
+			marshal(aBundle, fw, aFlat);
 		}
+	}
+
+
+	public String marshal(Bundle aBundle) throws IOException
+	{
+		return marshal(aBundle, false);
 	}
 
 
@@ -31,9 +44,9 @@ public class BUNEncoder
 	 * @return
 	 *   the Bundle as a JSON string
 	 */
-	public String marshal(Bundle aBundle) throws IOException
+	public String marshal(Bundle aBundle, boolean aFlat) throws IOException
 	{
-		return marshal(aBundle, new StringBuilder(1<<17)).toString();
+		return marshal(aBundle, new StringBuilder(1<<17), aFlat).toString();
 	}
 
 
@@ -45,7 +58,14 @@ public class BUNEncoder
 	 */
 	public Appendable marshal(Bundle aBundle, Appendable aAppendable) throws IOException
 	{
+		return marshal(aBundle, aAppendable, false);
+	}
+
+
+	public Appendable marshal(Bundle aBundle, Appendable aAppendable, boolean aFlat) throws IOException
+	{
 		mAppendable = aAppendable;
+		mFlat = aFlat;
 		mIndent = 0;
 
 		writeBundle(aBundle);
@@ -63,7 +83,7 @@ public class BUNEncoder
 			boolean simple = isSimple(aBundle);
 			boolean first = true;
 
-			if (!simple)
+			if (!mFlat && !simple)
 			{
 				mAppendable.append("\n");
 				mIndent++;
@@ -80,7 +100,7 @@ public class BUNEncoder
 
 				if (!first)
 				{
-					if (simple)
+					if (mFlat || simple)
 					{
 						mAppendable.append(", ");
 					}
@@ -123,7 +143,7 @@ public class BUNEncoder
 						{
 							boolean simpleArray = isSimple(len, value);
 
-							if (!simpleArray)
+							if (!mFlat && !simpleArray)
 							{
 								mAppendable.append("\n");
 								mIndent++;
@@ -132,7 +152,7 @@ public class BUNEncoder
 							{
 								if (i > 0)
 								{
-									if (simpleArray)
+									if (mFlat || simpleArray)
 									{
 										mAppendable.append(", ");
 									}
@@ -147,7 +167,7 @@ public class BUNEncoder
 								}
 								writeValue(Array.get(value, i));
 							}
-							if (!simpleArray)
+							if (!mFlat && !simpleArray)
 							{
 								mIndent--;
 								mAppendable.append("\n");
@@ -164,7 +184,7 @@ public class BUNEncoder
 				}
 			}
 
-			if (!simple)
+			if (!mFlat && !simple)
 			{
 				mIndent--;
 				mAppendable.append("\n");
