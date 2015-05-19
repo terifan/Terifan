@@ -65,7 +65,7 @@ public final class Streams
 	 * Streams.transfer("myfile.txt", "copy of myfile.txt"));
 	 * </pre>
 	 *
-	 * @return 
+	 * @return
 	 *   number of bytes transfered
 	 */
 	public static long transfer(Object aInput, Object aOutput) throws IOException
@@ -76,13 +76,13 @@ public final class Streams
 		}
 	}
 
-	
+
 	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams) throws IOException
 	{
 		return transfer(aInput, aOutput, aCloseStreams, Long.MAX_VALUE);
 	}
 
-	
+
 	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams, long aLimitLength) throws IOException
 	{
 		try
@@ -137,6 +137,10 @@ public final class Streams
 
 	private static InputStream createInputStream(Object aInput) throws IOException
 	{
+		if (aInput == null)
+		{
+			throw new IllegalArgumentException("Input is null");
+		}
 		if (aInput instanceof InputStream)
 		{
 			return (InputStream)aInput;

@@ -4,16 +4,15 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.io.Reader;
 import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import org.terifan.util.Convert;
 import org.terifan.util.log.Log;
 
@@ -22,7 +21,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 {
 	private final static long serialVersionUID = 1L;
 
-	private final Map<String, Object> mValues = new TreeMap<>();
+	private final Map<String, Object> mValues = new LinkedHashMap<>();
 	private boolean mStrict;
 
 
@@ -1180,7 +1179,7 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 				bundles[i] = new Bundle();
 				aValues[i].writeExternal(bundles[i]);
 			}
-		}		
+		}
 		put(aKey, bundles);
 		return this;
 	}
