@@ -1,14 +1,14 @@
 package org.terifan.util;
 
 
-public class VolatileResource<T> implements AutoCloseable
+public class SharedResource<T> implements AutoCloseable
 {
-	private VolatileResourceFactory mFactory;
+	private SharedResourceFactory mFactory;
 	private T mInstance;
 	private Object mOwner;
 
 
-	VolatileResource(VolatileResourceFactory aFactory, T aInstance, Object aOwner)
+	SharedResource(SharedResourceFactory aFactory, T aInstance, Object aOwner)
 	{
 		mInstance = aInstance;
 		mOwner = aOwner;

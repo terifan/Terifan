@@ -10,7 +10,7 @@ import org.terifan.util.log.Log;
  * This class manages the creation of a resource used by multiple parties that will be destroyed automatically when no party no longer uses it.
  *
  * <pre>
- * VolatileResourceFactory<Database,String,Long> factory = new VolatileResourceFactory<>(){
+ * SharedResourceFactory<Database,String,Long> factory = new SharedResourceFactory<>(){
  *	protected Database create(String aConnectionString){
  *   return new Database(aConnectionString);
  *  }
@@ -19,10 +19,10 @@ import org.terifan.util.log.Log;
  *  }
  * };
  * 
- * VolatileResource<Database,Long> database1 = factory.get(connectionString, Thread.currentThread().getId()); // create method called and database open
+ * SharedResource<Database,Long> database1 = factory.get(connectionString, Thread.currentThread().getId()); // create method called and database open
  * database1.something();
  * ...
- * try (VolatileResource<Database,Long> database2 = factory.get(connectionString, Thread.currentThread().getId())) // existing database instance returned
+ * try (SharedResource<Database,Long> database2 = factory.get(connectionString, Thread.currentThread().getId())) // existing database instance returned
  * {
  *    database2.something();
  * }
@@ -34,14 +34,14 @@ import org.terifan.util.log.Log;
  * @param <P> Type of prototypes this factory accepts for creating new instances.
  * @param <O> Type of objects capable to own an object.
  */
-public abstract class VolatileResourceFactory<I,P,O>
+public abstract class SharedResourceFactory<I,P,O>
 {
 	private HashMap<P,I> mPrototypeInstance;
 	private HashMap<I,P> mInstancePrototype;
 	private HashMap<I,HashSet<O>> mInstanceOwners;
 
 
-	public VolatileResourceFactory()
+	public SharedResourceFactory()
 	{
 		mInstanceOwners = new HashMap<>();
 		mInstancePrototype = new HashMap<>();
@@ -52,7 +52,7 @@ public abstract class VolatileResourceFactory<I,P,O>
 	/**
 	 * Return an already created instance or create a new object using the prototype provided.
 	 */
-	public synchronized VolatileResource<I> get(P aPrototype, O aOwner)
+	public synchronized SharedResource<I> get(P aPrototype, O aOwner)
 	{
 		I instance = mPrototypeInstance.get(aPrototype);
 
@@ -79,7 +79,7 @@ public abstract class VolatileResourceFactory<I,P,O>
 
 		owners.add(aOwner);
 
-		return new VolatileResource<>(this, instance, aOwner);
+		return new SharedResource<>(this, instance, aOwner);
 	}
 
 
@@ -103,7 +103,7 @@ public abstract class VolatileResourceFactory<I,P,O>
 	/**
 	 * Removes an Instance and Owner pair. If the instance isn't owned by any other Owner it will be destroyed.
 	 */
-	public synchronized void remove(VolatileResource<I> aInstance)
+	public synchronized void remove(SharedResource<I> aInstance)
 	{
 		remove(aInstance.get(), (O)aInstance.getOwner());
 	}
@@ -120,7 +120,7 @@ public abstract class VolatileResourceFactory<I,P,O>
 		{
 			mPrototypeInstance.remove(prototype);
 			mInstanceOwners.remove(aInstance);
-			destroy(aInstance);
+			destroy(prototype, aInstance);
 		}
 	}
 
@@ -205,14 +205,14 @@ public abstract class VolatileResourceFactory<I,P,O>
 	protected abstract I create(P aObject);
 
 
-	protected abstract void destroy(I aObject);
+	protected abstract void destroy(P aPrototype, I aObject);
 	
 	
 	public static void main(String... args)
 	{
 		try
 		{
-			VolatileResourceFactory<int[],Integer,Object> factory = new VolatileResourceFactory<int[], Integer, Object>()
+			SharedResourceFactory<int[],Integer,Object> factory = new SharedResourceFactory<int[], Integer, Object>()
 			{
 				@Override
 				protected int[] create(Integer aObject)
@@ -221,18 +221,18 @@ public abstract class VolatileResourceFactory<I,P,O>
 					return new int[aObject];
 				}
 				@Override
-				protected void destroy(int[] aObject)
+				protected void destroy(Integer aPrototype, int[] aObject)
 				{
 					Log.out.println("destroy " + aObject);
 				}
 			};
 
 
-			try (VolatileResource a = factory.get(4, "a"))
+			try (SharedResource a = factory.get(4, "a"))
 			{
 				Log.out.println(a.get());
 
-				try (VolatileResource b = factory.get(4, "b"))
+				try (SharedResource b = factory.get(4, "b"))
 				{
 					Log.out.println(b.get());
 				}
@@ -240,7 +240,7 @@ public abstract class VolatileResourceFactory<I,P,O>
 				Log.out.println(a.get());
 			}
 
-			try (VolatileResource a = factory.get(4, "a"))
+			try (SharedResource a = factory.get(4, "a"))
 			{
 				Log.out.println(a.get());
 			}
