@@ -2,14 +2,12 @@ package org.terifan.util.bundle;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.zip.DeflaterOutputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.terifan.io.Streams;
-import org.terifan.util.Debug;
 import org.terifan.util.StopWatch;
 import org.terifan.util.log.Log;
 import org.w3c.dom.Document;
