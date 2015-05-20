@@ -1722,68 +1722,6 @@ public final class Bundle implements Cloneable, Externalizable, Iterable<String>
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException
 	{
-		out.writeInt(size());
-
-		for (String key : this)
-		{
-			out.writeUTF(key);
-
-			Object value = mValues.get(key);
-
-			if (value instanceof String)
-			{
-				out.write('S');
-				out.writeUTF((String)value);
-			}
-			else if (value instanceof Boolean)
-			{
-				out.write('x');
-				out.writeBoolean((Boolean)value);
-			}
-			else if (value instanceof Byte)
-			{
-				out.write('b');
-				out.writeByte((Byte)value);
-			}
-			else if (value instanceof Short)
-			{
-				out.write('s');
-				out.writeShort((Short)value);
-			}
-			else if (value instanceof Character)
-			{
-				out.write('c');
-				out.writeChar((Character)value);
-			}
-			else if (value instanceof Integer)
-			{
-				out.write('i');
-				out.writeInt((Integer)value);
-			}
-			else if (value instanceof Long)
-			{
-				out.write('l');
-				out.writeLong((Long)value);
-			}
-			else if (value instanceof Float)
-			{
-				out.write('f');
-				out.writeFloat((Float)value);
-			}
-			else if (value instanceof Double)
-			{
-				out.write('d');
-				out.writeDouble((Double)value);
-			}
-			else if (value == null)
-			{
-				out.write('n');
-			}
-			else
-			{
-				out.write('O');
-				out.writeObject(value);
-			}
-		}
+		out.write(new FastEncoder().marshal(this));
 	}
 }

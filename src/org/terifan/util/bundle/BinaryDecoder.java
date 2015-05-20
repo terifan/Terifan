@@ -11,11 +11,9 @@ import java.util.TreeMap;
 import org.terifan.io.BitInputStream;
 import org.terifan.io.ByteBufferInputStream;
 import org.terifan.util.Convert;
-import org.terifan.util.Debug;
-import org.terifan.util.log.Log;
 
 
-public class BinaryDecoder
+public class BinaryDecoder implements Decoder
 {
 	private TreeMap<Integer,String> mKeys;
 	private BitInputStream mInput;
@@ -26,29 +24,48 @@ public class BinaryDecoder
 	}
 
 
+	@Override
 	public Bundle unmarshal(byte[] aBuffer) throws IOException
 	{
-		if (aBuffer == null || aBuffer.length == 0)
-		{
-			return null;
-		}
-
-		return unmarshal(new ByteArrayInputStream(aBuffer));
+		return unmarshal(new Bundle(), aBuffer);
 	}
 
 
+	@Override
+	public Bundle unmarshal(Bundle aBundle, byte[] aBuffer) throws IOException
+	{
+		return unmarshal(aBundle, new ByteArrayInputStream(aBuffer));
+	}
+
+
+	@Override
 	public Bundle unmarshal(ByteBuffer aBuffer) throws IOException
 	{
-		return unmarshal(new ByteBufferInputStream(aBuffer));
+		return unmarshal(new Bundle(), aBuffer);
 	}
 
 
+	@Override
+	public Bundle unmarshal(Bundle aBundle, ByteBuffer aBuffer) throws IOException
+	{
+		return unmarshal(aBundle, new ByteBufferInputStream(aBuffer));
+	}
+
+
+	@Override
 	public Bundle unmarshal(InputStream aInputStream) throws IOException
+	{
+		return unmarshal(new Bundle(), aInputStream);
+	}
+
+
+	@Override
+	public Bundle unmarshal(Bundle aBundle, InputStream aInputStream) throws IOException
 	{
 		mKeys = new TreeMap<>();
 		mInput = new BitInputStream(aInputStream);
 
-		return readBundle(new Bundle());
+		return readBundle(aBundle);
 	}
 
 
@@ -58,7 +75,6 @@ public class BinaryDecoder
 
 		for (String key : keys)
 		{
-//			FieldType fieldType = FieldType.values()[(int)mInput.readBits(4)];
 			FieldType fieldType = decodeFieldType();
 			Object value;
 
@@ -208,7 +224,7 @@ public class BinaryDecoder
 			case CHAR:
 				return (char)mInput.readVariableInt(3, 0, false);
 			case INT:
-				return mInput.readVariableInt(3, 4, true);
+				return mInput.readVariableInt(3, 1, true);
 			case LONG:
 				return mInput.readVariableLong(7, 0, true);
 			case FLOAT:
@@ -216,11 +232,11 @@ public class BinaryDecoder
 			case DOUBLE:
 				return Double.longBitsToDouble(mInput.readVariableLong(7, 0, false));
 			case STRING:
-				int len = mInput.readVariableInt(3, 4, false);
+				int len = mInput.readVariableInt(3, 0, false);
 				mInput.align();
 				return readString(len);
 			case DATE:
-				return new Date(mInput.readVariableLong(7, 8, false));
+				return new Date(mInput.readVariableLong(7, 0, false));
 			case BUNDLE:
 				return readBundle(new Bundle());
 			default:

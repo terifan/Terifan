@@ -11,10 +11,9 @@ import java.util.TreeMap;
 import org.terifan.util.Convert;
 import org.terifan.io.BitOutputStream;
 import org.terifan.io.ByteBufferOutputStream;
-import org.terifan.util.log.Log;
 
 
-public class BinaryEncoder
+public class BinaryEncoder implements Encoder
 {
 	private TreeMap<String,Integer> mKeys;
 	private BitOutputStream mOutput;
@@ -25,6 +24,7 @@ public class BinaryEncoder
 	}
 
 
+	@Override
 	public byte[] marshal(Bundle aBundle) throws IOException
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -33,12 +33,14 @@ public class BinaryEncoder
 	}
 
 
+	@Override
 	public void marshal(Bundle aBundle, ByteBuffer aBuffer) throws IOException
 	{
 		marshal(aBundle, new ByteBufferOutputStream(aBuffer));
 	}
 
 
+	@Override
 	public void marshal(Bundle aBundle, OutputStream aOutputStream) throws IOException
 	{
 		mOutput = new BitOutputStream(aOutputStream);
@@ -59,7 +61,6 @@ public class BinaryEncoder
 			Object value = aBundle.get(key);
 			FieldType fieldType = FieldType.valueOf(value);
 
-//			mOutput.writeBits(fieldType.ordinal(), 4);
 			mOutput.writeBits(fieldType.getSymbol(), fieldType.getSymbolLength());
 
 			if (fieldType == FieldType.NULL || fieldType == FieldType.EMPTY_LIST)
@@ -185,7 +186,7 @@ public class BinaryEncoder
 				mOutput.writeVariableInt((Character)aValue, 3, 0, false);
 				break;
 			case INT:
-				mOutput.writeVariableInt((Integer)aValue, 3, 4, true);
+				mOutput.writeVariableInt((Integer)aValue, 3, 1, true);
 				break;
 			case LONG:
 				mOutput.writeVariableLong((Long)aValue, 7, 0, true);
@@ -198,12 +199,12 @@ public class BinaryEncoder
 				break;
 			case STRING:
 				byte[] buffer = Convert.encodeUTF8((String)aValue);
-				mOutput.writeVariableInt(buffer.length, 3, 4, false);
+				mOutput.writeVariableInt(buffer.length, 3, 0, false);
 				mOutput.align();
 				mOutput.write(buffer);
 				break;
 			case DATE:
-				mOutput.writeVariableLong(((Date)aValue).getTime(), 7, 8, false);
+				mOutput.writeVariableLong(((Date)aValue).getTime(), 7, 0, false);
 				break;
 			case BUNDLE:
 				writeBundle((Bundle)aValue);

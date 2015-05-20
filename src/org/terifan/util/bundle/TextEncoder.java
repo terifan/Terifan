@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 
-public class BUNEncoder
+public class TextEncoder
 {
 	private SimpleDateFormat mDateFormatter;
 	private Appendable mAppendable;

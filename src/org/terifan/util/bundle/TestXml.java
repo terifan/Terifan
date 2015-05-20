@@ -1,13 +1,16 @@
 package org.terifan.util.bundle;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.zip.DeflaterOutputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.terifan.io.Streams;
+import org.terifan.util.Debug;
+import org.terifan.util.StopWatch;
 import org.terifan.util.log.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -22,21 +25,27 @@ public class TestXml
 		{
 			Bundle bundle = new Bundle();
 
-			byte[] xmlData = Streams.fetch(TestXml.class.getResource("edoc.xml"));
+//			byte[] xmlData = Streams.fetch(TestXml.class.getResource("edoc.xml"));
 //			byte[] xmlData = Streams.fetch(TestXml.class.getResource("mds1.xml"));
-//			byte[] xmlData = Streams.fetch(TestXml.class.getResource("mds2.xml"));
+			byte[] xmlData = Streams.fetch(TestXml.class.getResource("mds2.xml"));
 
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			Document doc = factory.newDocumentBuilder().parse(new ByteArrayInputStream(xmlData));
 			list(doc, bundle);
 
+			StopWatch stopWatch = new StopWatch("bin");
 			byte[] binData = new BinaryEncoder().marshal(bundle);
 
-			String bunData = new BUNEncoder().marshal(bundle, true);
+			stopWatch.split("bun");
+			String bunData = new TextEncoder().marshal(bundle, true);
 
-			Log.out.println(new BUNEncoder().marshal(bundle));
+			stopWatch.split("oos");
+			byte[] fastData = new FastEncoder().marshal(bundle);
 
-//			Debug.hexDump(binData);
+//			stopWatch.split("xml");
+//			byte[] xmlData = new XmlEncoder().marshal(bundle);
+			stopWatch.suspend();
+
 
 			ByteArrayOutputStream zipBin = new ByteArrayOutputStream();
 			try (DeflaterOutputStream dos = new DeflaterOutputStream(zipBin))
@@ -56,13 +65,25 @@ public class TestXml
 				dos.write(xmlData);
 			}
 
+			ByteArrayOutputStream zipOos = new ByteArrayOutputStream();
+			try (DeflaterOutputStream dos = new DeflaterOutputStream(zipOos))
+			{
+				dos.write(fastData);
+			}
+
+//			Log.out.println(new BUNEncoder().marshal(bundle));
+//			Debug.hexDump(oosBuf.toByteArray());
+
 			Log.out.println();
-			Log.out.println("xml: " + xmlData.length);
+			Log.out.println("source: " + xmlData.length);
 			Log.out.println("bun: " + bunData.length());
 			Log.out.println("bin: " + binData.length);
-			Log.out.println("zip-xml: " + zipXml.size());
+			Log.out.println("oos: " + fastData.length);
+			Log.out.println("zip-source: " + zipXml.size());
 			Log.out.println("zip-bun: " + zipBun.size());
 			Log.out.println("zip-bin: " + zipBin.size());
+			Log.out.println("zip-oos: " + zipOos.size());
+			Log.out.println(stopWatch);
 		}
 		catch (Throwable e)
 		{
@@ -123,7 +144,7 @@ public class TestXml
 						{
 							try
 							{
-								output = Base64.decode(output.toString());
+								output = Base64.getDecoder().decode(output.toString());
 							}
 							catch (Exception e)
 							{

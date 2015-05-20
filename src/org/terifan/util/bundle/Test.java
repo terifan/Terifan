@@ -17,7 +17,7 @@ public class Test
 		{
 			Bundle bundle = newBundle();
 
-			String expected = new BUNEncoder().marshal(bundle, true);
+			String expected = new TextEncoder().marshal(bundle, true);
 			Log.out.println(expected);
 
 			byte[] data = new BinaryEncoder().marshal(bundle);
@@ -25,10 +25,10 @@ public class Test
 
 			Bundle unbundled = new BinaryDecoder().unmarshal(data);
 
-			String actual = new BUNEncoder().marshal(unbundled, true);
+			String actual = new TextEncoder().marshal(unbundled, true);
 			Log.out.println(actual);
 
-			Log.out.println(new BUNEncoder().marshal(unbundled));
+			Log.out.println(new TextEncoder().marshal(unbundled));
 
 			ByteArrayOutputStream zip = new ByteArrayOutputStream();
 			try (DeflaterOutputStream dos = new DeflaterOutputStream(zip))

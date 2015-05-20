@@ -21,7 +21,7 @@ import java.util.Date;
 import org.terifan.util.log.Log;
 
 
-public class BUNDecoder
+public class TextDecoder
 {
 	private static SimpleDateFormat mDateFormatter;
 
@@ -506,11 +506,11 @@ public class BUNDecoder
 				.putStringArray("strings", "a", "b", "c")
 				.putIntArrayList("intList", new ArrayList<>(Arrays.asList(1,2,3)));
 
-			String s = new BUNEncoder().marshal(bundle);
+			String s = new TextEncoder().marshal(bundle);
 
 			Log.out.println(s);
 
-			Bundle unmarshaled = new BUNDecoder().unmarshal(s);
+			Bundle unmarshaled = new TextDecoder().unmarshal(s);
 
 			Log.out.println(unmarshaled);
 
