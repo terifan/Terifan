@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -41,7 +40,6 @@ import org.terifan.ui.Orientation;
 import org.terifan.ui.PopupFactory;
 import org.terifan.ui.StyleSheet;
 import org.terifan.ui.Utilities;
-import org.terifan.ui.listview.util.ListViewFactory;
 import org.terifan.util.log.Log;
 
 
@@ -666,36 +664,36 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	}
 
 
-	protected void fireMouseEvent(MouseEvent aEvent)
-	{
-		switch (aEvent.getID())
-		{
-			case MouseEvent.MOUSE_CLICKED:
-				mMouseListener.mouseClicked(aEvent);
-				break;
-			case MouseEvent.MOUSE_PRESSED:
-				mMouseListener.mousePressed(aEvent);
-				break;
-			case MouseEvent.MOUSE_RELEASED:
-				mMouseListener.mouseReleased(aEvent);
-				break;
-			case MouseEvent.MOUSE_MOVED:
-				mMouseListener.mouseMoved(aEvent);
-				break;
-			case MouseEvent.MOUSE_DRAGGED:
-				mMouseListener.mouseDragged(aEvent);
-				break;
-			case MouseEvent.MOUSE_ENTERED:
-				mMouseListener.mouseEntered(aEvent);
-				break;
-			case MouseEvent.MOUSE_EXITED:
-				mMouseListener.mouseExited(aEvent);
-				break;
-			case MouseEvent.MOUSE_WHEEL:
-				mMouseListener.mouseWheelMoved((MouseWheelEvent)aEvent);
-				break;
-		}
-	}
+//	protected void fireMouseEvent(MouseEvent aEvent)
+//	{
+//		switch (aEvent.getID())
+//		{
+//			case MouseEvent.MOUSE_CLICKED:
+//				mMouseListener.mouseClicked(aEvent);
+//				break;
+//			case MouseEvent.MOUSE_PRESSED:
+//				mMouseListener.mousePressed(aEvent);
+//				break;
+//			case MouseEvent.MOUSE_RELEASED:
+//				mMouseListener.mouseReleased(aEvent);
+//				break;
+//			case MouseEvent.MOUSE_MOVED:
+//				mMouseListener.mouseMoved(aEvent);
+//				break;
+//			case MouseEvent.MOUSE_DRAGGED:
+//				mMouseListener.mouseDragged(aEvent);
+//				break;
+//			case MouseEvent.MOUSE_ENTERED:
+//				mMouseListener.mouseEntered(aEvent);
+//				break;
+//			case MouseEvent.MOUSE_EXITED:
+//				mMouseListener.mouseExited(aEvent);
+//				break;
+//			case MouseEvent.MOUSE_WHEEL:
+//				mMouseListener.mouseWheelMoved((MouseWheelEvent)aEvent);
+//				break;
+//		}
+//	}
 
 
 	/**
@@ -719,35 +717,35 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 			return;
 		}
 
-		final AWTEventListener listener = new AWTEventListener() {
-			@Override
-			public void eventDispatched(AWTEvent event)
-			{
-				MouseEvent me = (MouseEvent)event;
-				if(me.getID() == MouseEvent.MOUSE_PRESSED && me.getComponent() == ListView.this)
-				{
-					fireMouseEvent(me);
-				}
-			}
-		};
-
-		menu.addPopupMenuListener(new PopupMenuListener() {
-			@Override
-			public void popupMenuWillBecomeVisible(PopupMenuEvent e)
-			{
-			}
-			@Override
-			public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
-			{
-			}
-			@Override
-			public void popupMenuCanceled(PopupMenuEvent e)
-			{
-				Toolkit.getDefaultToolkit().removeAWTEventListener(listener);
-			}
-		});
-
-		Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK);
+//		final AWTEventListener listener = new AWTEventListener() {
+//			@Override
+//			public void eventDispatched(AWTEvent event)
+//			{
+//				MouseEvent me = (MouseEvent)event;
+//				if(me.getID() == MouseEvent.MOUSE_PRESSED && me.getComponent() == ListView.this)
+//				{
+//					fireMouseEvent(me);
+//				}
+//			}
+//		};
+//
+//		menu.addPopupMenuListener(new PopupMenuListener() {
+//			@Override
+//			public void popupMenuWillBecomeVisible(PopupMenuEvent e)
+//			{
+//			}
+//			@Override
+//			public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
+//			{
+//			}
+//			@Override
+//			public void popupMenuCanceled(PopupMenuEvent e)
+//			{
+//				Toolkit.getDefaultToolkit().removeAWTEventListener(listener);
+//			}
+//		});
+//
+//		Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK);
 
 		menu.show(ListView.this, aPoint.x, aPoint.y);
 	}

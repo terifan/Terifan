@@ -5,9 +5,10 @@ import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import javax.swing.SwingUtilities;
+import org.terifan.util.log.Log;
 
 
 class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter implements MouseMotionListener
@@ -164,7 +165,7 @@ class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter impleme
 				changed = true;
 			}
 		}
-		else if (!mIsControlDown && (SwingUtilities.isLeftMouseButton(aEvent) || !isItem || !mListView.isItemSelected(selectedItem)))
+		else if (mIsControlDown || (SwingUtilities.isLeftMouseButton(aEvent) || !isItem || !mListView.isItemSelected(selectedItem)))
 		{
 			mListView.setItemsSelected(false);
 			changed = true;
@@ -176,21 +177,14 @@ class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter impleme
 			mListView.setFocusItem(selectedItem);
 		}
 
-		ArrayList<T> items = layout.getItemsIntersecting(mDragStart.x, mDragStart.y, x, y, null);
-
-		if (items.isEmpty())
-		items = layout.getItemsIntersecting(mDragStart.x, mDragStart.y, x, y, null);
-
-		for (T item : items)
+		for (T item : mSelectedItemsClone)
 		{
-			if (mIsControlDown)
-			{
-				mListView.setItemSelected(item, !mSelectedItemsClone.contains(item));
-			}
-			else
-			{
-				mListView.setItemSelected(item, !mSelectedItemsClone.contains(item));
-			}
+			mListView.setItemSelected(item, true);
+		}
+
+		for (T item : layout.getItemsIntersecting(mDragStart.x, mDragStart.y, x, y, null))
+		{
+			mListView.setItemSelected(item, !mSelectedItemsClone.contains(item));
 		}
 
 		if (changed)

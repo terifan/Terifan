@@ -10,7 +10,8 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
-import org.terifan.util.log.Log;
+import javax.swing.MenuSelectionManager;
+import javax.swing.plaf.basic.BasicCheckBoxMenuItemUI;
 
 
 public class JMenuImageItem extends JMenuItem
@@ -56,6 +57,13 @@ public class JMenuImageItem extends JMenuItem
 		super(aAction);
 		aAction.putValue(AbstractAction.MNEMONIC_KEY, aMnemonic);
 
+		setUI(new BasicCheckBoxMenuItemUI() {
+			@Override
+			protected void doClick(MenuSelectionManager msm) {
+			   menuItem.doClick(0);
+			}
+		 });
+		
 		try (InputStream in = aURL.openStream())
 		{
 			mImage = ImageIO.read(in);
