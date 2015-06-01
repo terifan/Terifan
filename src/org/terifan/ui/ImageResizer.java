@@ -4,13 +4,39 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.imageio.ImageIO;
 import org.terifan.ui.FilterFactory.Filter;
+import static org.terifan.ui.FilterFactory.HALF_FIXED_POINT_SCALE;
 import org.terifan.util.log.Log;
 
 
 public class ImageResizer
 {
+	public static void main(String... args)
+	{
+		try
+		{
+			BufferedImage src = ImageIO.read(new File("f:/0561847923.jpg"));
+
+//			BufferedImage dst1 = resizeAspect(src, 1920, 1080, FilterFactory.Lanczos3, null);
+			BufferedImage dst1 = resize(src, 706, 1246, FilterFactory.Lanczos3, null);
+//			BufferedImage dst3 = resizeAspect(src, 256, 256, FilterFactory.Lanczos3, null);
+
+			BufferedImage dst2 = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC, 1920, 1080);
+
+			ImageIO.write(dst1, "png", new File("d:/output-1.png"));
+			ImageIO.write(dst2, "png", new File("d:/output-2.png"));
+//			ImageIO.write(dst3, "png", new File("d:/output-3.png"));
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
+	}
+
+
 	public static BufferedImage resizeAspect(BufferedImage aSourceImage, int aDstWidth, int aDstHeight, Filter aFilter, AtomicBoolean aAbortProcess)
 	{
 		double scale = Math.min(aDstWidth / (double)aSourceImage.getWidth(), aDstHeight / (double)aSourceImage.getHeight());
@@ -38,32 +64,37 @@ public class ImageResizer
 		boolean opaque = aSourceImage.getTransparency() == Transparency.OPAQUE;
 		int type = opaque ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
 
+		if (aDstWidth < aSourceImage.getWidth() || aDstHeight < aSourceImage.getHeight())
+		{
+			aSourceImage = resizeDown(aSourceImage, aDstWidth, aDstHeight, type, aAbortProcess);
+		}
+
 		if (aDstWidth > aSourceImage.getWidth() || aDstHeight > aSourceImage.getHeight())
 		{
-			aSourceImage = resizeDown(aSourceImage, aDstWidth, aDstHeight, InterpolationMode.BICUBIC, type);
+			aSourceImage = resizeUp(aSourceImage, aDstWidth, aDstHeight, type, aAbortProcess, aFilter);
 		}
 
-		if (aDstWidth == aSourceImage.getWidth() && aDstHeight == aSourceImage.getHeight())
-		{
-			return aSourceImage;
-		}
+		return aSourceImage;
+	}
 
-		BufferedImage outputImage = new BufferedImage(aDstWidth, aDstHeight, type);
+
+	private static BufferedImage resizeUp(BufferedImage aSourceImage, int aDstWidth, int aDstHeight, int aType, AtomicBoolean aAbortProcess, Filter aFilter)
+	{
+		BufferedImage outputImage = new BufferedImage(aDstWidth, aDstHeight, aType);
 
 		int srcWidth = aSourceImage.getWidth();
 		int srcHeight = aSourceImage.getHeight();
-
+		
 		double scaleX = srcWidth / (double)aDstWidth;
 		double scaleY = srcHeight / (double)aDstHeight;
+		
+		int[] filterH = aFilter.getKernel1DInt((int)Math.ceil(aFilter.getRadius() * scaleX) * 2 + 1);
+		int[] filterV = aFilter.getKernel1DInt((int)Math.ceil(aFilter.getRadius() * scaleY) * 2 + 1);
 
 		int[] workPixels = new int[aDstWidth * srcHeight];
-
-		int[] filter1 = aFilter.getKernel1DInt((int)Math.ceil(aFilter.getRadius() * scaleX) * 2 + 1);
-		int[] filter2 = aFilter.getKernel1DInt((int)Math.ceil(aFilter.getRadius() * scaleY) * 2 + 1);
-
-		processHorizontal(aSourceImage, srcWidth, srcHeight, aDstWidth, workPixels, scaleX, filter1, aAbortProcess);
-
-		processVertical(outputImage, srcHeight, aDstWidth, aDstHeight, workPixels, scaleY, filter2, aAbortProcess);
+		
+		processHorizontal(aSourceImage, srcWidth, srcHeight, aDstWidth, workPixels, scaleX, filterH, aAbortProcess);
+		processVertical(outputImage, srcHeight, aDstWidth, aDstHeight, workPixels, scaleY, filterV, aAbortProcess);
 
 		return outputImage;
 	}
@@ -111,18 +142,20 @@ public class ImageResizer
 
 			for (int dx = 0; dx < aDstWidth; dx++)
 			{
+				int min = Math.max(-filterSize, -dx - scale);
+				int sx = (int)(dx * aScaleX + 0.5) + min;
+				int max = Math.min(aSrcWidth - sx + min, Math.min(filterSize, aDstWidth - dx + scale));
+
+				if (dy==0)Log.out.println(min+" "+max+" "+sx);
+				
+				min += filterSize;
+				max += filterSize;
+
 				int sample0 = 0;
 				int sample1 = 0;
 				int sample2 = 0;
 				int sample3 = 0;
 				int sum = 0;
-
-				int min = Math.max(-filterSize, -dx - scale);
-				int sx = (int)((dx + 0.5) * aScaleX + 0.5) + min;
-				int max = Math.min(aSrcWidth - sx + min - 1, Math.min(filterSize, aDstWidth - dx + scale));
-
-				min += filterSize;
-				max += filterSize;
 
 				switch (aSourceImage.getType())
 				{
@@ -258,10 +291,10 @@ public class ImageResizer
 	{
 		if (sum > 0)
 		{
-			sample0 = (sample0 + 32768) / sum;
-			sample1 = (sample1 + 32768) / sum;
-			sample2 = (sample2 + 32768) / sum;
-			sample3 = (sample3 + 32768) / sum;
+			sample0 = (sample0 + HALF_FIXED_POINT_SCALE) / sum;
+			sample1 = (sample1 + HALF_FIXED_POINT_SCALE) / sum;
+			sample2 = (sample2 + HALF_FIXED_POINT_SCALE) / sum;
+			sample3 = (sample3 + HALF_FIXED_POINT_SCALE) / sum;
 		}
 
 		int r = sample0 < 0 ? 0 : sample0 > 255 ? 255 : sample0;
@@ -273,42 +306,53 @@ public class ImageResizer
 	}
 
 
-	private static BufferedImage resizeDown(BufferedImage aImage, int aTargetWidth, int aTargetHeight, InterpolationMode aInterpolationMode, int aType)
+	private static BufferedImage resizeDown(BufferedImage aImage, int aTargetWidth, int aTargetHeight, int aType, AtomicBoolean aAbortProcess)
 	{
 		if (aTargetWidth <= 0 || aTargetHeight <= 0)
 		{
 			throw new IllegalArgumentException("Width or height is zero or less: width: " + aTargetWidth + ", height: " + aTargetHeight);
 		}
 
-		int w = aImage.getWidth();
-		int h = aImage.getHeight();
+		int currentWidth = aImage.getWidth();
+		int currentHeight = aImage.getHeight();
 		BufferedImage output = aImage;
 
-		for (boolean stop = false; !stop; )
+		do
 		{
-			stop = true;
+			int prevCurrentWidth = currentWidth;
+			int prevCurrentHeight = currentHeight;
 
-			if (w > aTargetWidth)
+			if (currentWidth > aTargetWidth)
 			{
-				w = Math.max(w / 2, aTargetWidth);
-				stop = false;
+				currentWidth -= currentWidth / 2;
+				if (currentWidth < aTargetWidth)
+				{
+					currentWidth = aTargetWidth;
+				}
 			}
-			if (h > aTargetHeight)
+			if (currentHeight > aTargetHeight)
 			{
-				h = Math.max(h / 2, aTargetHeight);
-				stop = false;
+				currentHeight -= currentHeight / 2;
+				if (currentHeight < aTargetHeight)
+				{
+					currentHeight = aTargetHeight;
+				}
 			}
 
-			BufferedImage tmp = new BufferedImage(w, h, aType);
+			if (prevCurrentWidth == currentWidth && prevCurrentHeight == currentHeight || (aAbortProcess != null && aAbortProcess.get()))
+			{
+				break;
+			}
+
+			BufferedImage tmp = new BufferedImage(currentWidth, currentHeight, aType);
 
 			Graphics2D g = tmp.createGraphics();
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, aInterpolationMode.getHint());
-			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-			g.drawImage(output, 0, 0, w, h, null);
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+			g.drawImage(output, 0, 0, currentWidth, currentHeight, null);
 			g.dispose();
 
 			output = tmp;
-		}
+		} while (currentWidth != aTargetWidth || currentHeight != aTargetHeight);
 
 		return output;
 	}

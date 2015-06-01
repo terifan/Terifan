@@ -30,6 +30,7 @@ import static org.terifan.ui.FilterFactory.values;
 public class FilterFactory
 {
 	public final static int FIXED_POINT_SCALE = 65536;
+	public final static int HALF_FIXED_POINT_SCALE = 32768;
 
 
 	public static FilterFactory.Filter [] values()
@@ -183,7 +184,7 @@ public class FilterFactory
 
 		public double[] getKernel1D(int aDiameter)
 		{
-			double step = mRadius / ((aDiameter-1) / 2.0);
+			double step = mRadius / (aDiameter / 2.0);
 			double c = (aDiameter - 1) / 2.0;
 
 			double[] kernel = new double[aDiameter];
@@ -223,7 +224,7 @@ public class FilterFactory
 			{
 				return 0;
 			}
-			if (x < 0.5)
+			if (x <= 0.5)
 			{
 				return 1;
 			}
