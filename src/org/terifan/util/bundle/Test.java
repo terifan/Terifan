@@ -3,6 +3,7 @@ package org.terifan.util.bundle;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.zip.DeflaterOutputStream;
 import org.terifan.util.Debug;
