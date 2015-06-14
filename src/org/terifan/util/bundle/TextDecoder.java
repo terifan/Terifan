@@ -13,6 +13,7 @@ import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Array;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,6 +25,34 @@ import org.terifan.util.log.Log;
 public class TextDecoder
 {
 	private static SimpleDateFormat mDateFormatter;
+
+
+	/**
+	 * Reads the provided string and returns a Bundle.
+	 *
+	 * @param aURL
+	 *   the path of a serialized Bundle
+	 * @return
+	 *   the read Bundle
+	 */
+	public Bundle unmarshal(URL aURL) throws IOException
+	{
+		return unmarshal(aURL, new Bundle());
+	}
+
+
+	/**
+	 * Reads the provided string and returns a Bundle.
+	 *
+	 * @param aURL
+	 *   the path of a serialized Bundle
+	 * @return
+	 *   the read Bundle
+	 */
+	public Bundle unmarshal(URL aURL, Bundle aBundle) throws IOException
+	{
+		return unmarshal(aURL.openConnection().getInputStream(), aBundle);
+	}
 
 
 	/**
