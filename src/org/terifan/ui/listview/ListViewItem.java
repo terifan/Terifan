@@ -7,25 +7,17 @@ public interface ListViewItem
 {
 	Object getValue(int aIndex);
 
-//	void setValue(int aIndex, Object aValue);
-
 	Icon getIcon(int aIndex);
-
-//	void setIcon(int aIndex, Icon aIcon);
 
 	Object getRenderingHint(Object aKey);
 
-	@Override
-	boolean equals(Object aObject);
-
-	@Override
-	int hashCode();
-
 	/**
-	 * Item will be rendered, load any state necessary for it.
+	 * Implementations should load item state necessary to display the item. The method is called repeatedly as items become visible in the ListView.
 	 * 
-	 * @param aItemVisible 
-	 *   true if it is within the visible rect and is rendered and false if it is neighbouring the visible rect (ie a row/column above/below).
+	 * @param aBackground
+	 *   true if the state is loaded in the background and the item might be hidden.
+	 * @return
+	 *   true item need to be repainted
 	 */
-	void loadState(boolean aItemVisible);
+	boolean loadState(boolean aBackground) throws Exception;
 }

@@ -1,6 +1,5 @@
 package org.terifan.ui.listview;
 
-import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import org.terifan.ui.listview.layout.ColumnHeaderRenderer;
 import org.terifan.ui.listview.layout.DetailItemRenderer;
@@ -13,14 +12,10 @@ import java.awt.Graphics2D;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import javax.swing.AbstractAction;
@@ -34,12 +29,11 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import org.terifan.ui.Orientation;
 import org.terifan.ui.PopupFactory;
 import org.terifan.ui.StyleSheet;
 import org.terifan.ui.Utilities;
+import org.terifan.util.FixedThreadExecutor;
 import org.terifan.util.log.Log;
 
 
@@ -68,6 +62,9 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	private final Rectangle mSelectionRectangle = new Rectangle();
 	private final HashSet<T> mSelectedItems;
 //	private final HashSet<T> mSelectedItemsClone;
+
+//	private final static FixedThreadExecutor mExecutor = new FixedThreadExecutor(Math.max(ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors(), 1));
+	private final static FixedThreadExecutor mExecutor = new FixedThreadExecutor(1);
 
 
 	public ListView()
@@ -912,7 +909,10 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	{
 		Rectangle itemRect = new Rectangle();
 
-		mLayout.getItemBounds(aItem, itemRect);
+		if (!mLayout.getItemBounds(aItem, itemRect))
+		{
+			return false;
+		}
 
 		Container p = getParent();
 
@@ -982,5 +982,63 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	protected Rectangle getSelectionRectangle()
 	{
 		return mSelectionRectangle;
+	}
+	
+	
+	protected void fireLoadState(T aItem)
+	{
+		mExecutor.submit(new RunnableItem(aItem));
+	}
+	
+	
+	private class RunnableItem implements Runnable
+	{
+		private T mItem;
+
+
+		public RunnableItem(T aItem)
+		{
+			mItem = aItem;
+		}
+
+		@Override
+		public void run()
+		{
+			try
+			{
+				if (isItemDisplayable(mItem, true))
+				{
+					boolean changed = mItem.loadState(false);
+
+					if (changed)
+					{
+						Log.out.println(mItem);
+					}
+					
+					if (changed && isItemDisplayable(mItem, false))
+					{
+						repaint();
+					}
+				}
+			}
+			catch (Throwable e)
+			{
+				e.printStackTrace(Log.out);
+			}
+		}
+		
+
+		@Override
+		public boolean equals(Object aObj)
+		{
+			return mItem == aObj;
+		}
+
+
+		@Override
+		public int hashCode()
+		{
+			return mItem.hashCode();
+		}
 	}
 }

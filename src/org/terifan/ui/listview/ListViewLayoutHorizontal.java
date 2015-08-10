@@ -223,7 +223,7 @@ public class ListViewLayoutHorizontal<T extends ListViewItem> extends AbstractLi
 				{
 					T item = items.get(itemIndex);
 
-					item.loadState(true);
+					mListView.fireLoadState(item);
 
 					int itemHeight = renderer.getItemHeight(mListView, item);
 

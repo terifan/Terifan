@@ -2,7 +2,8 @@ package org.terifan.util;
 
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.terifan.util.log.Log;
 
@@ -12,6 +13,7 @@ import org.terifan.util.log.Log;
  */
 public class FixedThreadExecutor implements AutoCloseable
 {
+	private LinkedBlockingQueue<Runnable> mBlockingQueue;
 	private ExecutorService mExecutorService;
 	private int mThreads;
 
@@ -19,6 +21,7 @@ public class FixedThreadExecutor implements AutoCloseable
 	public FixedThreadExecutor(int aThreads)
 	{
 		mThreads = aThreads;
+		mBlockingQueue = new LinkedBlockingQueue<>();
 	}
 
 
@@ -32,29 +35,45 @@ public class FixedThreadExecutor implements AutoCloseable
 		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * (aThreads - (int)(aThreads - 0.000001)))));
+		mBlockingQueue = new LinkedBlockingQueue<>();
 	}
 
 
 	public void submit(Runnable aRunnable)
 	{
-		init().submit(aRunnable);
+		if (!mBlockingQueue.contains(aRunnable))
+		{
+			init().submit(aRunnable);
+		}
+		else
+			Log.out.println("##");
 	}
 
 
 	public void submit(Runnable... aRunnables)
 	{
+		ExecutorService service = init();
+
 		for (Runnable r : aRunnables)
 		{
-			init().submit(r);
+			if (!mBlockingQueue.contains(r))
+			{
+				service.submit(r);
+			}
 		}
 	}
 
 
 	public void submit(Iterable<? extends Runnable> aRunnables)
 	{
+		ExecutorService service = init();
+
 		for (Runnable r : aRunnables)
 		{
-			init().submit(r);
+			if (!mBlockingQueue.contains(r))
+			{
+				service.submit(r);
+			}
 		}
 	}
 
@@ -96,7 +115,7 @@ public class FixedThreadExecutor implements AutoCloseable
 	{
 		if (mExecutorService == null)
 		{
-			mExecutorService = Executors.newFixedThreadPool(mThreads);
+			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, mBlockingQueue);
 		}
 
 		return mExecutorService;

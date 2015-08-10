@@ -129,7 +129,7 @@ public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractList
 	{
 		int verticalBarWidth = mListView.getStylesheet().getInt("verticalBarWidth");
 
-		ArrayList<ListViewItem> items = aGroup.getItems();
+		ArrayList<T> items = aGroup.getItems();
 		int y = aOriginY;
 		int itemsPerRow = getItemsPerRun();
 		double itemWidth = getItemWidth();
@@ -151,7 +151,8 @@ public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractList
 			{
 				for (int itemRowIndex = 0; itemIndex < itemCount && itemRowIndex < itemsPerRow; itemIndex++, itemRowIndex++)
 				{
-					items.get(itemIndex).loadState(false);
+					T item = items.get(itemIndex);
+					mListView.fireLoadState(item);
 				}
 
 				break;
@@ -163,8 +164,8 @@ public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractList
 
 				for (int itemRowIndex = 0; itemIndex < itemCount && itemRowIndex < itemsPerRow; itemIndex++, itemRowIndex++)
 				{
-					ListViewItem item = items.get(itemIndex);
-					item.loadState(true);
+					T item = items.get(itemIndex);
+					mListView.fireLoadState(item);
 
 					int tmpWidth = (int)(itemWidth + error);
 
@@ -178,7 +179,8 @@ public class ListViewLayoutVertical<T extends ListViewItem> extends AbstractList
 			{
 				for (int itemRowIndex = 0; itemIndex < itemCount && itemRowIndex < itemsPerRow; itemIndex++, itemRowIndex++)
 				{
-					items.get(itemIndex).loadState(false);
+					T item = items.get(itemIndex);
+					mListView.fireLoadState(item);
 				}
 			}
 			else
