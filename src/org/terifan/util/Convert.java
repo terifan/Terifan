@@ -4,13 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import org.terifan.io.ByteArray;
-import org.terifan.util.bundle.Bundle;
-import org.terifan.util.bundle.Bundlable;
 import org.terifan.util.log.Log;
 
 
