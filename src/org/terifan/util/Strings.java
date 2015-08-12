@@ -264,4 +264,10 @@ public class Strings
 	{
 		return aString == null || aString.isEmpty() ? null : aString;
 	}
+
+
+	public static String replaceNull(String aString, String aReplacedWith)
+	{
+		return aString == null ? aReplacedWith : aString;
+	}
 }
