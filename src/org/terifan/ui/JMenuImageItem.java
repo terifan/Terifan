@@ -19,7 +19,7 @@ public class JMenuImageItem extends JMenuItem
 	private BufferedImage mImage;
 	private Integer mOffsetX;
 
-	
+
 	public JMenuImageItem(BufferedImage aImage)
 	{
 		mImage = aImage;
@@ -57,13 +57,13 @@ public class JMenuImageItem extends JMenuItem
 		super(aAction);
 		aAction.putValue(AbstractAction.MNEMONIC_KEY, aMnemonic);
 
-		setUI(new BasicCheckBoxMenuItemUI() {
-			@Override
-			protected void doClick(MenuSelectionManager msm) {
-			   menuItem.doClick(0);
-			}
-		 });
-		
+//		setUI(new BasicCheckBoxMenuItemUI() {
+//			@Override
+//			protected void doClick(MenuSelectionManager msm) {
+//			   menuItem.doClick(0);
+//			}
+//		 });
+
 		try (InputStream in = aURL.openStream())
 		{
 			mImage = ImageIO.read(in);
@@ -75,7 +75,7 @@ public class JMenuImageItem extends JMenuItem
 	protected void paintComponent(Graphics aGraphics)
 	{
 		super.paintComponent(aGraphics);
-		
+
 		aGraphics.drawImage(mImage, mOffsetX - 5, (getHeight() - mImage.getHeight()) / 2, null);
 	}
 

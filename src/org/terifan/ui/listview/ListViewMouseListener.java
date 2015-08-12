@@ -19,6 +19,7 @@ class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter impleme
 	private Point mDragStart;
 	private boolean mIsControlDown;
 	private boolean mIsShiftDown;
+	private boolean mPopupTriggered;
 
 
 	public ListViewMouseListener(ListView<T> aListView)
@@ -26,24 +27,6 @@ class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter impleme
 		mListView = aListView;
 		mDragStart = new Point();
 		mSelectedItemsClone = new HashSet<>();
-	}
-
-
-	@Override
-	public void mouseReleased(MouseEvent aEvent)
-	{
-		if (!mListView.getSelectionRectangle().isEmpty())
-		{
-			mListView.getSelectionRectangle().setSize(0, 0);
-			mListView.repaint();
-		}
-
-		mSelectedItemsClone.clear();
-
-		if (aEvent.isPopupTrigger())
-		{
-			mListView.firePopupMenu(aEvent.getPoint());
-		}
 	}
 
 
@@ -71,6 +54,34 @@ class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter impleme
 			{
 				mListView.fireSelectionAction(new ListViewEvent(mListView, aEvent));
 			}
+		}
+
+		if (!aEvent.isPopupTrigger())
+		{
+			mPopupTriggered = false;
+		}
+	}
+
+
+	@Override
+	public void mouseReleased(MouseEvent aEvent)
+	{
+		if (!mListView.getSelectionRectangle().isEmpty())
+		{
+			mListView.getSelectionRectangle().setSize(0, 0);
+			mListView.repaint();
+		}
+
+		mSelectedItemsClone.clear();
+
+		if (mPopupTriggered)
+		{
+			mousePressed(aEvent);
+		}
+
+		if (aEvent.isPopupTrigger())
+		{
+			mPopupTriggered = mListView.firePopupMenu(aEvent.getPoint());
 		}
 	}
 

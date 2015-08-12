@@ -661,90 +661,33 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	}
 
 
-//	protected void fireMouseEvent(MouseEvent aEvent)
-//	{
-//		switch (aEvent.getID())
-//		{
-//			case MouseEvent.MOUSE_CLICKED:
-//				mMouseListener.mouseClicked(aEvent);
-//				break;
-//			case MouseEvent.MOUSE_PRESSED:
-//				mMouseListener.mousePressed(aEvent);
-//				break;
-//			case MouseEvent.MOUSE_RELEASED:
-//				mMouseListener.mouseReleased(aEvent);
-//				break;
-//			case MouseEvent.MOUSE_MOVED:
-//				mMouseListener.mouseMoved(aEvent);
-//				break;
-//			case MouseEvent.MOUSE_DRAGGED:
-//				mMouseListener.mouseDragged(aEvent);
-//				break;
-//			case MouseEvent.MOUSE_ENTERED:
-//				mMouseListener.mouseEntered(aEvent);
-//				break;
-//			case MouseEvent.MOUSE_EXITED:
-//				mMouseListener.mouseExited(aEvent);
-//				break;
-//			case MouseEvent.MOUSE_WHEEL:
-//				mMouseListener.mouseWheelMoved((MouseWheelEvent)aEvent);
-//				break;
-//		}
-//	}
-
-
 	/**
 	 * Create and display a pop-up.
 	 *
 	 * Note: this code also ensure that if the right click occurred on an item the item will be selected before the pop-up is displayed.
+	 *
+	 * @return
+	 *
 	 */
-	protected void firePopupMenu(Point aPoint)
+	protected boolean firePopupMenu(Point aPoint)
 	{
 		PopupFactory<ListView> factory = getPopupFactory();
 
 		if (factory == null)
 		{
-			return;
+			return false;
 		}
 
 		JPopupMenu menu = factory.createPopup(this);
 
 		if (menu == null)
 		{
-			return;
+			return false;
 		}
 
-//		final AWTEventListener listener = new AWTEventListener() {
-//			@Override
-//			public void eventDispatched(AWTEvent event)
-//			{
-//				MouseEvent me = (MouseEvent)event;
-//				if(me.getID() == MouseEvent.MOUSE_PRESSED && me.getComponent() == ListView.this)
-//				{
-//					fireMouseEvent(me);
-//				}
-//			}
-//		};
-//
-//		menu.addPopupMenuListener(new PopupMenuListener() {
-//			@Override
-//			public void popupMenuWillBecomeVisible(PopupMenuEvent e)
-//			{
-//			}
-//			@Override
-//			public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
-//			{
-//			}
-//			@Override
-//			public void popupMenuCanceled(PopupMenuEvent e)
-//			{
-//				Toolkit.getDefaultToolkit().removeAWTEventListener(listener);
-//			}
-//		});
-//
-//		Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK);
-
 		menu.show(ListView.this, aPoint.x, aPoint.y);
+
+		return true;
 	}
 
 
@@ -897,12 +840,12 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 
 	/**
 	 * Return true if the item is currently probably visible. TODO: only jscrollpane supported!!!
-	 * 
+	 *
 	 * @param aItem
 	 *   the item
 	 * @param aExpandView
 	 *   include neighbouring items
-	 * @return 
+	 * @return
 	 *   true if the item is probably visible
 	 */
 	public boolean isItemDisplayable(T aItem, boolean aExpandView)
@@ -932,7 +875,7 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 					int y = scrollPane.getVerticalScrollBar().getValue();
 					int w = viewport.getWidth();
 					int h = viewport.getHeight();
-					
+
 					if (aExpandView)
 					{
 						x -= itemRect.width;
@@ -983,14 +926,14 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	{
 		return mSelectionRectangle;
 	}
-	
-	
+
+
 	protected void fireLoadState(T aItem)
 	{
 		mExecutor.submit(new RunnableItem(aItem));
 	}
-	
-	
+
+
 	private class RunnableItem implements Runnable
 	{
 		private T mItem;
@@ -1014,7 +957,7 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 					{
 						Log.out.println(mItem);
 					}
-					
+
 					if (changed && isItemDisplayable(mItem, false))
 					{
 						repaint();
@@ -1026,7 +969,7 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 				e.printStackTrace(Log.out);
 			}
 		}
-		
+
 
 		@Override
 		public boolean equals(Object aObj)
