@@ -953,10 +953,10 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 				{
 					boolean changed = mItem.loadState(false);
 
-					if (changed)
-					{
-						Log.out.println(mItem);
-					}
+//					if (changed)
+//					{
+//						Log.out.println(mItem);
+//					}
 
 					if (changed && isItemDisplayable(mItem, false))
 					{

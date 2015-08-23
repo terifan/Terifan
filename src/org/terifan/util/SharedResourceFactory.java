@@ -50,6 +50,32 @@ public abstract class SharedResourceFactory<I,P,O>
 
 
 	/**
+	 * Return an already created instance but will not create an instance if one doesn't exists.
+	 */
+	public synchronized SharedResource<I> peek(P aPrototype, O aOwner)
+	{
+		I instance = mPrototypeInstance.get(aPrototype);
+
+		if (instance == null)
+		{
+			return null;
+		}
+
+		HashSet<O> owners = mInstanceOwners.get(instance);
+
+		if (owners == null)
+		{
+			owners = new HashSet<>();
+			mInstanceOwners.put(instance, owners);
+		}
+
+		owners.add(aOwner);
+
+		return new SharedResource<>(this, instance, aOwner);
+	}
+
+
+	/**
 	 * Return an already created instance or create a new object using the prototype provided.
 	 */
 	public synchronized SharedResource<I> get(P aPrototype, O aOwner)
