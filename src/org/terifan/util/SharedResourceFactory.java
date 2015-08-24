@@ -52,7 +52,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return an already created instance but will not create an instance if one doesn't exists.
 	 */
-	public synchronized SharedResource<I> peek(P aPrototype, O aOwner)
+	public /*synchronized*/ SharedResource<I> peek(P aPrototype, O aOwner)
 	{
 		I instance = mPrototypeInstance.get(aPrototype);
 
@@ -78,7 +78,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return an already created instance or create a new object using the prototype provided.
 	 */
-	public synchronized SharedResource<I> get(P aPrototype, O aOwner)
+	public /*synchronized*/ SharedResource<I> get(P aPrototype, O aOwner)
 	{
 		I instance = mPrototypeInstance.get(aPrototype);
 
@@ -129,7 +129,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes an Instance and Owner pair. If the instance isn't owned by any other Owner it will be destroyed.
 	 */
-	public synchronized void remove(SharedResource<I> aInstance)
+	public /*synchronized*/ void remove(SharedResource<I> aInstance)
 	{
 		remove(aInstance.get(), (O)aInstance.getOwner());
 	}
@@ -138,7 +138,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes an Instance. The destroy method will be called.
 	 */
-	public synchronized void remove(I aInstance)
+	public /*synchronized*/ void remove(I aInstance)
 	{
 		P prototype = mInstancePrototype.remove(aInstance);
 
@@ -154,7 +154,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes the Owner provided from all object instances. If an object isn't owned by any Owner then it will be destroyed.
 	 */
-	public synchronized void removeOwner(O aOwner)
+	public /*synchronized*/ void removeOwner(O aOwner)
 	{
 		for (Object instance : mInstanceOwners.keySet().toArray())
 		{
@@ -166,7 +166,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes the instance with the Prototype provided. If an object instance of the Prototype isn't owned by any Owner then it will be destroyed.
 	 */
-	public synchronized void removePrototype(P aPrototype)
+	public /*synchronized*/ void removePrototype(P aPrototype)
 	{
 		I instance = mPrototypeInstance.get(aPrototype);
 
@@ -183,13 +183,13 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return number of instances this class manages.
 	 */
-	public synchronized int size()
+	public /*synchronized*/ int size()
 	{
 		return mInstanceOwners.size();
 	}
 
 
-	public synchronized void clear()
+	public /*synchronized*/ void clear()
 	{
 		for (Object instance : mInstancePrototype.keySet().toArray())
 		{
@@ -201,7 +201,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return all instances managed by this object.
 	 */
-	public synchronized Set<I> entries()
+	public /*synchronized*/ Set<I> entries()
 	{
 		return mInstancePrototype.keySet();
 	}
@@ -210,19 +210,19 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return all Owners owning a certain instances managed by this object.
 	 */
-	public synchronized Set<O> owners(I aInstance)
+	public /*synchronized*/ Set<O> owners(I aInstance)
 	{
 		return mInstanceOwners.get(aInstance);
 	}
 
 
-	public synchronized boolean containsInstance(I aInstance)
+	public /*synchronized*/ boolean containsInstance(I aInstance)
 	{
 		return mInstancePrototype.containsKey(aInstance);
 	}
 
 
-	public synchronized boolean containsPrototype(P aType)
+	public /*synchronized*/ boolean containsPrototype(P aType)
 	{
 		return mPrototypeInstance.containsKey(aType);
 	}

@@ -39,6 +39,12 @@ public class FixedThreadExecutor implements AutoCloseable
 	}
 
 
+	public LinkedBlockingQueue<Runnable> getBlockingQueue()
+	{
+		return mBlockingQueue;
+	}
+
+
 	public void submit(Runnable aRunnable)
 	{
 		if (!mBlockingQueue.contains(aRunnable))

@@ -83,6 +83,13 @@ public class DefaultListViewItem extends AbstractListViewItem
 
 
 	@Override
+	public boolean isStateLoaded()
+	{
+		return true;
+	}
+
+
+	@Override
 	public String toString()
 	{
 		return Arrays.asList(mValues).toString();

@@ -12,12 +12,17 @@ public interface ListViewItem
 	Object getRenderingHint(Object aKey);
 
 	/**
-	 * Implementations should load item state necessary to display the item. The method is called repeatedly as items become visible in the ListView.
+	 * Implementations should load item state necessary to display the item and ensure the method isStateLoaded return true if the state don't need to be loaded again.
 	 * 
 	 * @param aBackground
-	 *   true if the state is loaded in the background and the item might be hidden.
+	 *   true if the state is loaded as a background task. The ListView implementation only calls this method with a 'false' value.
 	 * @return
 	 *   true item need to be repainted
 	 */
 	boolean loadState(boolean aBackground) throws Exception;
+
+	/**
+	 * Return true if the state is loaded.
+	 */
+	boolean isStateLoaded();
 }
