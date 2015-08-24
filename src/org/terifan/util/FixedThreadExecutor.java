@@ -39,20 +39,27 @@ public class FixedThreadExecutor implements AutoCloseable
 	}
 
 
-	public LinkedBlockingQueue<Runnable> getBlockingQueue()
+	public void cancel()
 	{
-		return mBlockingQueue;
+		if (mExecutorService != null)
+		{
+			mExecutorService.shutdown();
+		}
+	}
+
+
+	public void shutdown()
+	{
+		if (mExecutorService != null)
+		{
+			mExecutorService.shutdownNow();
+		}
 	}
 
 
 	public void submit(Runnable aRunnable)
 	{
-		if (!mBlockingQueue.contains(aRunnable))
-		{
-			init().submit(aRunnable);
-		}
-		else
-			Log.out.println("##");
+		init().submit(aRunnable);
 	}
 
 
@@ -62,10 +69,7 @@ public class FixedThreadExecutor implements AutoCloseable
 
 		for (Runnable r : aRunnables)
 		{
-			if (!mBlockingQueue.contains(r))
-			{
-				service.submit(r);
-			}
+			service.submit(r);
 		}
 	}
 
@@ -76,10 +80,7 @@ public class FixedThreadExecutor implements AutoCloseable
 
 		for (Runnable r : aRunnables)
 		{
-			if (!mBlockingQueue.contains(r))
-			{
-				service.submit(r);
-			}
+			service.submit(r);
 		}
 	}
 
