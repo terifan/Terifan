@@ -9,20 +9,33 @@ import java.lang.annotation.Target;
 @Target(value = {ElementType.METHOD, ElementType.FIELD}) @Retention(value = RetentionPolicy.RUNTIME)
 public @interface Column
 {
+	public final static class NO_PRODUCER implements ValueProducer
+	{
+		@Override
+		public Object produce(Object aEntity, Column aColumn)
+		{
+			return null;
+		}
+	}
+
+
 	public String name() default "";
 
 
-	public boolean enumName() default false;
+	public boolean publish() default false;
 
 
 	public boolean generated() default false;
 
 
-//	public boolean publish() default false;
-//
-//
-//	public boolean nullable() default true;
-//
+	public boolean nullable() default true;
+
+
+	public EnumType enumType() default EnumType.ORDINAL;
+
+
+	public Class<? extends ValueProducer> producer() default NO_PRODUCER.class;
+
 
 //	public boolean unique() default false;
 //

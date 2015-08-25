@@ -12,12 +12,12 @@ public @interface PrimaryKey
 	public String name() default "";
 
 
+	public boolean enumName() default false;
+
+
 	public boolean generated() default false;
 
 
-//	public boolean enumName() default false;
-//
-//
 //	public boolean publish() default false;
 //
 //

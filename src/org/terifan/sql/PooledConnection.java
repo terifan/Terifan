@@ -22,10 +22,10 @@ import java.util.concurrent.Executor;
 
 public class PooledConnection implements Connection
 {
-	private final static long IDLE_TEST_PERIOD = 10 * 1000;
+	private final static long IDLE_TEST_PERIOD = 10*1000;
 
 	private final ConnectionPool mConnectionPool;
-	private final Connection mConnection;
+	private Connection mConnection;
 	private long mLastAliveTime;
 
 
@@ -38,8 +38,14 @@ public class PooledConnection implements Connection
 	}
 
 
-	public Connection getConnection()
+	public Connection getConnection() throws SQLException
 	{
+		// create a new connection if the connection was erroneously closed
+		if (mConnectionPool != null && mConnection.isClosed())
+		{
+			mConnection = mConnectionPool.claim().mConnection;
+		}
+
 		return mConnection;
 	}
 
@@ -52,11 +58,16 @@ public class PooledConnection implements Connection
 
 
 	@Override
-	public boolean isValid(int aTimeoutSeconds)
+	public boolean isValid(int aTimeoutSeconds) throws SQLException
 	{
 		if (System.currentTimeMillis() - mLastAliveTime > IDLE_TEST_PERIOD)
 		{
-			try (Statement statement = mConnection.createStatement())
+			if (mConnection.isClosed())
+			{
+				return false;
+			}
+
+			try (Statement statement = getConnection().createStatement())
 			{
 				statement.setQueryTimeout(aTimeoutSeconds);
 				statement.execute("select 1");
@@ -74,366 +85,396 @@ public class PooledConnection implements Connection
 
 
 	// ---------- overrides
+
+
 	@Override
 	public void setAutoCommit(boolean aState) throws SQLException
 	{
-		mConnection.setAutoCommit(aState);
+		getConnection().setAutoCommit(aState);
 	}
 
 
 	@Override
 	public void commit() throws SQLException
 	{
-		mConnection.commit();
+		getConnection().commit();
 	}
 
 
 	@Override
 	public void rollback() throws SQLException
 	{
-		mConnection.rollback();
+		getConnection().rollback();
 	}
 
 
 	@Override
 	public Statement createStatement() throws SQLException
 	{
-		return mConnection.createStatement();
+		return getConnection().createStatement();
 	}
 
 
 	@Override
 	public PreparedStatement prepareStatement(String aStatement) throws SQLException
 	{
-		return mConnection.prepareStatement(aStatement);
+		return getConnection().prepareStatement(aStatement);
 	}
 
 
 	@Override
-	public CallableStatement prepareCall(String sql) throws SQLException
+	public CallableStatement prepareCall(String aStatement) throws SQLException
 	{
-		return mConnection.prepareCall(sql);
+		return getConnection().prepareCall(aStatement);
 	}
 
 
 	@Override
-	public String nativeSQL(String sql) throws SQLException
+	public String nativeSQL(String aStatement) throws SQLException
 	{
-		return mConnection.nativeSQL(sql);
+		return getConnection().nativeSQL(aStatement);
 	}
 
 
 	@Override
 	public boolean getAutoCommit() throws SQLException
 	{
-		return mConnection.getAutoCommit();
+		return getConnection().getAutoCommit();
 	}
 
 
 	@Override
 	public boolean isClosed() throws SQLException
 	{
-		return mConnection.isClosed();
+		return getConnection().isClosed();
 	}
 
 
 	@Override
 	public DatabaseMetaData getMetaData() throws SQLException
 	{
-		return mConnection.getMetaData();
+		return getConnection().getMetaData();
 	}
 
 
 	@Override
 	public void setReadOnly(boolean readOnly) throws SQLException
 	{
-		mConnection.setReadOnly(readOnly);
+		getConnection().setReadOnly(readOnly);
 	}
 
 
 	@Override
 	public boolean isReadOnly() throws SQLException
 	{
-		return mConnection.isReadOnly();
+		return getConnection().isReadOnly();
 	}
 
 
 	@Override
-	public void setCatalog(String catalog) throws SQLException
+	public void setCatalog(String aCatalog) throws SQLException
 	{
-		mConnection.setCatalog(catalog);
+		getConnection().setCatalog(aCatalog);
 	}
 
 
 	@Override
 	public String getCatalog() throws SQLException
 	{
-		return mConnection.getCatalog();
+		return getConnection().getCatalog();
 	}
 
 
 	@Override
-	public void setTransactionIsolation(int level) throws SQLException
+	public void setTransactionIsolation(int aLevel) throws SQLException
 	{
-		mConnection.setTransactionIsolation(level);
+		getConnection().setTransactionIsolation(aLevel);
 	}
 
 
 	@Override
 	public int getTransactionIsolation() throws SQLException
 	{
-		return mConnection.getTransactionIsolation();
+		return getConnection().getTransactionIsolation();
 	}
 
 
 	@Override
 	public SQLWarning getWarnings() throws SQLException
 	{
-		return mConnection.getWarnings();
+		return getConnection().getWarnings();
 	}
 
 
 	@Override
 	public void clearWarnings() throws SQLException
 	{
-		mConnection.clearWarnings();
+		getConnection().clearWarnings();
 	}
 
 
 	@Override
-	public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
+	public Statement createStatement(int aResultSetType, int aResultSetConcurrency) throws SQLException
 	{
-		return mConnection.createStatement(resultSetType, resultSetConcurrency);
+		return getConnection().createStatement(aResultSetType, aResultSetConcurrency);
 	}
 
 
 	@Override
-	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
+	public PreparedStatement prepareStatement(String aStatement, int aResultSetType, int aResultSetConcurrency) throws SQLException
 	{
-		return mConnection.prepareStatement(sql, resultSetType, resultSetConcurrency);
+		return getConnection().prepareStatement(aStatement, aResultSetType, aResultSetConcurrency);
 	}
 
 
 	@Override
-	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
+	public CallableStatement prepareCall(String aStatement, int aResultSetType, int aResultSetConcurrency) throws SQLException
 	{
-		return mConnection.prepareCall(sql, resultSetType, resultSetConcurrency);
+		return getConnection().prepareCall(aStatement, aResultSetType, aResultSetConcurrency);
 	}
 
 
 	@Override
 	public Map<String, Class<?>> getTypeMap() throws SQLException
 	{
-		return mConnection.getTypeMap();
+		return getConnection().getTypeMap();
 	}
 
 
 	@Override
-	public void setTypeMap(Map<String, Class<?>> map) throws SQLException
+	public void setTypeMap(Map<String, Class<?>> aMap) throws SQLException
 	{
-		mConnection.setTypeMap(map);
+		getConnection().setTypeMap(aMap);
 	}
 
 
 	@Override
-	public void setHoldability(int holdability) throws SQLException
+	public void setHoldability(int aHoldability) throws SQLException
 	{
-		mConnection.setHoldability(holdability);
+		getConnection().setHoldability(aHoldability);
 	}
 
 
 	@Override
 	public int getHoldability() throws SQLException
 	{
-		return mConnection.getHoldability();
+		return getConnection().getHoldability();
 	}
 
 
 	@Override
 	public Savepoint setSavepoint() throws SQLException
 	{
-		return mConnection.setSavepoint();
+		return getConnection().setSavepoint();
 	}
 
 
 	@Override
-	public Savepoint setSavepoint(String name) throws SQLException
+	public Savepoint setSavepoint(String aName) throws SQLException
 	{
-		return mConnection.setSavepoint(name);
+		return getConnection().setSavepoint(aName);
 	}
 
 
 	@Override
-	public void rollback(Savepoint savepoint) throws SQLException
+	public void rollback(Savepoint aSavepoint) throws SQLException
 	{
-		mConnection.rollback(savepoint);
+		getConnection().rollback(aSavepoint);
 	}
 
 
 	@Override
-	public void releaseSavepoint(Savepoint savepoint) throws SQLException
+	public void releaseSavepoint(Savepoint aSavepoint) throws SQLException
 	{
-		mConnection.releaseSavepoint(savepoint);
+		getConnection().releaseSavepoint(aSavepoint);
 	}
 
 
 	@Override
-	public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	public Statement createStatement(int aResultSetType, int aResultSetConcurrency, int aResultSetHoldability) throws SQLException
 	{
-		return mConnection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+		return getConnection().createStatement(aResultSetType, aResultSetConcurrency, aResultSetHoldability);
 	}
 
 
 	@Override
-	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	public PreparedStatement prepareStatement(String aStatement, int aResultSetType, int aResultSetConcurrency, int aResultSetHoldability) throws SQLException
 	{
-		return mConnection.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+		return getConnection().prepareStatement(aStatement, aResultSetType, aResultSetConcurrency, aResultSetHoldability);
 	}
 
 
 	@Override
-	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	public CallableStatement prepareCall(String aStatement, int aResultSetType, int aResultSetConcurrency, int aResultSetHoldability) throws SQLException
 	{
-		return mConnection.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+		return getConnection().prepareCall(aStatement, aResultSetType, aResultSetConcurrency, aResultSetHoldability);
 	}
 
 
 	@Override
-	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
+	public PreparedStatement prepareStatement(String aStatement, int aAutoGeneratedKeys) throws SQLException
 	{
-		return mConnection.prepareStatement(sql, autoGeneratedKeys);
+		return getConnection().prepareStatement(aStatement, aAutoGeneratedKeys);
 	}
 
 
 	@Override
-	public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
+	public PreparedStatement prepareStatement(String aStatement, int[] aColumnIndexes) throws SQLException
 	{
-		return mConnection.prepareStatement(sql, columnIndexes);
+		return getConnection().prepareStatement(aStatement, aColumnIndexes);
 	}
 
 
 	@Override
-	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
+	public PreparedStatement prepareStatement(String aStatement, String[] aColumnNames) throws SQLException
 	{
-		return mConnection.prepareStatement(sql, columnNames);
+		return getConnection().prepareStatement(aStatement, aColumnNames);
 	}
 
 
 	@Override
 	public Clob createClob() throws SQLException
 	{
-		return mConnection.createClob();
+		return getConnection().createClob();
 	}
 
 
 	@Override
 	public Blob createBlob() throws SQLException
 	{
-		return mConnection.createBlob();
+		return getConnection().createBlob();
 	}
 
 
 	@Override
 	public NClob createNClob() throws SQLException
 	{
-		return mConnection.createNClob();
+		return getConnection().createNClob();
 	}
 
 
 	@Override
 	public SQLXML createSQLXML() throws SQLException
 	{
-		return mConnection.createSQLXML();
+		return getConnection().createSQLXML();
 	}
 
 
 	@Override
-	public void setClientInfo(String name, String value) throws SQLClientInfoException
+	public void setClientInfo(String aName, String aValue) throws SQLClientInfoException
 	{
-		mConnection.setClientInfo(name, value);
+		try
+		{
+			getConnection().setClientInfo(aName, aValue);
+		}
+		catch (SQLException e)
+		{
+			throw new IllegalStateException(e);
+		}
 	}
 
 
 	@Override
-	public void setClientInfo(Properties properties) throws SQLClientInfoException
+	public void setClientInfo(Properties aProperties) throws SQLClientInfoException
 	{
-		mConnection.setClientInfo(properties);
+		try
+		{
+			getConnection().setClientInfo(aProperties);
+		}
+		catch (SQLException e)
+		{
+			throw new IllegalStateException(e);
+		}
 	}
 
 
 	@Override
-	public String getClientInfo(String name) throws SQLException
+	public String getClientInfo(String aName) throws SQLException
 	{
-		return mConnection.getClientInfo(name);
+		return getConnection().getClientInfo(aName);
 	}
 
 
 	@Override
 	public Properties getClientInfo() throws SQLException
 	{
-		return mConnection.getClientInfo();
+		return getConnection().getClientInfo();
 	}
 
 
 	@Override
-	public Array createArrayOf(String typeName, Object[] elements) throws SQLException
+	public Array createArrayOf(String aTypeName, Object[] aElements) throws SQLException
 	{
-		return mConnection.createArrayOf(typeName, elements);
+		return getConnection().createArrayOf(aTypeName, aElements);
 	}
 
 
 	@Override
-	public Struct createStruct(String typeName, Object[] attributes) throws SQLException
+	public Struct createStruct(String aTypeName, Object[] aAttributes) throws SQLException
 	{
-		return mConnection.createStruct(typeName, attributes);
+		return getConnection().createStruct(aTypeName, aAttributes);
 	}
 
 
 	@Override
-	public void setSchema(String schema) throws SQLException
+	public void setSchema(String aSchema) throws SQLException
 	{
-		mConnection.setSchema(schema);
+		getConnection().setSchema(aSchema);
 	}
 
 
 	@Override
 	public String getSchema() throws SQLException
 	{
-		return mConnection.getSchema();
+		return getConnection().getSchema();
 	}
 
 
 	@Override
-	public void abort(Executor executor) throws SQLException
+	public void abort(Executor aExecutor) throws SQLException
 	{
-		mConnection.abort(executor);
+		getConnection().abort(aExecutor);
 	}
 
 
 	@Override
-	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
+	public void setNetworkTimeout(Executor aExecutor, int aMilliseconds) throws SQLException
 	{
-		mConnection.setNetworkTimeout(executor, milliseconds);
+		getConnection().setNetworkTimeout(aExecutor, aMilliseconds);
 	}
 
 
 	@Override
 	public int getNetworkTimeout() throws SQLException
 	{
-		return mConnection.getNetworkTimeout();
+		return getConnection().getNetworkTimeout();
 	}
 
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException
+	public boolean isWrapperFor(Class<?> aIface) throws SQLException
 	{
-		return mConnection.isWrapperFor(iface);
+		return getConnection().isWrapperFor(aIface);
 	}
 
 
 	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException
+	public <T> T unwrap(Class<T> aIface) throws SQLException
 	{
-		return mConnection.unwrap(iface);
+		return getConnection().unwrap(aIface);
+	}
+
+
+	@Override
+	public String toString()
+	{
+		try
+		{
+			return getConnection().toString();
+		}
+		catch (Exception e)
+		{
+			return "" + e.toString();
+		}
 	}
 }

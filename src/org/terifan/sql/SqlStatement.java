@@ -1,7 +1,6 @@
 package org.terifan.sql;
 
 import java.sql.Connection;
-import java.util.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 import org.terifan.util.Calendar;
+import org.terifan.util.log.Log;
 
 
 /**
@@ -102,14 +102,17 @@ public class SqlStatement
 		}
 		else
 		{
-			if (mValues.put(aColumn, aValue) != null)
+			Object oldValue = mValues.put(aColumn, aValue);
+
+			if (oldValue != null)
 			{
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("Value in column '" + aColumn + "' replaced '" + oldValue + "' with '" + aValue + "'");
 			}
 		}
 	}
 
 
+	@Deprecated
 	public boolean executeInsertUpdate(Connection aConnection) throws SQLException
 	{
 		if (executeUpdate(aConnection) > 0)
@@ -123,18 +126,20 @@ public class SqlStatement
 	}
 
 
+	@Deprecated
 	public int executeUpdate(Connection aConnection) throws SQLException
 	{
-		StringBuilder where = new StringBuilder();
-		StringBuilder columns = new StringBuilder();
+		StringBuilder columnsString = new StringBuilder();
 		for (String columnName : mValues.keySet())
 		{
-			if (columns.length() > 0)
+			if (columnsString.length() > 0)
 			{
-				columns.append(",");
+				columnsString.append(",");
 			}
-			columns.append("[").append(columnName).append("]=?");
+			columnsString.append("[").append(columnName).append("]=?");
 		}
+
+		StringBuilder where = new StringBuilder();
 		for (String keyName : mKeys.keySet())
 		{
 			if (where.length() > 0)
@@ -144,7 +149,7 @@ public class SqlStatement
 			where.append("[").append(keyName).append("]=?");
 		}
 
-		String sql = "update " + mTable + " set " + columns + " where " + where;
+		String sql = "update " + mTable + " set " + columnsString + " where " + where;
 
 		if (aConnection == null)
 		{
@@ -169,6 +174,7 @@ public class SqlStatement
 	}
 
 
+	@Deprecated
 	public int executeInsert(Connection aConnection) throws SQLException
 	{
 		StringBuilder values = new StringBuilder();
@@ -250,26 +256,35 @@ public class SqlStatement
 
 	void executeUpdate2(Connection aConnection, AbstractEntity aEntity) throws SQLException
 	{
-		StringBuilder where = new StringBuilder();
-		StringBuilder columns = new StringBuilder();
+		int j = 0;
+		Column[] valueColumns = new Column[mValues.size()];
+		StringBuilder columnString = new StringBuilder();
 		for (String columnName : mValues.keySet())
 		{
-			if (columns.length() > 0)
+			if (columnString.length() > 0)
 			{
-				columns.append(",");
+				columnString.append(",");
 			}
-			columns.append("[").append(columnName).append("]=?");
-		}
-		for (String keyName : mKeys.keySet())
-		{
-			if (where.length() > 0)
-			{
-				where.append(" and ");
-			}
-			where.append("[").append(keyName).append("]=?");
+			columnString.append("[").append(columnName).append("]=?");
+			valueColumns[j++] = EntityTools.getColumn(aEntity, columnName);
 		}
 
-		String sql = "update " + mTable + " set " + columns + " where " + where + "; select * from " + mTable + " where " + where;
+		StringBuilder whereString = new StringBuilder();
+		for (String keyName : mKeys.keySet())
+		{
+			if (whereString.length() > 0)
+			{
+				whereString.append(" and ");
+			}
+			whereString.append("[").append(keyName).append("]=?");
+		}
+
+		if (whereString.length() == 0)
+		{
+			throw new IllegalStateException("No keys defined");
+		}
+
+		String sql = "update " + mTable + " set " + columnString + " where " + whereString + "; select * from " + mTable + " where " + whereString;
 
 		if (aConnection == null)
 		{
@@ -281,7 +296,8 @@ public class SqlStatement
 			int i = 0;
 			for (Object value : mValues.values())
 			{
-				statement.setObject(++i, javaToResultSet(value));
+				statement.setObject(i + 1, javaToResultSet(value, valueColumns[i]));
+				i++;
 			}
 
 			// update params
@@ -305,6 +321,10 @@ public class SqlStatement
 
 				EntityTools.populateEntity(aEntity, resultSet);
 			}
+			catch (SQLException e)
+			{
+				throw new SQLException("Error with expression: " + sql, e);
+			}
 		}
 	}
 
@@ -320,6 +340,22 @@ public class SqlStatement
 		StringBuilder columns = new StringBuilder();
 		for (String column : mValues.keySet())
 		{
+			Column col = EntityTools.getColumn(aEntity, column);
+			if (mValues.get(column) == null && col.producer() != Column.NO_PRODUCER.class)
+			{
+				try
+				{
+					Object value = col.producer().newInstance().produce(aEntity, col);
+
+					Log.out.println("Producing value '" + value + "' for column '" + column + "'");
+
+					mValues.put(column, value);
+				}
+				catch (InstantiationException | IllegalAccessException e)
+				{
+				}
+			}
+
 			if (columns.length() > 0)
 			{
 				columns.append(",");
@@ -357,6 +393,7 @@ public class SqlStatement
 	}
 
 
+	@Deprecated
 	public int executeDelete(Connection aConnection) throws SQLException
 	{
 		if (!identityColumn)
@@ -437,32 +474,34 @@ public class SqlStatement
 	}
 
 
-	public static void main(String ... args)
+	private Object javaToResultSet(Object aValue, Column aColumn)
 	{
-		try
+		if (aValue != null)
 		{
-			SqlStatement insert = new SqlStatement("t_log")
-				.key("id", 0, true)
-				.put("datetime", new Date(0))
-				.put("str", "hello world");
-
-			SqlStatement update = new SqlStatement("t_log")
-				.key("id", 7)
-				.key("str", "test", true)
-				.put("datetime", new Date(0))
-				.put("str", "hello world");
-
-			SqlStatement delete = new SqlStatement("t_log")
-				.key("id", 7)
-				.key("str", "test");
-
-//			Log.out.println(insert.executeInsert(null));
-//			Log.out.println(update.executeInsertUpdate(null));
-//			Log.out.println(delete.executeDelete(null));
+			if (aValue instanceof java.util.Date)
+			{
+				return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format((java.util.Date)aValue);
+			}
+			if (aValue instanceof Calendar)
+			{
+				return aValue.toString();
+			}
+			if (aValue instanceof UUID)
+			{
+				return aValue.toString();
+			}
+			if (Enum.class.isAssignableFrom(aValue.getClass()))
+			{
+				if (aColumn.enumType() == EnumType.NAME)
+				{
+					return ((Enum)aValue).name();
+				}
+				else
+				{
+					return ((Enum)aValue).ordinal() + 1;
+				}
+			}
 		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
+		return aValue;
 	}
 }

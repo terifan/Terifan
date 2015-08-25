@@ -2,17 +2,20 @@ package org.terifan.sql;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Iterator;
 
 
 public class ResultSetIterable implements Iterable<ResultSet>, AutoCloseable
 {
 	private ResultSet mResultSet;
+	private Statement mStatement;
 
 
-	ResultSetIterable(ResultSet aResultSet)
+	ResultSetIterable(Statement aStatement, ResultSet aResultSet)
 	{
 		mResultSet = aResultSet;
+		mStatement = aStatement;
 	}
 
 
@@ -23,6 +26,11 @@ public class ResultSetIterable implements Iterable<ResultSet>, AutoCloseable
 		{
 			mResultSet.close();
 			mResultSet = null;
+		}
+		if (mStatement != null)
+		{
+			mStatement.close();
+			mStatement = null;
 		}
 	}
 

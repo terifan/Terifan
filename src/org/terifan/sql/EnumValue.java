@@ -6,8 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
-@Target(value = {ElementType.TYPE}) @Retention(value = RetentionPolicy.RUNTIME)
-public @interface Table
+@Target(value = {ElementType.FIELD}) @Retention(value = RetentionPolicy.RUNTIME)
+public @interface EnumValue
 {
-	public String name() default "";
+	public int value();
 }

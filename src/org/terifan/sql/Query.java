@@ -1,7 +1,5 @@
 package org.terifan.sql;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,7 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.terifan.util.log.Log;
+import org.terifan.util.Strings;
 
 
 /**
@@ -17,33 +15,21 @@ import org.terifan.util.log.Log;
  * A value is bound to the integer parameter :foo by calling <pre>setParameter("foo", foo, Types.INTEGER);</pre> for example. A name may
  * appear multiple times in the query string.</p>
  * <p/>
- * Sample iterating a ResultSet produced via a Query:
- * <pre>try (Query query = new Query("select * from table where id between @first and @last"))
- * {
- *    query.setParameter("first", 1);
- *    query.setParameter("last", 7);
- *
- *    for (ResultSet rs : query.execute(connection))
- *    {
- *        System.out.println(rs.getInt("id"));
- *    }
- * }</pre>
- * <p/>
  * Sample fetching a Query result to a list:
- * <pre>try (Query query = new Query("select * from table where id between @first and @last"))
- * {
- *    query.setParameter("first", 1);
- *    query.setParameter("last", 7);
+ * <pre>Query query = EntityManager.createQuery("select * from table where id between :first and :last")
+ *    .setParameter("first", 1)
+ *    .setParameter("last", 7);
  *
- *    for (Item item : query.list(connection, Item.class))
+ *    for (Item item : query.list(Item.class))
  *    {
- *        System.out.println(item.getId());
+ *        System.out.println(item.personName);
  *    }
  * }
  *
- * class Item
+ * public static class Item extends AbstractEntity
  * {
- *    @Column(name="id") int id;
+ *    int id;
+ *    @Column("person_name") String personName;
  * }
  * </pre>
  */
@@ -65,12 +51,12 @@ public class Query implements AutoCloseable
 	}
 
 
-	public Query(String aStatement)
-	{
-		mStatement = aStatement;
-		mValues = new HashMap<>();
-		mTypes = new HashMap<>();
-	}
+//	Query(String aStatement)
+//	{
+//		mStatement = aStatement;
+//		mValues = new HashMap<>();
+//		mTypes = new HashMap<>();
+//	}
 
 
 	public Query append(String aStatement)
@@ -95,7 +81,7 @@ public class Query implements AutoCloseable
 	 * Bind a value to a named query parameter.
 	 *
 	 * @param aField
-	 *   field name in the query, e.g. field name "value" in query "select * from table where id=@value"
+	 *   field name in the query, e.g. field name "value" in query "select * from table where id=:value"
 	 * @param aValue
 	 *   value
 	 */
@@ -110,7 +96,7 @@ public class Query implements AutoCloseable
 	 * Bind a value to a named query parameter.
 	 *
 	 * @param aField
-	 *   field name in the query, e.g. field name "value" in query "select * from table where id=@value"
+	 *   field name in the query, e.g. field name "value" in query "select * from table where id=:value"
 	 * @param aValue
 	 *   value
 	 * @param aType
@@ -126,26 +112,18 @@ public class Query implements AutoCloseable
 	}
 
 
-	@Deprecated
-	public ResultSet executeQuery(Connection aConnection) throws SQLException
-	{
-		return execute(aConnection).iterator().next();
-	}
-
-
-	@Deprecated
-	public ResultSetIterable execute(Connection aConnection) throws SQLException
+	private ResultSetIterable executeImpl(Connection aConnection) throws SQLException
 	{
 		String st = mStatement;
 		ArrayList<Object> values = new ArrayList<>();
 		ArrayList<Integer> types = new ArrayList<>();
-		ArrayList<String> fields = new ArrayList<>();
+//		ArrayList<String> fields = new ArrayList<>();
 
 //		Log.out.println(mStatement);
 
 		for (;;)
 		{
-			int i = st.indexOf("@");
+			int i = st.indexOf(":");
 
 			if (i == -1)
 			{
@@ -154,7 +132,12 @@ public class Query implements AutoCloseable
 
 			String field = trim(st.substring(i + 1));
 
-			fields.add(field);
+			if (Strings.isEmptyOrNull(field))
+			{
+				throw new IllegalArgumentException("Illegal parameter name in query: " + mStatement);
+			}
+
+//			fields.add(field);
 			values.add(mValues.get(field));
 			types.add(mTypes.get(field));
 
@@ -170,20 +153,26 @@ public class Query implements AutoCloseable
 			for (int i = 0; i < values.size(); i++)
 			{
 				Integer type = types.get(i);
+				Object tmp = values.get(i);
+
+				if (tmp instanceof java.util.Date)
+				{
+					tmp = new java.sql.Date(((java.util.Date)tmp).getTime());
+				}
 
 //				Log.out.println("  " + fields.get(i) + " = " + values.get(i));
 
 				if (type == null)
 				{
-					statement.setObject(1 + i, values.get(i));
+					statement.setObject(1 + i, tmp);
 				}
 				else
 				{
-					statement.setObject(1 + i, values.get(i), type);
+					statement.setObject(1 + i, tmp, type);
 				}
 			}
 
-			mSqlResult = new ResultSetIterable(statement.executeQuery());
+			mSqlResult = new ResultSetIterable(statement, statement.executeQuery());
 
 			return mSqlResult;
 		}
@@ -193,19 +182,6 @@ public class Query implements AutoCloseable
 			throw e;
 		}
 	}
-
-
-//	public <T> T executeSingle(Connection aConnection, Class<T> aType) throws SQLException
-//	{
-//		T e = createEntityInstance(aType);
-//
-//		if (executeSingle(aConnection, e))
-//		{
-//			return e;
-//		}
-//
-//		return null;
-//	}
 
 
 	public <T extends AbstractEntity> T executeSingle(Class<T> aType) throws SQLException
@@ -221,94 +197,53 @@ public class Query implements AutoCloseable
 	}
 
 
-	public boolean executeSingle(AbstractEntity aEntity) throws SQLException
+	public boolean executeSingle(Object aEntity) throws SQLException
 	{
 		try (Connection conn = em.claim())
-		{
-			ResultSet resultSet = executeQuery(conn);
-
-			if (!resultSet.next())
-			{
-				return false;
-			}
-
-			EntityTools.populateEntity(aEntity, resultSet);
-
-			return true;
-		}
-	}
-
-
-//	public boolean executeSingle(Connection aConnection, Object aItem) throws SQLException
-//	{
-//		ResultSet resultSet = executeQuery(aConnection);
-//
-//		if (!resultSet.next())
-//		{
-//			return false;
-//		}
-//
-//		assignValue(aItem, resultSet);
-//
-//		return true;
-//	}
-
-
-	public <T extends AbstractEntity> List<T> list(Class<T> aType) throws SQLException
-	{
-		try (Connection conn = em.claim())
-		{
-			ArrayList list = new ArrayList();
-
-			for (ResultSet resultSet : execute(conn))
-			{
-				T item = em.create(aType);
-
-				EntityTools.populateEntity(item, resultSet);
-
-				list.add(item);
-			}
-
-			return list;
-		}
-	}
-
-
-//	@Deprecated
-//	public <T> List<T> list(Connection aConnection, Class<T> aType) throws SQLException
-//	{
-//		ArrayList list = new ArrayList();
-//
-//		for (ResultSet resultSet : execute(aConnection))
-//		{
-//			T item = createEntityInstance(aType);
-//
-//			EntityTools.populateEntity(item, resultSet);
-//
-//			list.add(item);
-//		}
-//
-//		return list;
-//	}
-
-
-	private static <T> T createEntityInstance(Class<T> aType) throws SQLException
-	{
-		try
-		{
-			return aType.newInstance();
-		}
-		catch (IllegalAccessException | InstantiationException e)
 		{
 			try
 			{
-				Constructor c = aType.getDeclaredConstructor();
-				c.setAccessible(true);
-				return (T)c.newInstance();
+				ResultSet resultSet = executeImpl(conn).iterator().next();
+
+				if (!resultSet.next())
+				{
+					return false;
+				}
+
+				EntityTools.populateEntity(aEntity, resultSet);
+
+				return true;
 			}
-			catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ee)
+			finally
 			{
-				throw new SQLException("Problem creating an instance of " + aType + " (make sure there is a zero arguments constructor).", ee);
+				close();
+			}
+		}
+	}
+
+
+	public <T> List<T> list(Class<T> aType) throws SQLException
+	{
+		try (Connection conn = em.claim())
+		{
+			try
+			{
+				ArrayList list = new ArrayList();
+
+				for (ResultSet resultSet : executeImpl(conn))
+				{
+					T item = em.create(aType);
+
+					EntityTools.populateEntity(item, resultSet);
+
+					list.add(item);
+				}
+
+				return list;
+			}
+			finally
+			{
+				close();
 			}
 		}
 	}

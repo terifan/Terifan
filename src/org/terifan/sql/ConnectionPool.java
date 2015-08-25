@@ -1,11 +1,15 @@
 package org.terifan.sql;
 
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import org.terifan.util.Pool;
+import java.util.Timer;
+import java.util.TimerTask;
+import org.terifan.data.Pool;
 import org.terifan.util.Strings;
+import org.terifan.util.log.Log;
 
 
 public class ConnectionPool extends Pool<PooledConnection>
@@ -15,16 +19,20 @@ public class ConnectionPool extends Pool<PooledConnection>
 	private final String mLogin;
 	private final String mPassword;
 	private final String mCatalog;
+	private PrintStream mLog;
+	private Timer mCleanUpTimer;
 
 
 	public ConnectionPool(String aDriver, String aHost, String aLogin, String aPassword, String aCatalog)
 	{
-		super(3, 10);
+		super(10, 15 * 60);
 
 		if (Strings.isEmptyOrNull(aDriver) || Strings.isEmptyOrNull(aHost) || Strings.isEmptyOrNull(aLogin) || Strings.isEmptyOrNull(aPassword) || Strings.isEmptyOrNull(aCatalog))
 		{
 			throw new IllegalArgumentException("Bad input " + aDriver + ", " + aHost + ", " + aLogin + ", " + aPassword + ", " + aCatalog);
 		}
+
+		super.setYoungFirst(true);
 
 		try
 		{
@@ -41,11 +49,41 @@ public class ConnectionPool extends Pool<PooledConnection>
 		mLogin = aLogin;
 		mPassword = aPassword;
 		mCatalog = aCatalog;
+
+		mCleanUpTimer = new Timer(true);
+		mCleanUpTimer.schedule(mCleanUpTimerTask, 60000, 60000);
+	}
+
+
+	private TimerTask mCleanUpTimerTask = new TimerTask()
+	{
+		@Override
+		public void run()
+		{
+			cleanUp();
+		}
+	};
+
+
+	public void setLog(PrintStream aLog)
+	{
+		mLog = aLog;
 	}
 
 
 	public void shutdown() throws SQLException
 	{
+		try
+		{
+			mCleanUpTimer.cancel();
+		}
+		catch (Exception e)
+		{
+			mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
+
+			e.printStackTrace(Log.out);
+		}
+
 		clear();
 
 		if (mDriver != null)
@@ -58,6 +96,8 @@ public class ConnectionPool extends Pool<PooledConnection>
 	@Override
 	protected PooledConnection create()
 	{
+		if (mLog != null) mLog.println("ConnectionPool: Creating connection");
+
 		RuntimeException exception = null;
 
 		for (int i = 0; i < 10; i++)
@@ -65,6 +105,7 @@ public class ConnectionPool extends Pool<PooledConnection>
 			try
 			{
 				DriverManager.setLoginTimeout(10);
+
 				Connection connection = DriverManager.getConnection(mHost, mLogin, mPassword);
 				connection.setCatalog(mCatalog);
 
@@ -72,6 +113,10 @@ public class ConnectionPool extends Pool<PooledConnection>
 			}
 			catch (SQLException e)
 			{
+				if (mLog != null) mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
+
+				Log.out.println("Error connecting to " + mCatalog+", "+mHost + ", " + mLogin);
+
 				exception = new RuntimeException(e);
 
 				try
@@ -89,35 +134,39 @@ public class ConnectionPool extends Pool<PooledConnection>
 
 
 	@Override
-	protected void destroy(PooledConnection aConnection)
+	protected void destroy(PooledConnection aPooledConnection)
 	{
 		try
 		{
-			Connection conn = aConnection.getConnection();
+			Connection conn = aPooledConnection.getConnection();
 
 			if (conn != null)
 			{
+				if (mLog != null) mLog.println("ConnectionPool: Closing connection");
+
 				conn.close();
 			}
 		}
 		catch (SQLException e)
 		{
+			if (mLog != null) mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
+
 			throw new RuntimeException(e);
 		}
 	}
 
 
 	@Override
-	protected boolean prepare(PooledConnection aConnection)
+	protected boolean prepare(PooledConnection aPooledConnection)
 	{
 		try
 		{
-			if (aConnection.getConnection().isClosed())
+			if (aPooledConnection.getConnection().isClosed())
 			{
 				return false;
 			}
 
-			Connection conn = aConnection.getConnection();
+			Connection conn = aPooledConnection.getConnection();
 
 			if (conn != null)
 			{
@@ -125,10 +174,12 @@ public class ConnectionPool extends Pool<PooledConnection>
 				conn.clearWarnings();
 			}
 
-			return aConnection.isValid(5);
+			return aPooledConnection.isValid(5);
 		}
 		catch (SQLException e)
 		{
+			mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
+
 			return false;
 		}
 	}
@@ -139,10 +190,16 @@ public class ConnectionPool extends Pool<PooledConnection>
 	{
 		try
 		{
+			if (aConnection.isClosed()) // uggly code because of validation bug in netbeans
+			{
+				return false;
+			}
 			return aConnection.getWarnings() == null;
 		}
-		catch (SQLException e)
+		catch (Throwable e)
 		{
+			mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
+
 			return false;
 		}
 	}

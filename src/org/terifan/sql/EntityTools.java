@@ -8,28 +8,35 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 import org.terifan.util.Calendar;
-import org.terifan.util.log.Log;
+import org.terifan.util.Strings;
 
 
 public class EntityTools
 {
 	public static <T> void populateEntity(T aEntity, ResultSet aResultSet) throws SQLException, SecurityException
 	{
-		for (Field field : aEntity.getClass().getDeclaredFields())
+		for (Field field : getDeclaredFields(aEntity.getClass()))
 		{
-			String name = null;
+			String name = field.getName();
 
 			Column column = field.getAnnotation(Column.class);
-			if (column != null)
+            PrimaryKey key = field.getAnnotation(PrimaryKey.class);
+
+            if(column == null && key == null)
+            {
+                continue;
+            }
+
+			if (column != null && !Strings.isEmptyOrNull(column.name()))
 			{
 				name = column.name();
 			}
 
-			PrimaryKey key = field.getAnnotation(PrimaryKey.class);
-			if (key != null)
+			if (key != null && !Strings.isEmptyOrNull(key.name()))
 			{
 				name = key.name();
 			}
@@ -48,7 +55,8 @@ public class EntityTools
 				}
 				catch (Exception e)
 				{
-					throw new SQLException("Problem setting item property " + name + " via field " + field + " to value " + aResultSet.getObject(name), e);
+					Object value = aResultSet == null || Strings.isEmptyOrNull(name) ? "<empty column name>" : aResultSet.getObject(name);
+					throw new SQLException("Problem setting item property " + name + " via field " + field + " to value " + value, e);
 				}
 			}
 		}
@@ -94,8 +102,6 @@ public class EntityTools
 
 	public static <T> T convertValue(Class<T> aType, Object aValue) throws IllegalArgumentException
 	{
-		Object input = aValue;
-
 		if (UUID.class.isAssignableFrom(aType))
 		{
 			if (aValue instanceof String)
@@ -154,14 +160,14 @@ public class EntityTools
 
 				if (!found)
 				{
-					throw new IllegalArgumentException("Enum name not found for " + aValue + " in java type " + aType);
+					throw new IllegalArgumentException("Enum name not found for '" + aValue + "' in java type " + aType + ". Annotation enumName missing in Entity?");
 				}
 			}
-			else if (aValue instanceof Integer)
+			else if (aValue instanceof Integer || aValue != null && aValue.getClass() == Integer.TYPE)
 			{
-				aValue = ((Class<Enum>)aType).getEnumConstants()[(Integer)aValue - 1];
+				aValue = getEnumConstant((Class<Enum>)aType, (Integer)aValue);
 			}
-			else
+			else if (aValue != null)
 			{
 				throw new IllegalArgumentException("Failed to convert database field " + aValue.getClass() + " to java field " + aType);
 			}
@@ -206,6 +212,52 @@ public class EntityTools
 	}
 
 
+	private static Object getEnumConstant(Class<Enum> aType, int aValue) throws IllegalArgumentException
+	{
+		boolean replacements = false;
+		Enum[] enumConstants = aType.getEnumConstants();
+
+		for (Enum ec : enumConstants)
+		{
+			EnumValue annotation = getEnumAnnotation(ec);
+
+			if (annotation != null)
+			{
+				replacements = true;
+
+				if (annotation.value() == aValue)
+				{
+					return ec;
+				}
+			}
+		}
+
+		if (replacements)
+		{
+			throw new IllegalArgumentException("Enum value not found: " + aValue + " in enum:" + aType);
+		}
+
+		return enumConstants[aValue - 1];
+	}
+
+
+	private static EnumValue getEnumAnnotation(Enum aEnum)
+	{
+		EnumValue annotation = null;
+		try
+		{
+			Field field = aEnum.getClass().getField(aEnum.name());
+			if (field.getType() == aEnum.getClass() && field.getAnnotations().length > 0)
+			{
+				annotation = field.getAnnotation(EnumValue.class);
+			}
+		}catch (NoSuchFieldException | SecurityException e)
+		{
+		}
+		return annotation;
+	}
+
+
 	public static ArrayList<String> getColumns(AbstractEntity aEntity, boolean aIncludeKeys, boolean aIncludeValues, boolean aIncludeGenerated)
 	{
 		if (aEntity == null)
@@ -217,11 +269,11 @@ public class EntityTools
 	}
 
 
-	public static ArrayList<String> getColumns(Class aEntity, boolean aIncludeKeys, boolean aIncludeValues, boolean aIncludeGenerated)
+	public static ArrayList<String> getColumns(Class aType, boolean aIncludeKeys, boolean aIncludeValues, boolean aIncludeGenerated)
 	{
 		ArrayList<String> list = new ArrayList<>();
 
-		for (Field field : aEntity.getDeclaredFields())
+		for (Field field : getDeclaredFields(aType))
 		{
 			String name = null;
 
@@ -234,22 +286,35 @@ public class EntityTools
 					{
 						continue;
 					}
-
-					name = column.name();
+					if (Strings.isEmptyOrNull(column.name()))
+					{
+						name = field.getName();
+					}
+					else
+					{
+						name = column.name();
+					}
 				}
 			}
 
 			if (aIncludeKeys)
 			{
 				PrimaryKey key = field.getAnnotation(PrimaryKey.class);
+
 				if (key != null)
 				{
-					if (!aIncludeGenerated && key.generated())
+//					if (!aIncludeGenerated && key.generated())
+//					{
+//						continue;
+//					}
+					if (Strings.isEmptyOrNull(key.name()))
 					{
-						continue;
+						name = field.getName();
 					}
-
-					name = key.name();
+					else
+					{
+						name = key.name();
+					}
 				}
 			}
 
@@ -259,7 +324,7 @@ public class EntityTools
 			}
 		}
 
-		for (Method method : aEntity.getDeclaredMethods())
+		for (Method method : aType.getDeclaredMethods())
 		{
 			if (method.getName().startsWith("set") || method.getName().startsWith("get"))
 			{
@@ -312,12 +377,12 @@ public class EntityTools
 				}
 			}
 
-			for (Field field : aEntity.getClass().getDeclaredFields())
+			for (Field field : getDeclaredFields(aEntity.getClass()))
 			{
 				Column column = field.getAnnotation(Column.class);
 				PrimaryKey key = field.getAnnotation(PrimaryKey.class);
 
-				if (column != null && column.name().equals(aColumnName) || key != null && key.name().equals(aColumnName))
+				if (column != null && (column.name().equals(aColumnName) || field.getName().equals(aColumnName)) || key != null && (key.name().equals(aColumnName) || field.getName().equals(aColumnName)))
 				{
 					field.setAccessible(true);
 
@@ -353,7 +418,7 @@ public class EntityTools
 				}
 			}
 
-			for (Field field : aEntity.getClass().getDeclaredFields())
+			for (Field field : getDeclaredFields(aEntity.getClass()))
 			{
 				Column column = field.getAnnotation(Column.class);
 				PrimaryKey key = field.getAnnotation(PrimaryKey.class);
@@ -391,11 +456,11 @@ public class EntityTools
 				}
 			}
 
-			for (Field field : aEntity.getClass().getDeclaredFields())
+			for (Field field : getDeclaredFields(aEntity.getClass()))
 			{
 				Column column = field.getAnnotation(Column.class);
 
-				if (column != null && column.name().equals(aColumnName))
+				if (column != null && (column.name().equals(aColumnName) || field.getName().equals(aColumnName)))
 				{
 					return column;
 				}
@@ -430,16 +495,45 @@ public class EntityTools
 			}
 			if (Enum.class.isAssignableFrom(aValue.getClass()))
 			{
-				if (column.enumName())
+				if (column.enumType() == EnumType.NAME)
 				{
 					return ((Enum)aValue).name();
 				}
 				else
 				{
-					return ((Enum)aValue).ordinal() + 1;
+					EnumValue annotation = getEnumAnnotation((Enum)aValue);
+					if (annotation != null)
+					{
+						return annotation.value();
+					}
+					else
+					{
+						return ((Enum)aValue).ordinal() + 1;
+					}
 				}
 			}
 		}
 		return aValue;
+	}
+
+
+	private static ArrayList<Field> getDeclaredFields(Class<?> aType)
+	{
+		return getDeclaredFields(aType, new ArrayList<>());
+	}
+
+
+	private static ArrayList<Field> getDeclaredFields(Class<?> aType, ArrayList<Field> aOutput)
+	{
+		aOutput.addAll(Arrays.asList(aType.getDeclaredFields()));
+
+		Class<?> sup = aType.getSuperclass();
+
+		if (sup != Object.class)
+		{
+			getDeclaredFields(sup, aOutput);
+		}
+
+		return aOutput;
 	}
 }

@@ -1,5 +1,6 @@
 package org.terifan.sql;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -55,23 +56,27 @@ public class EntityManager implements AutoCloseable
 	}
 
 
-	public <E extends AbstractEntity> E create(Class<E> aType)
+	public <E> E create(Class<E> aType)
 	{
 		try
 		{
-			E instance = aType.getConstructor().newInstance();
+			Constructor<E> c = (Constructor<E>)aType.getDeclaredConstructor();
+			c.setAccessible(true);
 
-//			E instance = aType.newInstance();
+			E instance = c.newInstance();
 
-			instance.bind(this);
+			if (instance instanceof AbstractEntity)
+			{
+				((AbstractEntity)instance).bind(this);
+			}
 
 			return instance;
 		}
 		catch (IllegalArgumentException e)
 		{
-			throw new IllegalStateException("Ensure that " + aType + " has an empty constructor", e);
+			throw new IllegalStateException("Ensure that " + aType + " has an empty public constructor and that the entity is static if it's an internal class", e);
 		}
-		catch (InstantiationException | IllegalAccessException | IllegalStateException | NoSuchMethodException | InvocationTargetException e)
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e)
 		{
 			throw new IllegalStateException(e);
 		}
@@ -117,23 +122,37 @@ public class EntityManager implements AutoCloseable
 	}
 
 
+	/**
+	 * Saves an entity.
+	 *
+	 * @return
+	 *   true if the entity was inserted or false if it was updated.
+	 */
 	public boolean save(AbstractEntity aEntity) throws SQLException
 	{
 		String table = getTable(aEntity.getClass());
 
 		SqlStatement statement = new SqlStatement(table);
 
-		boolean hasKeys = true;
+		boolean hasKeys = false;
 
 		for (String keyName : EntityTools.getColumns(aEntity, true, false, false))
 		{
 			Object value = EntityTools.getColumnValue(aEntity, keyName);
-			hasKeys &= value != null;
+
 			statement.key(keyName, value);
+
+			if (value != null)
+			{
+				hasKeys = true;
+			}
 		}
+
 		for (String columnName : EntityTools.getColumns(aEntity, false, true, false))
 		{
-			statement.put(columnName, EntityTools.javaToResultSet(aEntity, columnName, EntityTools.getColumnValue(aEntity, columnName)));
+			Object columnValue = EntityTools.getColumnValue(aEntity, columnName);
+			Object convertedValue = EntityTools.javaToResultSet(aEntity, columnName, columnValue);
+			statement.put(columnName, convertedValue);
 		}
 
 		try (Connection conn = claim())
@@ -178,8 +197,6 @@ public class EntityManager implements AutoCloseable
 
 		Query query = createQuery("select * from " + table + " where ");
 
-		int keyIndex = 0;
-
 		for (String name : EntityTools.getColumns(aEntity, true, false, true))
 		{
 			query.append("[" + name + "] = :" + name);
@@ -200,7 +217,7 @@ public class EntityManager implements AutoCloseable
 			throw new IllegalArgumentException("Entity '" + aClass.getSimpleName() + "' is missing Table annotation.");
 		}
 
-		String table = ann.catalog();
+		String table = ann.name();
 
 		if (table.isEmpty())
 		{
