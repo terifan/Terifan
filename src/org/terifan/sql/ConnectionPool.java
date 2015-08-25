@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.terifan.data.Pool;
+import org.terifan.util.Pool;
 import org.terifan.util.Strings;
 import org.terifan.util.log.Log;
 

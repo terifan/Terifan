@@ -45,9 +45,9 @@ public class Log
 	}
 
 
-	public static String getStackTraceStringFlatten(Exception aException)
+	public static String getStackTraceStringFlatten(Throwable aThrowable)
 	{
-		return getStackTraceString(aException).replace('\r',' ').replace('\n',' ').replace('\t',' ').replace("    "," ").replace("   "," ").replace("  "," ");
+		return getStackTraceString(aThrowable).replace('\r',' ').replace('\n',' ').replace('\t',' ').replace("    "," ").replace("   "," ").replace("  "," ");
 	}
 
 
