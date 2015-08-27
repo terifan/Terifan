@@ -1,7 +1,9 @@
 package org.terifan.util;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.terifan.util.log.Log;
 
@@ -18,7 +20,7 @@ import org.terifan.util.log.Log;
  *   aDatabase.close();
  *  }
  * };
- * 
+ *
  * SharedResource<Database,Long> database1 = factory.get(connectionString, Thread.currentThread().getId()); // create method called and database open
  * database1.something();
  * ...
@@ -36,83 +38,89 @@ import org.terifan.util.log.Log;
  */
 public abstract class SharedResourceFactory<I,P,O>
 {
-	private HashMap<P,I> mPrototypeInstance;
-	private HashMap<I,P> mInstancePrototype;
-	private HashMap<I,HashSet<O>> mInstanceOwners;
+	private Map<P,I> mPrototypeInstance;
+	private Map<I,P> mInstancePrototype;
+	private Map<I,HashSet<O>> mInstanceOwners;
 
 
 	public SharedResourceFactory()
 	{
-		mInstanceOwners = new HashMap<>();
-		mInstancePrototype = new HashMap<>();
-		mPrototypeInstance = new HashMap<>();
+		mInstanceOwners = Collections.synchronizedMap(new HashMap<>());
+		mInstancePrototype = Collections.synchronizedMap(new HashMap<>());
+		mPrototypeInstance = Collections.synchronizedMap(new HashMap<>());
 	}
 
 
 	/**
 	 * Return an already created instance but will not create an instance if one doesn't exists.
 	 */
-	public /*synchronized*/ SharedResource<I> peek(P aPrototype, O aOwner)
+	public SharedResource<I> peek(P aPrototype, O aOwner)
 	{
-		I instance = mPrototypeInstance.get(aPrototype);
-
-		if (instance == null)
+		synchronized (aOwner)
 		{
-			return null;
-		}
-
-		HashSet<O> owners = mInstanceOwners.get(instance);
-
-		if (owners == null)
-		{
-			owners = new HashSet<>();
-			mInstanceOwners.put(instance, owners);
-		}
-
-		owners.add(aOwner);
-
-		return new SharedResource<>(this, instance, aOwner);
-	}
-
-
-	/**
-	 * Return an already created instance or create a new object using the prototype provided.
-	 */
-	public /*synchronized*/ SharedResource<I> get(P aPrototype, O aOwner)
-	{
-		I instance = mPrototypeInstance.get(aPrototype);
-
-		if (instance == null)
-		{
-			instance = create(aPrototype);
+			I instance = mPrototypeInstance.get(aPrototype);
 
 			if (instance == null)
 			{
 				return null;
 			}
 
-			mPrototypeInstance.put(aPrototype, instance);
-			mInstancePrototype.put(instance, aPrototype);
+			HashSet<O> owners = mInstanceOwners.get(instance);
+
+			if (owners == null)
+			{
+				owners = new HashSet<>();
+				mInstanceOwners.put(instance, owners);
+			}
+
+			owners.add(aOwner);
+
+			return new SharedResource<>(this, instance, aOwner);
 		}
+	}
 
-		HashSet<O> owners = mInstanceOwners.get(instance);
 
-		if (owners == null)
+	/**
+	 * Return an already created instance or create a new object using the prototype provided.
+	 */
+	public SharedResource<I> get(P aPrototype, O aOwner)
+	{
+		synchronized (aOwner)
 		{
-			owners = new HashSet<>();
-			mInstanceOwners.put(instance, owners);
+			I instance = mPrototypeInstance.get(aPrototype);
+
+			if (instance == null)
+			{
+				instance = create(aPrototype);
+
+				if (instance == null)
+				{
+					return null;
+				}
+
+				mPrototypeInstance.put(aPrototype, instance);
+				mInstancePrototype.put(instance, aPrototype);
+			}
+
+			HashSet<O> owners = mInstanceOwners.get(instance);
+
+			if (owners == null)
+			{
+				owners = new HashSet<>();
+				mInstanceOwners.put(instance, owners);
+			}
+
+			owners.add(aOwner);
+
+			return new SharedResource<>(this, instance, aOwner);
 		}
-
-		owners.add(aOwner);
-
-		return new SharedResource<>(this, instance, aOwner);
 	}
 
 
 	/**
 	 * Removes an Instance and Owner pair. If the instance isn't owned by any other Owner it will be destroyed.
 	 */
-	private void remove(I aInstance, O aOwner)
+	private synchronized void remove(I aInstance, O aOwner)
 	{
 		HashSet<O> owners = mInstanceOwners.get(aInstance);
 
@@ -129,7 +137,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes an Instance and Owner pair. If the instance isn't owned by any other Owner it will be destroyed.
 	 */
-	public /*synchronized*/ void remove(SharedResource<I> aInstance)
+	public synchronized void remove(SharedResource<I> aInstance)
 	{
 		remove(aInstance.get(), (O)aInstance.getOwner());
 	}
@@ -138,7 +146,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes an Instance. The destroy method will be called.
 	 */
-	public /*synchronized*/ void remove(I aInstance)
+	public synchronized void remove(I aInstance)
 	{
 		P prototype = mInstancePrototype.remove(aInstance);
 
@@ -154,7 +162,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes the Owner provided from all object instances. If an object isn't owned by any Owner then it will be destroyed.
 	 */
-	public /*synchronized*/ void removeOwner(O aOwner)
+	public synchronized void removeOwner(O aOwner)
 	{
 		for (Object instance : mInstanceOwners.keySet().toArray())
 		{
@@ -166,7 +174,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Removes the instance with the Prototype provided. If an object instance of the Prototype isn't owned by any Owner then it will be destroyed.
 	 */
-	public /*synchronized*/ void removePrototype(P aPrototype)
+	public synchronized void removePrototype(P aPrototype)
 	{
 		I instance = mPrototypeInstance.get(aPrototype);
 
@@ -183,13 +191,13 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return number of instances this class manages.
 	 */
-	public /*synchronized*/ int size()
+	public synchronized int size()
 	{
 		return mInstanceOwners.size();
 	}
 
 
-	public /*synchronized*/ void clear()
+	public synchronized void clear()
 	{
 		for (Object instance : mInstancePrototype.keySet().toArray())
 		{
@@ -201,7 +209,7 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return all instances managed by this object.
 	 */
-	public /*synchronized*/ Set<I> entries()
+	public synchronized Set<I> entries()
 	{
 		return mInstancePrototype.keySet();
 	}
@@ -210,19 +218,19 @@ public abstract class SharedResourceFactory<I,P,O>
 	/**
 	 * Return all Owners owning a certain instances managed by this object.
 	 */
-	public /*synchronized*/ Set<O> owners(I aInstance)
+	public synchronized Set<O> owners(I aInstance)
 	{
 		return mInstanceOwners.get(aInstance);
 	}
 
 
-	public /*synchronized*/ boolean containsInstance(I aInstance)
+	public synchronized boolean containsInstance(I aInstance)
 	{
 		return mInstancePrototype.containsKey(aInstance);
 	}
 
 
-	public /*synchronized*/ boolean containsPrototype(P aType)
+	public synchronized boolean containsPrototype(P aType)
 	{
 		return mPrototypeInstance.containsKey(aType);
 	}
@@ -232,48 +240,48 @@ public abstract class SharedResourceFactory<I,P,O>
 
 
 	protected abstract void destroy(P aPrototype, I aObject);
-	
-	
-	public static void main(String... args)
-	{
-		try
-		{
-			SharedResourceFactory<int[],Integer,Object> factory = new SharedResourceFactory<int[], Integer, Object>()
-			{
-				@Override
-				protected int[] create(Integer aObject)
-				{
-					Log.out.println("create " + aObject);
-					return new int[aObject];
-				}
-				@Override
-				protected void destroy(Integer aPrototype, int[] aObject)
-				{
-					Log.out.println("destroy " + aObject);
-				}
-			};
 
 
-			try (SharedResource a = factory.get(4, "a"))
-			{
-				Log.out.println(a.get());
-
-				try (SharedResource b = factory.get(4, "b"))
-				{
-					Log.out.println(b.get());
-				}
-
-				Log.out.println(a.get());
-			}
-
-			try (SharedResource a = factory.get(4, "a"))
-			{
-				Log.out.println(a.get());
-			}
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
+//	public static void main(String... args)
+//	{
+//		try
+//		{
+//			SharedResourceFactory<int[],Integer,Object> factory = new SharedResourceFactory<int[], Integer, Object>()
+//			{
+//				@Override
+//				protected int[] create(Integer aObject)
+//				{
+//					Log.out.println("create " + aObject);
+//					return new int[aObject];
+//				}
+//				@Override
+//				protected void destroy(Integer aPrototype, int[] aObject)
+//				{
+//					Log.out.println("destroy " + aObject);
+//				}
+//			};
+//
+//
+//			try (SharedResource a = factory.get(4, "a"))
+//			{
+//				Log.out.println(a.get());
+//
+//				try (SharedResource b = factory.get(4, "b"))
+//				{
+//					Log.out.println(b.get());
+//				}
+//
+//				Log.out.println(a.get());
+//			}
+//
+//			try (SharedResource a = factory.get(4, "a"))
+//			{
+//				Log.out.println(a.get());
+//			}
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }
