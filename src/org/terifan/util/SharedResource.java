@@ -1,14 +1,17 @@
 package org.terifan.util;
 
+import java.util.UUID;
+
+
 
 public class SharedResource<T> implements AutoCloseable
 {
 	private SharedResourceFactory mFactory;
 	private T mInstance;
-	private Object mOwner;
+	private UUID mOwner;
 
 
-	SharedResource(SharedResourceFactory aFactory, T aInstance, Object aOwner)
+	SharedResource(SharedResourceFactory aFactory, T aInstance, UUID aOwner)
 	{
 		mInstance = aInstance;
 		mOwner = aOwner;
@@ -22,7 +25,7 @@ public class SharedResource<T> implements AutoCloseable
 	}
 
 
-	public Object getOwner()
+	public UUID getOwner()
 	{
 		return mOwner;
 	}
