@@ -389,7 +389,7 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 					return;
 				}
 
-				viewport.addChangeListener((aEvent) ->
+				viewport.addChangeListener(e->
 				{
 					if (mRolloverEnabled)
 					{
