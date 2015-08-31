@@ -115,7 +115,7 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
-	public T findItem(int aColumnIndex, Object aObject)
+	public T findItemByColumnValue(int aColumnIndex, Object aObject)
 	{
 		for (T item : mItems)
 		{

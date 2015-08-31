@@ -5,10 +5,8 @@ import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
-import java.util.Date;
 import java.util.HashSet;
 import javax.swing.SwingUtilities;
-import org.terifan.util.log.Log;
 
 
 class ListViewMouseListener<T extends ListViewItem> extends MouseAdapter implements MouseMotionListener

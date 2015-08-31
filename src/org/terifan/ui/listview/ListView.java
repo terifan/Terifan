@@ -86,7 +86,6 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 		setHeaderRenderer(new ColumnHeaderRenderer());
 		setSelectionMode(SelectionMode.ROW);
 		setItemRenderer(new DetailItemRenderer());
-		setRolloverEnabled(true);
 		setOpaque(true);
 		setGroupRenderer(new ListViewGroupRenderer());
 
