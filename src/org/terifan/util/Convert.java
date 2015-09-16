@@ -411,7 +411,7 @@ public class Convert
 	 */
 	public static byte [] encodeUTF8(String aInput)
 	{
-		byte [] array = new byte[aInput.length()];
+		byte [] array = new byte[aInput.length()  +10];
 		int ptr = 0;
 
 		for (int i = 0, len = aInput.length(); i < len; i++)
