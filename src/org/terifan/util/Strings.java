@@ -266,8 +266,8 @@ public class Strings
 	}
 
 
-	public static String replaceNull(String aString, String aReplacedWith)
+	public static String replaceNull(Object aString, String aReplacedWith)
 	{
-		return aString == null ? aReplacedWith : aString;
+		return aString == null ? aReplacedWith : aString.toString();
 	}
 }
