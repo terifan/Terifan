@@ -13,6 +13,10 @@ public class FormattedString
 {
 	private final static String TAG = FormattedString.class.getName();
 
+	private final static char START_SYMBOL = '$';
+	private final static char LEFT_BRACE = '{';
+	private final static char RIGHT_BRACE = '}';
+
 	private String mFormat;
 	private HashMap<String, Object> mParameters;
 
@@ -55,12 +59,12 @@ public class FormattedString
 		{
 			char c = chars[i];
 
-			if (c == '$' && i + 1 < chars.length && chars[i + 1] == '{')
+			if (c == START_SYMBOL && i + 1 < chars.length && chars[i + 1] == LEFT_BRACE)
 			{
 				int j = -1;
 				for (int k = i; k < chars.length; k++)
 				{
-					if (chars[k] == '}')
+					if (chars[k] == RIGHT_BRACE)
 					{
 						j = k;
 						break;
