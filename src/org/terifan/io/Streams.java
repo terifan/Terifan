@@ -92,7 +92,7 @@ public final class Streams
 
 			for (;;)
 			{
-				int len = aInput.read(buffer);
+				int len = aLimitLength < buffer.length ? aInput.read(buffer, 0, (int)aLimitLength) : aInput.read(buffer);
 
 				if (len <= 0)
 				{
@@ -102,6 +102,7 @@ public final class Streams
 				aOutput.write(buffer, 0, len);
 
 				total += len;
+				aLimitLength -= len;
 			}
 
 			return total;
