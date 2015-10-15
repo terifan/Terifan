@@ -25,7 +25,7 @@ public class ConnectionPool extends Pool<PooledConnection>
 
 	public ConnectionPool(String aDriver, String aHost, String aLogin, String aPassword, String aCatalog)
 	{
-		super(10, 15 * 60);
+		super(10, 2 * 60);
 
 		if (Strings.isEmptyOrNull(aDriver) || Strings.isEmptyOrNull(aHost) || Strings.isEmptyOrNull(aLogin) || Strings.isEmptyOrNull(aPassword) || Strings.isEmptyOrNull(aCatalog))
 		{
@@ -198,7 +198,10 @@ public class ConnectionPool extends Pool<PooledConnection>
 		}
 		catch (Throwable e)
 		{
-			mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
+			if (mLog != null)
+			{
+				mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
+			}
 
 			return false;
 		}

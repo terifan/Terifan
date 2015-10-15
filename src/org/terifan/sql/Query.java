@@ -1,22 +1,23 @@
 package org.terifan.sql;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import org.terifan.util.Strings;
+import java.util.HashSet;
+import org.terifan.util.Calendar;
+import org.terifan.util.log.Log;
 
 
 /**
  * <p>A query utility enabling named query parameters to be be used. Named query parameters are tokens of the form :name in the query string.
- * A value is bound to the integer parameter :foo by calling <pre>setParameter("foo", foo, Types.INTEGER);</pre> for example. A name may
- * appear multiple times in the query string.</p>
+ * A value is bound to the integer parameter :foo by calling <pre>setParameter("foo", foo);</pre> for example. A name may appear multiple
+ * times in the query string.</p>
  * <p/>
  * Sample fetching a Query result to a list:
- * <pre>Query query = EntityManager.createQuery("select * from table where id between :first and :last")
+ * <code>Query query = EntityManager.createQuery("select * from table where id between :first and :last")
  *    .setParameter("first", 1)
  *    .setParameter("last", 7);
  *
@@ -31,37 +32,44 @@ import org.terifan.util.Strings;
  *    int id;
  *    @Column("person_name") String personName;
  * }
- * </pre>
+ * </code>
  */
 public class Query implements AutoCloseable
 {
-	private EntityManager em;
-	private String mStatement;
-	private HashMap<String,Object> mValues;
-	private HashMap<String,Integer> mTypes;
-	private ResultSetIterable mSqlResult;
+	private EntityManager mEntityManager;
+	private StringBuilder mStatement;
+	private HashMap<String,String> mParameters;
 
 
 	Query(EntityManager aEntityManager, String aStatement)
 	{
-		em = aEntityManager;
-		mStatement = aStatement;
-		mValues = new HashMap<>();
-		mTypes = new HashMap<>();
+		mEntityManager = aEntityManager;
+		mStatement = new StringBuilder(aStatement);
+		mParameters = new HashMap<>();
 	}
-
-
-//	Query(String aStatement)
-//	{
-//		mStatement = aStatement;
-//		mValues = new HashMap<>();
-//		mTypes = new HashMap<>();
-//	}
 
 
 	public Query append(String aStatement)
 	{
-		mStatement += aStatement;
+		HashSet<String> keysUsed = new HashSet<>();
+
+		replaceParameters(aStatement, keysUsed);
+
+		boolean empty = true;
+		for (String key : keysUsed)
+		{
+			if (mParameters.get(key) != null)
+			{
+				empty = false;
+				break;
+			}
+		}
+
+		if (!empty || keysUsed.isEmpty())
+		{
+			mStatement.append(aStatement);
+		}
+
 		return this;
 	}
 
@@ -69,11 +77,6 @@ public class Query implements AutoCloseable
 	@Override
 	public void close() throws SQLException
 	{
-		if (mSqlResult != null)
-		{
-			mSqlResult.close();
-			mSqlResult = null;
-		}
 	}
 
 
@@ -87,106 +90,72 @@ public class Query implements AutoCloseable
 	 */
 	public Query setParameter(String aField, Object aValue)
 	{
-		mValues.put(aField, aValue);
+//		Log.out.println("Setting parameter " + aField + " = " + aValue);
+
+		String value;
+
+		if (aValue != null && Collection.class.isAssignableFrom(aValue.getClass()))
+		{
+			value = "";
+			for (Object o : (Collection)aValue)
+			{
+				if (!value.isEmpty())
+				{
+					value += ",";
+				}
+				value += convertValue(o);
+			}
+		}
+		else
+		{
+			value = convertValue(aValue);
+		}
+
+		mParameters.put(aField, value);
+
 		return this;
 	}
 
 
-	/**
-	 * Bind a value to a named query parameter.
-	 *
-	 * @param aField
-	 *   field name in the query, e.g. field name "value" in query "select * from table where id=:value"
-	 * @param aValue
-	 *   value
-	 * @param aType
-	 *   parameter type, see java.sql.Types
-	 * @see
-	 *   java.sql.Types
-	 */
-	public Query setParameter(String aField, Object aValue, int aType)
+	private String convertValue(Object aValue) throws IllegalArgumentException
 	{
-		mValues.put(aField, aValue);
-		mTypes.put(aField, aType);
-		return this;
-	}
-
-
-	private ResultSetIterable executeImpl(Connection aConnection) throws SQLException
-	{
-		String st = mStatement;
-		ArrayList<Object> values = new ArrayList<>();
-		ArrayList<Integer> types = new ArrayList<>();
-//		ArrayList<String> fields = new ArrayList<>();
-
-//		Log.out.println(mStatement);
-
-		for (;;)
+		if (aValue == null)
 		{
-			int i = st.indexOf(":");
-
-			if (i == -1)
-			{
-				break;
-			}
-
-			String field = trim(st.substring(i + 1));
-
-			if (Strings.isEmptyOrNull(field))
-			{
-				throw new IllegalArgumentException("Illegal parameter name in query: " + mStatement);
-			}
-
-//			fields.add(field);
-			values.add(mValues.get(field));
-			types.add(mTypes.get(field));
-
-			st = st.substring(0, i) + "?" + st.substring(i + 1 + field.length());
+			return null;
+		}
+		if (aValue instanceof Boolean)
+		{
+			return (Boolean)aValue ? "1" : "0";
+		}
+		if (aValue instanceof Byte || aValue instanceof Short || aValue instanceof Integer || aValue instanceof Long || aValue instanceof Float || aValue instanceof Double)
+		{
+			return aValue.toString();
 		}
 
-//		Log.out.println(st);
-
-		PreparedStatement statement = aConnection.prepareStatement(st);
-
-		try
+		if (aValue instanceof Character)
 		{
-			for (int i = 0; i < values.size(); i++)
-			{
-				Integer type = types.get(i);
-				Object tmp = values.get(i);
-
-				if (tmp instanceof java.util.Date)
-				{
-					tmp = new java.sql.Date(((java.util.Date)tmp).getTime());
-				}
-
-//				Log.out.println("  " + fields.get(i) + " = " + values.get(i));
-
-				if (type == null)
-				{
-					statement.setObject(1 + i, tmp);
-				}
-				else
-				{
-					statement.setObject(1 + i, tmp, type);
-				}
-			}
-
-			mSqlResult = new ResultSetIterable(statement, statement.executeQuery());
-
-			return mSqlResult;
+			return "'" + (Character)aValue + "'";
 		}
-		catch (SQLException e)
+		if (aValue instanceof Date)
 		{
-			statement.close();
-			throw e;
+			return "'" + new Calendar(((Date)aValue).getTime()).toString() + "'";
 		}
+		if (aValue instanceof Calendar)
+		{
+			return "'" + ((Calendar)aValue).toString() + "'";
+		}
+		if (aValue instanceof String)
+		{
+			return "'" + aValue.toString() + "'";
+		}
+
+		throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 	}
 
 
 	public <T extends AbstractEntity> T executeSingle(Class<T> aType) throws SQLException
 	{
-		T item = em.create(aType);
+		T item = mEntityManager.create(aType);
 
 		if (executeSingle(item))
 		{
@@ -199,66 +168,141 @@ public class Query implements AutoCloseable
 
 	public boolean executeSingle(Object aEntity) throws SQLException
 	{
-		try (Connection conn = em.claim())
+		try (ResultSet resultSet = execute())
 		{
-			try
+			if (!resultSet.next())
 			{
-				ResultSet resultSet = executeImpl(conn).iterator().next();
-
-				if (!resultSet.next())
-				{
-					return false;
-				}
-
-				EntityTools.populateEntity(aEntity, resultSet);
-
-				return true;
+				return false;
 			}
-			finally
-			{
-				close();
-			}
+
+			EntityTools.populateEntity(aEntity, resultSet);
+
+			return true;
 		}
 	}
 
 
-	public <T> List<T> list(Class<T> aType) throws SQLException
+	public <T> ArrayList<T> list(Class<T> aType) throws SQLException
 	{
-		try (Connection conn = em.claim())
+		ArrayList list = new ArrayList();
+
+		try (ResultSet resultSet = execute())
 		{
-			try
+			while (resultSet.next())
 			{
-				ArrayList list = new ArrayList();
+				T item = mEntityManager.create(aType);
 
-				for (ResultSet resultSet : executeImpl(conn))
-				{
-					T item = em.create(aType);
+				EntityTools.populateEntity(item, resultSet);
 
-					EntityTools.populateEntity(item, resultSet);
-
-					list.add(item);
-				}
-
-				return list;
+				list.add(item);
 			}
-			finally
-			{
-				close();
-			}
+
+			return list;
 		}
 	}
 
 
-	private static String trim(String aString)
+	public String compile()
 	{
-		for (int i = 0; i < aString.length(); i++)
+		String sql = replaceParameters(mStatement.toString(), null);
+
+		Log.out.println("query: " + sql);
+
+		return sql;
+	}
+
+
+	private String replaceParameters(String aStatement, HashSet<String> aKeysOut)
+	{
+		StringBuilder result = new StringBuilder();
+		char[] chars = aStatement.toCharArray();
+
+		for (int i = 0; i < chars.length; i++)
 		{
-			if (!Character.isJavaIdentifierPart(aString.charAt(i)))
+			char c = chars[i];
+
+			if (c == ':')
 			{
-				return aString.substring(0, i);
+				int j;
+				for (j = i + 1; j < chars.length; j++)
+				{
+					if (!Character.isJavaIdentifierPart(chars[j]))
+					{
+						break;
+					}
+				}
+
+				String key = new String(chars, i + 1, j - (i + 1));
+
+				if (!mParameters.containsKey(key))
+				{
+					throw new IllegalArgumentException("Parameter '" + key + "' not set.");
+				}
+
+				String value = mParameters.get(key);
+
+				result.append(value);
+
+				if (aKeysOut != null)
+				{
+					aKeysOut.add(key);
+				}
+
+				i = j - 1;
+			}
+			else
+			{
+				result.append(c);
 			}
 		}
 
-		return aString;
+		return result.toString();
+	}
+
+
+	public ResultSet execute() throws SQLException
+	{
+		String queryString = compile();
+
+		PooledConnection conn = null;
+
+		try
+		{
+			conn = (PooledConnection)mEntityManager.claim();
+
+			return new PooledResultSet(conn, conn.createStatement().executeQuery(queryString));
+		}
+		catch (Exception e)
+		{
+			if (conn != null)
+			{
+				try
+				{
+					conn.close();
+				}
+				catch (Exception ee)
+				{
+					e.printStackTrace(Log.out);
+				}
+			}
+
+			throw e;
+		}
+	}
+
+
+	public ArrayList listColumn(String aColumnName) throws SQLException
+	{
+		ArrayList list = new ArrayList<>();
+
+		try (ResultSet resultSet = execute())
+		{
+			while (resultSet.next())
+			{
+				list.add(resultSet.getObject(aColumnName));
+			}
+		}
+
+		return list;
 	}
 }

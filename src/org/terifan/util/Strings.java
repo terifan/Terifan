@@ -1,6 +1,10 @@
 package org.terifan.util;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import static jdk.nashorn.internal.objects.NativeArray.map;
+import org.terifan.util.log.Log;
 
 
 public class Strings
@@ -269,5 +273,66 @@ public class Strings
 	public static String replaceNull(Object aString, String aReplacedWith)
 	{
 		return aString == null ? aReplacedWith : aString.toString();
+	}
+
+
+	public static String replaceParams(String aText, Map<String,Object> aParams)
+	{
+		return replaceParams(aText, e->"" + aParams.get(e));
+	}
+
+
+	public static String replaceParams(String aText, ParamProvider aParamProvider)
+	{
+		StringBuilder text = new StringBuilder();
+
+		for (int i = 0, sz = aText.length(); i < sz; i++)
+		{
+			if (aText.startsWith("${", i))
+			{
+				int j = aText.indexOf('}', i);
+
+				if (j != -1)
+				{
+					String name = aText.substring(i+2, j);
+					Object header = aParamProvider.get(name);
+					if (header != null)
+					{
+						text.append(header);
+						i = j;
+						continue;
+					}
+				}
+			}
+
+			text.append(aText.charAt(i));
+		}
+
+		return text.toString();
+	}
+
+
+	public interface ParamProvider
+	{
+		String get(String aName);
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			Map<String, Object> map = new HashMap<>();
+			map.put("a", "A");
+			map.put("b", "B");
+
+			Log.out.println(replaceParams("${a} ${b}", map));
+
+			Log.out.println(replaceParams("${a} ${b}", e->e.toUpperCase()));
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }
