@@ -21,7 +21,8 @@ import org.terifan.util.log.Log;
  *   .executeInsertUpdate(aConnection);
  * </code>
  */
-public class SqlStatement
+@Deprecated
+class SqlStatement
 {
 	private String mTable;
 	private LinkedHashMap<String,Object> mValues;

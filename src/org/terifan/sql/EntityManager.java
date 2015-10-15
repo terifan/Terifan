@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import org.terifan.util.log.Log;
 
 
 public class EntityManager implements AutoCloseable
@@ -15,6 +16,8 @@ public class EntityManager implements AutoCloseable
 	public EntityManager(ConnectionPool aConnectionPool)
 	{
 		mConnectionPool = aConnectionPool;
+
+		mConnectionPool.setLog(Log.out);
 	}
 
 
@@ -72,13 +75,9 @@ public class EntityManager implements AutoCloseable
 
 			return instance;
 		}
-		catch (IllegalArgumentException e)
+		catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 		{
 			throw new IllegalStateException("Ensure that " + aType + " has an empty public constructor and that the entity is static if it's an internal class", e);
-		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e)
-		{
-			throw new IllegalStateException(e);
 		}
 	}
 
