@@ -1,14 +1,12 @@
 package org.terifan.util;
 
+import java.util.Iterator;
 import java.util.TreeMap;
 
 
-public class SparseDoubleArray 
+public class SparseDoubleArray implements Iterable<Integer>
 {
-	private final static int BITS = 8;
-	private final static int SIZE = (1 << BITS) - 1;
-
-	private TreeMap<Integer,double[]> mValues;
+	private TreeMap<Integer,Double> mValues;
 
 
 	public SparseDoubleArray()
@@ -19,32 +17,36 @@ public class SparseDoubleArray
 
 	public void set(int aIndex, double aValue)
 	{
-		getChunk(aIndex)[aIndex & SIZE] = aValue;
+		mValues.put(aIndex, aValue);
 	}
 
 
 	public double get(int aIndex, double aDefaultValue)
 	{
-		return getChunk(aIndex)[aIndex & SIZE];
+		return mValues.get(aIndex);
 	}
-
-
-	private double[] getChunk(int aIndex)
+	
+	
+	public int size()
 	{
-		if (aIndex < 0)
+		return mValues.lastKey();
+	}
+	
+	
+	public double[] toArray()
+	{
+		double[] array = new double[size()];
+		for (int i = 0, sz = size(); i < sz; i++)
 		{
-			throw new IllegalArgumentException("" + aIndex);
+			array[i] = get(i, 0.0);
 		}
-
-		int index = aIndex >>> BITS;
-		double[] chunk = mValues.get(index);
-
-		if (chunk == null)
-		{
-			chunk = new double[SIZE + 1];
-			mValues.put(index, chunk);
-		}
-		
-		return chunk;
+		return array;
+	}
+	
+	
+	@Override
+	public Iterator<Integer> iterator()
+	{
+		return mValues.keySet().iterator();
 	}
 }
