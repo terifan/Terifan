@@ -284,22 +284,30 @@ public class Strings
 
 	public static String replaceParams(String aText, ParamProvider aParamProvider)
 	{
-		StringBuilder text = new StringBuilder();
+		return replaceParams("${", "}", aText, aParamProvider);
+	}
+
+
+	public static String replaceParams(String aKeywordPrefix, String aKeywordSuffix, String aText, ParamProvider aParamProvider)
+	{
+		StringBuilder text = new StringBuilder(aText.length());
+		int prefixLength = aKeywordPrefix.length();
+		int suffixLength = aKeywordSuffix.length();
 
 		for (int i = 0, sz = aText.length(); i < sz; i++)
 		{
-			if (aText.startsWith("${", i))
+			if (aText.startsWith(aKeywordPrefix, i))
 			{
-				int j = aText.indexOf('}', i);
+				int j = aText.indexOf(aKeywordSuffix, i + prefixLength);
 
 				if (j != -1)
 				{
-					String name = aText.substring(i+2, j);
+					String name = aText.substring(i + prefixLength, j);
 					Object header = aParamProvider.get(name);
 					if (header != null)
 					{
 						text.append(header);
-						i = j;
+						i = j + suffixLength - 1;
 						continue;
 					}
 				}
@@ -318,21 +326,23 @@ public class Strings
 	}
 
 
-	public static void main(String ... args)
-	{
-		try
-		{
-			Map<String, Object> map = new HashMap<>();
-			map.put("a", "A");
-			map.put("b", "B");
-
-			Log.out.println(replaceParams("${a} ${b}", map));
-
-			Log.out.println(replaceParams("${a} ${b}", e->e.toUpperCase()));
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
+//	public static void main(String ... args)
+//	{
+//		try
+//		{
+//			Map<String, Object> map = new HashMap<>();
+//			map.put("a", "A");
+//			map.put("b", "B");
+//
+//			Log.out.println(replaceParams("${a} ${b}", map));
+//
+//			Log.out.println(replaceParams("${a} ${b}", e->e.toUpperCase()));
+//
+//			Log.out.println(replaceParams("****", "#", "****a# ****b#", e->e.toUpperCase()));
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }
