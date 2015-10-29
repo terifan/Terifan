@@ -97,7 +97,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 
 
 	/**
-	 * @param aDateTimeString
+	 * @param aDateTime
 	 *    a date/time string. Supported formats:
 	 *    <ul>
 	 *    <li>2004-07-28</li>
@@ -109,9 +109,9 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 *    <li>15:50:40.11</li>
 	 *    </ul>
 	 */
-	public Calendar(String aDateTimeString)
+	public Calendar(String aDateTime)
 	{
-		set(aDateTimeString);
+		set(aDateTime);
 	}
 
 
@@ -158,26 +158,26 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	}
 
 
-	private int grab(String aDateTime, StringBuilder aFormat, String aPart)
-	{
-		int i = aFormat.indexOf(aPart);
-
-		if (i == -1)
-		{
-			throw new IllegalDateTimeFormatException("Part not found: " + aPart + ", format: " + aFormat + ", datetime: " + aDateTime);
-		}
-
-		//System.out.println(i+" "+aDateTime+" "+aFormat+" "+aPart);
-
-		int v = Integer.parseInt(aDateTime.substring(i,i+aPart.length()));
-
-		for (int j = 0; j < aPart.length(); j++)
-		{
-			aFormat.setCharAt(i+j, '*');
-		}
-
-		return v;
-	}
+//	private int grab(String aDateTime, StringBuilder aFormat, String aPart)
+//	{
+//		int i = aFormat.indexOf(aPart);
+//
+//		if (i == -1)
+//		{
+//			throw new IllegalDateTimeFormatException("Part not found: " + aPart + ", format: " + aFormat + ", datetime: " + aDateTime);
+//		}
+//
+//		//System.out.println(i+" "+aDateTime+" "+aFormat+" "+aPart);
+//
+//		int v = Integer.parseInt(aDateTime.substring(i,i+aPart.length()));
+//
+//		for (int j = 0; j < aPart.length(); j++)
+//		{
+//			aFormat.setCharAt(i+j, '*');
+//		}
+//
+//		return v;
+//	}
 
 
 	/**
