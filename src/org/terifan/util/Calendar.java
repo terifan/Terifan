@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Locale;
-import org.terifan.util.log.Log;
+import java.util.TimeZone;
 
 
 public final class Calendar implements Cloneable, Comparable<Calendar>, Serializable
@@ -554,7 +553,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	public synchronized long get()
 	{
 		GregorianCalendar gc = mStaticGregorianCalendar;
-
+		gc.setTimeZone(TimeZone.getTimeZone("UTC"));
 		gc.setMinimalDaysInFirstWeek(4);
 		gc.setFirstDayOfWeek(GregorianCalendar.MONDAY);
 		gc.set(GregorianCalendar.YEAR, mYear);
@@ -613,7 +612,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 
 	public String format(String aFormat)
 	{
-		return new SimpleDateFormat(aFormat, Locale.US).format(new Date(get()));
+		return new SimpleDateFormat(aFormat).format(new Date(get()));
 	}
 
 

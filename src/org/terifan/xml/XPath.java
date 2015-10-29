@@ -1,6 +1,5 @@
 package org.terifan.xml;
 
-import java.util.Iterator;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;

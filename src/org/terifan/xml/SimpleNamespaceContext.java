@@ -1,11 +1,18 @@
 package org.terifan.xml;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 
 
+/**
+ * Class used as a lookup table for name space prefixes.
+ *
+ * note: default name spaces are not supported by Java default XPath (1.0) implementation.
+ */
 public class SimpleNamespaceContext implements NamespaceContext
 {
 	private HashMap<String,String> mContexts;
@@ -17,34 +24,16 @@ public class SimpleNamespaceContext implements NamespaceContext
 	}
 
 
-	public SimpleNamespaceContext(String aDefault)
-	{
-		mContexts = new HashMap<>();
-	}
-	
-	
 	public SimpleNamespaceContext add(String aName, String aContext)
 	{
 		mContexts.put(aName, aContext);
 		return this;
 	}
-	
-	
-	public SimpleNamespaceContext addDefault(String aContext)
-	{
-		mContexts.put("", aContext);
-		return this;
-	}
-	
-	
+
+
 	@Override
 	public String getNamespaceURI(String aPrefix)
 	{
-		if (aPrefix.equals(XMLConstants.DEFAULT_NS_PREFIX))
-		{
-			return mContexts.get("");
-		}
-
 		String ctx = mContexts.get(aPrefix);
 
 		if (ctx == null)
@@ -59,6 +48,14 @@ public class SimpleNamespaceContext implements NamespaceContext
 	@Override
 	public String getPrefix(String aNamespaceURI)
 	{
+		for (Entry<String,String> entry : mContexts.entrySet())
+		{
+			if (entry.getValue().equals(aNamespaceURI))
+			{
+				return entry.getKey();
+			}
+		}
+
 		return null;
 	}
 
@@ -66,6 +63,16 @@ public class SimpleNamespaceContext implements NamespaceContext
 	@Override
 	public Iterator getPrefixes(String aNamespaceURI)
 	{
-		return null;
+		ArrayList<String> result = new ArrayList<>();
+
+		for (Entry<String,String> entry : mContexts.entrySet())
+		{
+			if (entry.getValue().equals(aNamespaceURI))
+			{
+				result.add(entry.getKey());
+			}
+		}
+
+		return result.iterator();
 	}
 }
