@@ -181,7 +181,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 
 
 	/**
-	 * @param aDateTimeString
+	 * @param aDateTime
 	 *    a date/time string. Supported formats:
 	 *    <ul>
 	 *    <li>2004-07-28</li>
@@ -194,22 +194,22 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 *    </ul>
 	 */
 	@Deprecated
-	public void set(String aDateTimeString)
+	public void set(String aDateTime)
 	{
-		if (Strings.isEmptyOrNull(aDateTimeString))
+		if (Strings.isEmptyOrNull(aDateTime))
 		{
 			throw new IllegalDateTimeFormatException("Zero length datetime value.");
 		}
 
-		String[] data = aDateTimeString.split(" ");
+		String[] data = aDateTime.split(" ");
 
 		int index = 0;
-		if (aDateTimeString.contains("-"))
+		if (aDateTime.contains("-"))
 		{
 			String[] date = data[0].split("-");
 			if (date.length != 3)
 			{
-				throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTimeString);
+				throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
 			}
 			setYear(Integer.parseInt(date[0]));
 			setMonth(Integer.parseInt(date[1]));
@@ -227,7 +227,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 				String[] time = data[index].split(":");
 				if (time.length != 2 && time.length != 3)
 				{
-					throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTimeString);
+					throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
 				}
 
 				mHour = Integer.parseInt(time[0]);
@@ -240,7 +240,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 						String[] sec = time[2].split("\\.");
 						if (sec.length != 2)
 						{
-							throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTimeString);
+							throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
 						}
 						mSecond = Integer.parseInt(sec[0]);
 						mMilliSecond = Integer.parseInt(sec[1]);
@@ -254,7 +254,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 			}
 			else
 			{
-				throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTimeString);
+				throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
 			}
 		}
 	}
