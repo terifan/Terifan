@@ -77,6 +77,15 @@ public final class Streams
 	}
 
 
+	public static long transfer(Object aInput, Object aOutput, long aLimitLength) throws IOException
+	{
+		try (InputStream inputStream = createInputStream(aInput); OutputStream outputStream = createOutputStream(aOutput))
+		{
+			return transfer(inputStream, outputStream, false, aLimitLength);
+		}
+	}
+
+
 	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams) throws IOException
 	{
 		return transfer(aInput, aOutput, aCloseStreams, Long.MAX_VALUE);
