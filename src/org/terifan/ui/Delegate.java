@@ -15,10 +15,10 @@ import javax.swing.SwingUtilities;
 
 
 /**
- * E.g. 
+ * E.g.
  * <code>
  * JButton myButton = new JButton(new Delegate(this, "buttonClicked"));
- * 
+ *
  * @DelegateTarget(name = "OK")
  * void buttonClicked() {}
  * </code>
@@ -31,6 +31,12 @@ public class Delegate extends AbstractAction
 
 
 	public Delegate(Object aObject, String aMethod, Object ... aParameters)
+	{
+		this(null, aObject, aMethod, aParameters);
+	}
+
+
+	public Delegate(String aLabel, Object aObject, String aMethod, Object ... aParameters)
 	{
 		mObject = aObject;
 		mParameters = aParameters;
@@ -99,6 +105,11 @@ public class Delegate extends AbstractAction
 			}
 
 			throw new IllegalArgumentException("Failed to locate the method specified: class: " + aObject.getClass()+", name: " + aMethod + ", parameters: " + types, e);
+		}
+
+		if (aLabel != null)
+		{
+			putValue(Action.NAME, aLabel);
 		}
 
 		DelegateTarget params = mMethod.getAnnotation(DelegateTarget.class);

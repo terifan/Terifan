@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.TimeZone;
+import org.terifan.util.log.Log;
 
 
 public final class Calendar implements Cloneable, Comparable<Calendar>, Serializable
@@ -153,6 +153,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace(Log.out);
 			return false;
 		}
 	}
@@ -553,7 +554,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	public synchronized long get()
 	{
 		GregorianCalendar gc = mStaticGregorianCalendar;
-		gc.setTimeZone(TimeZone.getTimeZone("UTC"));
+
 		gc.setMinimalDaysInFirstWeek(4);
 		gc.setFirstDayOfWeek(GregorianCalendar.MONDAY);
 		gc.set(GregorianCalendar.YEAR, mYear);
@@ -696,7 +697,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 * Return the difference between this Calendar and the provided Calendar. The
 	 * returned difference equals <code>this</code> minus <code>other</code>.
 	 */
-	public long distance(String aField, long aTimeMillis)
+	public long difference(String aField, long aTimeMillis)
 	{
 		return difference(Enum.valueOf(Field.class, aField.toUpperCase()), new Calendar(aTimeMillis));
 	}
@@ -704,9 +705,19 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 
 	/**
 	 * Return the difference between this Calendar and the provided Calendar. The
-	 * returned difference equals <code>this</code> minus <code>other</code>.
+	 * returned difference equals <code>this</code> minus <code>aTimeMillis</code>.
 	 */
-	public long differance(String aField, Calendar aCalendar)
+	public long difference(Field aField, long aTimeMillis)
+	{
+		return difference(aField, new Calendar(aTimeMillis));
+	}
+
+
+	/**
+	 * Return the difference between this Calendar and the provided Calendar. The
+	 * returned difference equals <code>this</code> minus <code>aTimeMillis</code>.
+	 */
+	public long difference(String aField, Calendar aCalendar)
 	{
 		return difference(Field.valueOf(aField.toUpperCase()), aCalendar);
 	}
@@ -744,6 +755,12 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 		}
 
 		return d;
+	}
+
+
+	public boolean after(Calendar aCalendar)
+	{
+		return !before(aCalendar);
 	}
 
 
@@ -1034,5 +1051,11 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 		{
 			return new Calendar(aString);
 		}
+	}
+
+
+	public Date toDate()
+	{
+		return new Date(get());
 	}
 }
