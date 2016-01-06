@@ -728,18 +728,15 @@ public class ListView<T extends ListViewItem> extends JComponent implements Scro
 	 */
 	public ArrayList<T> getSelectedItems()
 	{
-		final ArrayList<T> list = new ArrayList<>(mSelectedItems.size());
+		ArrayList<T> list = new ArrayList<>(mSelectedItems.size());
 
-		ItemVisitor<T> visitor = new ItemVisitor<T>() {
-			@Override
-			public Object visit(T aItem)
+		ItemVisitor<T> visitor = (T aItem) ->
+		{
+			if (mSelectedItems.contains(aItem))
 			{
-				if (mSelectedItems.contains(aItem))
-				{
-					list.add(aItem);
-				}
-				return null;
+				list.add(aItem);
 			}
+			return null;
 		};
 
 		mModel.visitItems(true, visitor);
