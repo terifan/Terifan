@@ -1,11 +1,13 @@
 package org.terifan.util;
 
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.terifan.util.log.Log;
 
 
 /**
@@ -122,7 +124,39 @@ public class FixedThreadExecutor implements AutoCloseable
 	{
 		if (mExecutorService == null)
 		{
-			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, mBlockingQueue);
+			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, mBlockingQueue)
+			{
+				@Override
+				protected void afterExecute(Runnable aRunnable, Throwable aThrowable)
+				{
+					super.afterExecute(aRunnable, aThrowable);
+
+					if (aThrowable == null && aRunnable instanceof Future<?>)
+					{
+						try
+						{
+							Object result = ((Future<?>)aRunnable).get();
+						}
+						catch (CancellationException ce)
+						{
+							aThrowable = ce;
+						}
+						catch (ExecutionException ee)
+						{
+							aThrowable = ee.getCause();
+						}
+						catch (InterruptedException ie)
+						{
+							Thread.currentThread().interrupt(); // ignore/reset
+						}
+					}
+
+					if (aThrowable != null)
+					{
+						aThrowable.printStackTrace(System.err);
+					}
+				}
+			};
 		}
 
 		return mExecutorService;
