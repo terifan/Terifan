@@ -39,4 +39,10 @@ public class ImagePanel extends JPanel
 	{
 		return new Dimension(mImage.getWidth(), mImage.getHeight());
 	}
+
+
+	public void setImage(BufferedImage aImage)
+	{
+		mImage = aImage;
+	}
 }
