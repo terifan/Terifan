@@ -17,8 +17,10 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
+import org.terifan.util.log.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
@@ -450,6 +452,14 @@ public class XmlNode
 
 	public String getValue()
 	{
+//		StringBuilder sb = new StringBuilder();
+//		NodeList list = mNode.getChildNodes();
+//		for (int i = 0; i < list.getLength(); i++)
+//		{
+//			sb.append(list.item(i).getNodeValue());
+//		}
+//		return sb.toString();
+
 		return mNode.getTextContent();
 	}
 
@@ -623,6 +633,24 @@ public class XmlNode
 	public Node getInternalNode()
 	{
 		return mNode;
+	}
+
+
+	public String[] getAttributes()
+	{
+		NamedNodeMap attributes = mNode.getAttributes();
+		if (attributes == null)
+		{
+			return new String[0];
+		}
+
+		String[] names = new String[attributes.getLength()];
+		for (int i = 0; i < attributes.getLength(); i++)
+		{
+			names[i] = attributes.item(i).getNodeName();
+		}
+
+		return names;
 	}
 
 

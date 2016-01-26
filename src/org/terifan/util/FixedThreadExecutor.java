@@ -1,6 +1,8 @@
 package org.terifan.util;
 
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +43,10 @@ public class FixedThreadExecutor implements AutoCloseable
 	}
 
 
-	public void cancel()
+	/**
+	 * @see java.util.concurrent.ExecutorService#shutdown
+	 */
+	public void shutdown()
 	{
 		if (mExecutorService != null)
 		{
@@ -50,21 +55,32 @@ public class FixedThreadExecutor implements AutoCloseable
 	}
 
 
-	public void shutdown()
+	/**
+	 * @see java.util.concurrent.ExecutorService#shutdownNow
+	 */
+	public List<Runnable> shutdownNow()
 	{
 		if (mExecutorService != null)
 		{
-			mExecutorService.shutdownNow();
+			return mExecutorService.shutdownNow();
 		}
+
+		return new ArrayList<>();
 	}
 
 
+	/**
+	 * @see java.util.concurrent.ExecutorService#submit
+	 */
 	public void submit(Runnable aRunnable)
 	{
 		init().submit(aRunnable);
 	}
 
 
+	/**
+	 * @see java.util.concurrent.ExecutorService#submit
+	 */
 	public void submit(Runnable... aRunnables)
 	{
 		ExecutorService service = init();
@@ -76,6 +92,9 @@ public class FixedThreadExecutor implements AutoCloseable
 	}
 
 
+	/**
+	 * @see java.util.concurrent.ExecutorService#submit
+	 */
 	public void submit(Iterable<? extends Runnable> aRunnables)
 	{
 		ExecutorService service = init();
@@ -160,5 +179,11 @@ public class FixedThreadExecutor implements AutoCloseable
 		}
 
 		return mExecutorService;
+	}
+
+
+	public LinkedBlockingQueue<Runnable> getBlockingQueue()
+	{
+		return mBlockingQueue;
 	}
 }

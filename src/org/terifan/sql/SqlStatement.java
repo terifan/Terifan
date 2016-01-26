@@ -348,7 +348,7 @@ class SqlStatement
 				{
 					Object value = col.producer().newInstance().produce(aEntity, col);
 
-					Log.out.println("Producing value '" + value + "' for column '" + column + "'");
+//					Log.out.println("Producing value '" + value + "' for column '" + column + "'");
 
 					mValues.put(column, value);
 				}
