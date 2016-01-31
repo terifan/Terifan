@@ -107,7 +107,7 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 	}
 	
 	
-	public IntArray compact()
+	public IntArray trimToSize()
 	{
 		mValues = Arrays.copyOfRange(mValues, 0, mSize);
 		return this;
