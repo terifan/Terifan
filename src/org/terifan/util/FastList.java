@@ -79,7 +79,10 @@ public class FastList<T> implements Iterable<T>
 
 	public FastList<T> ensureCapacity(int aSize)
 	{
-		resize(Math.max(mSize, aSize));
+		if (aSize > mElementData.length)
+		{
+			resize(aSize);
+		}
 		return this;
 	}
 
