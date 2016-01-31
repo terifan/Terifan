@@ -3,6 +3,7 @@ package org.terifan.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
+import org.terifan.util.log.Log;
 
 
 public class FastList<T> implements Iterable<T>
@@ -126,7 +127,10 @@ public class FastList<T> implements Iterable<T>
 
 	public void addAll(T[] aElements)
 	{
-		resize(mSize + aElements.length);
+		if (mSize + aElements.length > mElementData.length)
+		{
+			resize(mSize + aElements.length + GROWTH);
+		}
 		System.arraycopy(aElements, 0, mElementData, mSize, aElements.length);
 		mSize += aElements.length;
 	}
@@ -134,6 +138,9 @@ public class FastList<T> implements Iterable<T>
 
 	protected void resize(int aSize)
 	{
-		mElementData = Arrays.copyOfRange(mElementData, 0, aSize);
+		if (aSize > mElementData.length)
+		{
+			mElementData = Arrays.copyOfRange(mElementData, 0, aSize);
+		}
 	}
 }
