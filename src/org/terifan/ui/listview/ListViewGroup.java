@@ -2,6 +2,7 @@ package org.terifan.ui.listview;
 
 import org.terifan.util.SortedMap;
 import java.util.ArrayList;
+import org.terifan.util.log.Log;
 
 
 public class ListViewGroup<T extends ListViewItem>
