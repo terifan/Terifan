@@ -5,6 +5,8 @@ import org.terifan.ui.listview.ListViewLayoutVertical;
 import org.terifan.ui.Orientation;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import org.terifan.ui.Anchor;
 import org.terifan.ui.Icon;
@@ -14,6 +16,7 @@ import org.terifan.ui.listview.ListView;
 import org.terifan.ui.listview.ListViewItem;
 import org.terifan.ui.listview.ListViewItemRenderer;
 import org.terifan.ui.listview.ListViewLayout;
+import org.terifan.ui.vectorgraphics.RenderingHint;
 
 
 public class ThumbnailItemRenderer implements ListViewItemRenderer
@@ -101,7 +104,7 @@ public class ThumbnailItemRenderer implements ListViewItemRenderer
 
 
 	@Override
-	public void paintItem(Graphics aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
+	public void paintItem(Graphics2D aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
 	{
 		StyleSheet style = aListView.getStylesheet();
 		boolean selected = aListView.isItemSelected(aItem);
@@ -150,6 +153,7 @@ public class ThumbnailItemRenderer implements ListViewItemRenderer
 			}
 		}
 
+		aGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		icon.paintIcon(null, aGraphics, tx, ty, tw, th);
 
 		Object label = aItem.getValue(0);
@@ -161,7 +165,7 @@ public class ThumbnailItemRenderer implements ListViewItemRenderer
 				label = aListView.getModel().getColumn(0).getFormatter().format(label);
 			}
 
-			aListView.getTextRenderer().drawString(aGraphics, label.toString(), x+2, y+h-mLabelHeight-2, w-4, mLabelHeight, Anchor.NORTH, style.getColor("itemForeground"), null, true);
+			aListView.getTextRenderer().drawString(aGraphics, label.toString(), sx+2, y+h-mLabelHeight-2, sw-4, mLabelHeight, Anchor.NORTH, style.getColor("itemForeground"), null, false);
 		}
 
 		if (aListView.getFocusItem() == aItem)

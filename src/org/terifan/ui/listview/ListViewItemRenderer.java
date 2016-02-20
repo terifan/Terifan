@@ -1,6 +1,6 @@
 package org.terifan.ui.listview;
 
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 
 public interface ListViewItemRenderer
@@ -21,7 +21,7 @@ public interface ListViewItemRenderer
 
 	public int getItemHeight(ListView aListView, ListViewItem aItem);
 
-	public void paintItem(Graphics aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem);
+	public void paintItem(Graphics2D aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem);
 
 	public ListViewLayout createListViewLayout(ListView aListView);
 }

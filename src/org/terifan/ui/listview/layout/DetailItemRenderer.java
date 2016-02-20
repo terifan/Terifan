@@ -3,6 +3,7 @@ package org.terifan.ui.listview.layout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import javax.swing.JComponent;
 import org.terifan.ui.StyleSheet;
 import org.terifan.ui.Utilities;
@@ -101,7 +102,7 @@ public class DetailItemRenderer implements ListViewItemRenderer
 
 
 	@Override
-	public void paintItem(Graphics aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
+	public void paintItem(Graphics2D aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
 	{
 		StyleSheet style = aListView.getStylesheet();
 

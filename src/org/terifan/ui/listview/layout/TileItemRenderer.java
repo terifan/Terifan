@@ -6,6 +6,7 @@ import org.terifan.ui.Orientation;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
@@ -106,7 +107,7 @@ public class TileItemRenderer implements ListViewItemRenderer
 
 
 	@Override
-	public void paintItem(Graphics aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
+	public void paintItem(Graphics2D aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
 	{
 		StyleSheet style = aListView.getStylesheet();
 		ListViewModel model = aListView.getModel();
@@ -126,14 +127,14 @@ public class TileItemRenderer implements ListViewItemRenderer
 		{
 			int x = aOriginX+3;
 			int y = aOriginY+3;
-			int w = aHeight-6;
-			int h = aHeight-6;
+			int w = mIconWidth + 10;
+			int h = aHeight-10;
 
 			Icon icon = aItem.getIcon(0);
 			boolean drawBorder = icon != null;
 
-			int tw = mIconWidth-10;
-			int th = mItemSize.height;
+			int tw = mIconWidth;
+			int th = mItemSize.height-20;
 
 			if (icon == null)
 			{

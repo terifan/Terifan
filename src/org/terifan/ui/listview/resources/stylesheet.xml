@@ -88,9 +88,9 @@
 		<image id="thumbBorderUnselected" value="thumb_border_v4_unselected.png"/>
 		<image id="thumbPlaceholder" value="placeholder.png"/>
 -->
-		<image id="thumbBorderSelected" value="thumb_border_v1_selected.png"/>
-		<image id="thumbBorderSelectedBackground" value="thumb_border_v1_selected_background.png"/>
-		<image id="thumbBorderUnselected" value="thumb_border_v1_unselected.png"/>
+		<image id="thumbBorderSelected" value="thumb_border_v2_selected.png"/>
+		<image id="thumbBorderSelectedBackground" value="thumb_border_v2_selected_background.png"/>
+		<image id="thumbBorderUnselected" value="thumb_border_v2_unselected.png"/>
 		<image id="thumbPlaceholder" value="placeholder.png"/>
 
 		<font id="bar" value="Ebrima,bold,14"/>

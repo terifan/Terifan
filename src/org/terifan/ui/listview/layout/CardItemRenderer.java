@@ -5,7 +5,7 @@ import org.terifan.ui.listview.ListViewLayoutHorizontal;
 import org.terifan.ui.Orientation;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import org.terifan.ui.Anchor;
 import org.terifan.ui.StyleSheet;
 import org.terifan.ui.Utilities;
@@ -116,7 +116,7 @@ public class CardItemRenderer implements ListViewItemRenderer
 
 
 	@Override
-	public void paintItem(Graphics aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
+	public void paintItem(Graphics2D aGraphics, int aOriginX, int aOriginY, int aWidth, int aHeight, ListView aListView, ListViewItem aItem)
 	{
 		Utilities.enableTextAntialiasing(aGraphics);
 		StyleSheet style = aListView.getStylesheet();
