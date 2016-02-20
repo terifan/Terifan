@@ -53,14 +53,14 @@ public class ListViewFactory
 	public static void applyVerticalTileLayout(ListView aListView)
 	{
 		aListView.setHeaderRenderer(null);
-		aListView.setItemRenderer(new TileItemRenderer(new Dimension(200, 100), 100, Orientation.VERTICAL));
+		aListView.setItemRenderer(new TileItemRenderer(new Dimension(300, 128), 100, Orientation.VERTICAL));
 	}
 
 
 	public static void applyHorizontalTileLayout(ListView aListView)
 	{
 		aListView.setHeaderRenderer(null);
-		aListView.setItemRenderer(new TileItemRenderer(new Dimension(200, 100), 100, Orientation.HORIZONTAL));
+		aListView.setItemRenderer(new TileItemRenderer(new Dimension(300, 128), 100, Orientation.HORIZONTAL));
 	}
 
 
