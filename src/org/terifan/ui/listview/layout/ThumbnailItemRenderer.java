@@ -4,7 +4,6 @@ import org.terifan.ui.listview.ListViewLayoutHorizontal;
 import org.terifan.ui.listview.ListViewLayoutVertical;
 import org.terifan.ui.Orientation;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -16,7 +15,6 @@ import org.terifan.ui.listview.ListView;
 import org.terifan.ui.listview.ListViewItem;
 import org.terifan.ui.listview.ListViewItemRenderer;
 import org.terifan.ui.listview.ListViewLayout;
-import org.terifan.ui.vectorgraphics.RenderingHint;
 
 
 public class ThumbnailItemRenderer implements ListViewItemRenderer
