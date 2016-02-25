@@ -164,11 +164,6 @@ public class Cache<K,V> implements Iterable<K>
 			shrink();
 		}
 
-		if (aValue instanceof CacheObjectListener)
-		{
-			((CacheObjectListener)aValue).cacheStateChanged(this, aKey, aValue, CacheObjectListener.ADDED);
-		}
-
 		return prevValue;
 	}
 
@@ -229,6 +224,29 @@ public class Cache<K,V> implements Iterable<K>
 		}
 
 		return null;
+	}
+
+
+	public synchronized V get(K aKey, CacheProvider<K,V> aProvider)
+	{
+		Entry<K, V> entry = mKeyValueMap.get(aKey);
+
+		if (entry != null)
+		{
+			mCacheOrder.remove(aKey);
+			mCacheOrder.addFirst(aKey);
+
+			return entry.value;
+		}
+
+		V value = aProvider.get(aKey);
+
+		if (value != null)
+		{
+			put(aKey, value, 1);
+		}
+
+		return value;
 	}
 
 
@@ -338,11 +356,6 @@ public class Cache<K,V> implements Iterable<K>
 		mCacheOrder.remove(aKey);
 		mUsedSize -= entry.size;
 
-		if (entry.value instanceof CacheObjectListener)
-		{
-			((CacheObjectListener)entry).cacheStateChanged(this, aKey, entry.value, aDropped ? CacheObjectListener.DROPPED : CacheObjectListener.REMOVED);
-		}
-
 		return entry.value;
 	}
 
@@ -424,5 +437,12 @@ public class Cache<K,V> implements Iterable<K>
 	public synchronized Iterator<K> iterator()
 	{
 		return mCacheOrder.iterator();
+	}
+
+
+	@FunctionalInterface
+	public interface CacheProvider<K,V>
+	{
+		V get(K aKey);
 	}
 }
