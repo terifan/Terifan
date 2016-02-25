@@ -16,7 +16,56 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 	{
 		mValues = new int[0];
 	}
+
+
+	public IntArray(int[] aValues)
+	{
+		this(aValues, aValues.length);
+	}
+
+
+	public IntArray(int[] aValues, int aSize)
+	{
+		mValues = aValues;
+		mSize = aSize;
+	}
 	
+	
+	public int indexOf(int aValue)
+	{
+		for (int i = 0; i < mSize; i++)
+		{
+			if (mValues[i] == aValue)
+			{
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+
+	public IntArray removeValue(int aValue)
+	{
+		for (int i = 0, j = 0; i < mSize; )
+		{
+			if (mValues[i] == aValue)
+			{
+				if (mValues[mSize - 1] != aValue)
+				{
+					mValues[j++] = mValues[mSize - 1];
+				}
+				mSize--;
+			}
+			else
+			{
+				mValues[j++] = mValues[i++];
+			}
+		}
+		
+		return this;
+	}
+
 	
 	public int[] array()
 	{
