@@ -227,6 +227,26 @@ public class Cache<K,V> implements Iterable<K>
 	}
 
 
+	/**
+	 * Returns the value to which the specified key is mapped in this identity
+	 * hash map, or null if the map contains no mapping for this key. A return
+	 * value of null does not necessarily indicate that the map contains no
+	 * mapping for the key; it is also possible that the map explicitly maps
+	 * the key to null. The containsKey method may be used to distinguish
+	 * these two cases.<p>
+	 *
+	 * Getting a value will cause a reorder of items. The retrieved key will be
+	 * moved to the top of the cache.
+	 *
+	 * @param aKey
+	 *   Key whose associated value is to be returned. Must not be null or
+	 *   zero length.
+	 * @param aProvider
+	 *   A provider capable of producing a value for the key.
+	 * @return
+	 *   The value to which this map maps the specified key, or null if the
+	 *   map contains no mapping for this key.
+	 */
 	public synchronized V get(K aKey, CacheProvider<K,V> aProvider)
 	{
 		Entry<K, V> entry = mKeyValueMap.get(aKey);
@@ -437,12 +457,5 @@ public class Cache<K,V> implements Iterable<K>
 	public synchronized Iterator<K> iterator()
 	{
 		return mCacheOrder.iterator();
-	}
-
-
-	@FunctionalInterface
-	public interface CacheProvider<K,V>
-	{
-		V get(K aKey);
 	}
 }
