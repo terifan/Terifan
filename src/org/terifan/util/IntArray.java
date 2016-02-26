@@ -2,6 +2,9 @@ package org.terifan.util;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.function.IntPredicate;
+import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
 
 
 public final class IntArray implements Cloneable, Iterable<Integer>
@@ -47,19 +50,35 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 
 	public IntArray removeValue(int aValue)
 	{
-		for (int i = 0, j = 0; i < mSize; )
+		for (int dst = 0, src = 0; dst < mSize; )
 		{
-			if (mValues[i] == aValue)
+			if (mValues[src] == aValue)
 			{
-				if (mValues[mSize - 1] != aValue)
-				{
-					mValues[j++] = mValues[mSize - 1];
-				}
+				src++;
 				mSize--;
 			}
 			else
 			{
-				mValues[j++] = mValues[i++];
+				mValues[dst++] = mValues[src++];
+			}
+		}
+		
+		return this;
+	}
+
+
+	public IntArray removeIf(IntPredicate aPredicate)
+	{
+		for (int dst = 0, src = 0; dst < mSize; )
+		{
+			if (aPredicate.test(mValues[src]))
+			{
+				src++;
+				mSize--;
+			}
+			else
+			{
+				mValues[dst++] = mValues[src++];
 			}
 		}
 		
@@ -85,7 +104,9 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		{
 			mValues = Arrays.copyOfRange(mValues, 0, mSize + GROWTH);
 		}
+
 		mValues[mSize++] = aValue;
+
 		return this;
 	}
 	
@@ -103,8 +124,21 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		{
 			mValues = Arrays.copyOfRange(mValues, 0, mSize + aLength + GROWTH);
 		}
+
 		System.arraycopy(aValues, aOffset, mValues, mSize, aLength);
+		
 		mSize += aLength;
+
+		return this;
+	}
+	
+	
+	public <T> IntArray addValues(T[] aArray, ToIntFunction<T> aFunction)
+	{
+		for (int i = 0; i < aArray.length; i++)
+		{
+			add(aFunction.applyAsInt(aArray[i]));
+		}
 		return this;
 	}
 	
@@ -115,11 +149,14 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		{
 			mValues = Arrays.copyOfRange(mValues, 0, aIndex + GROWTH);
 		}
+
 		mValues[aIndex] = aValue;
+		
 		if (aIndex >= mSize)
 		{
 			mSize = aIndex + 1;
 		}
+		
 		return this;
 	}
 
@@ -144,6 +181,7 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 			System.arraycopy(aValues, aOffset, mValues, aIndex, aLength);
 			mSize = Math.max(mSize, aIndex + aLength);
 		}
+
 		return this;
 	}
 	
@@ -224,5 +262,64 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 			sb.append(mValues[i]);
 		}
 		return sb.toString();
+	}
+
+
+	@Override
+	public int hashCode()
+	{
+        int result = 1;
+        for (int element : mValues)
+		{
+            result = 31 * result + element;
+		}
+
+        return result;
+	}
+
+
+	@Override
+	public boolean equals(Object aOther)
+	{
+        if (this == aOther)
+		{
+            return true;
+		}
+		if (!(aOther instanceof IntArray))
+		{
+			return false;
+		}
+
+		IntArray other = (IntArray)aOther;
+
+        if (mSize != other.mSize)
+		{
+            return false;
+		}
+
+		int[] a = mValues;
+		int[] b = other.mValues;
+
+		for (int i = 0; i < mSize; i++)
+		{
+            if (a[i] != b[i])
+			{
+                return false;
+			}
+		}
+
+        return true;
+	}
+	
+
+	public boolean contains(int aValue)
+	{
+		return indexOf(aValue) != -1;
+	}
+	
+	
+	public IntStream stream()
+	{
+		return Arrays.stream(mValues, 0, mSize);
 	}
 }

@@ -1,21 +1,22 @@
 package org.terifan.util;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 
 /**
  * The Tuple class is a union of tw values into a single Object. Useful for
  * keys in HashMaps where two distinct values make out the key.
  *
- * @param <T1>
+ * @param <T>
  *   type of first value
- * @param <T2>
+ * @param <U>
  *   type of second value
  */
-public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
+public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 {
-	private T1 mFirst;
-	private T2 mSecond;
+	private T mFirst;
+	private U mSecond;
 
 
 	/**
@@ -26,7 +27,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	 * @param aSecond
 	 *   the second value.
 	 */
-	public Tuple(T1 aFirst, T2 aSecond)
+	public Tuple(T aFirst, U aSecond)
 	{
 		setFirst(aFirst);
 		setSecond(aSecond);
@@ -41,7 +42,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	@Override
 	public int hashCode()
 	{
-		return getFirst().hashCode() ^ getSecond().hashCode();
+		return Objects.hashCode(mFirst) ^ Objects.hashCode(mSecond);
 	}
 
 
@@ -58,10 +59,10 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	{
 		if (aObject instanceof Tuple)
 		{
-			Tuple<T1, T2> t = (Tuple<T1, T2>)aObject;
+			Tuple<T, U> t = (Tuple<T, U>)aObject;
 
-			T1 f1 = getFirst();
-			T1 f2 = t.getFirst();
+			T f1 = mFirst;
+			T f2 = t.mFirst;
 
 			if (f1 == null && f2 == null)
 			{
@@ -71,8 +72,8 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 				return false;
 			}
 
-			T2 s1 = getSecond();
-			T2 s2 = t.getSecond();
+			U s1 = mSecond;
+			U s2 = t.mSecond;
 
 			if (s1 == null && s2 == null)
 			{
@@ -94,7 +95,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	 * @return
 	 *   the value
 	 */
-	public T1 getFirst()
+	public T getFirst()
 	{
 		return mFirst;
 	}
@@ -105,7 +106,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	 * @param aFirst
 	 *   the value
 	 */
-	public void setFirst(T1 aFirst)
+	public void setFirst(T aFirst)
 	{
 		mFirst = aFirst;
 	}
@@ -116,7 +117,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	 * @return
 	 *   the value
 	 */
-	public T2 getSecond()
+	public U getSecond()
 	{
 		return mSecond;
 	}
@@ -127,7 +128,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	 * @param aSecond
 	 *   the value
 	 */
-	public void setSecond(T2 aSecond)
+	public void setSecond(U aSecond)
 	{
 		mSecond = aSecond;
 	}
@@ -160,7 +161,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 	 *   "greater than" the supplied Tuple.
 	 */
 	@Override
-	public int compareTo(Tuple<T1, T2> aTuple)
+	public int compareTo(Tuple<T, U> aTuple)
 	{
 		int r;
 
@@ -178,7 +179,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 		}
 		else
 		{
-			r = ((Comparable<T1>)getFirst()).compareTo(aTuple.getFirst());
+			r = ((Comparable<T>)getFirst()).compareTo(aTuple.getFirst());
 		}
 
 		if (r == 0)
@@ -197,7 +198,7 @@ public class Tuple<T1, T2> implements Serializable, Comparable<Tuple<T1, T2>>
 			}
 			else
 			{
-				r = ((Comparable<T2>)getSecond()).compareTo(aTuple.getSecond());
+				r = ((Comparable<U>)getSecond()).compareTo(aTuple.getSecond());
 			}
 		}
 
