@@ -419,6 +419,12 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
+	public ArrayList<T> getItems()
+	{
+		return mItems;
+	}
+
+
 	protected void sortRecursive(ListViewGroup aParent, int aLevel)
 	{
 		SortedMap<Object,ListViewGroup> children = aParent.getChildren();
