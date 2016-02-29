@@ -8,6 +8,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
 import java.awt.geom.AffineTransform;
@@ -112,6 +113,8 @@ public class TileItemRenderer implements ListViewItemRenderer
 		StyleSheet style = aListView.getStylesheet();
 		ListViewModel model = aListView.getModel();
 		boolean selected = aListView.isItemSelected(aItem);
+
+		aGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
 		aOriginX += 1;
 		aOriginY += 1;
