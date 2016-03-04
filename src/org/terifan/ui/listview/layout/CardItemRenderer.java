@@ -100,8 +100,8 @@ public class CardItemRenderer implements ListViewItemRenderer
 		int h = 0;
 		for (int i = 0, sz = model.getColumnCount(); i < sz; i++)
 		{
-			Object value = aItem.getValue(i);
 			ListViewColumn column = model.getColumn(i);
+			Object value = aItem.getValue(column);
 			if (column.getFormatter() != null)
 			{
 				value = column.getFormatter().format(value);
@@ -153,7 +153,7 @@ public class CardItemRenderer implements ListViewItemRenderer
 		{
 			ListViewColumn column = model.getColumn(col);
 
-			Object value = aItem.getValue(col);
+			Object value = aItem.getValue(column);
 			if (column.getFormatter() != null)
 			{
 				value = column.getFormatter().format(value);

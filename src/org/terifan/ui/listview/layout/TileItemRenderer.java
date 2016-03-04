@@ -133,7 +133,7 @@ public class TileItemRenderer implements ListViewItemRenderer
 			int w = mIconWidth + 10;
 			int h = aHeight-10;
 
-			Icon icon = aItem.getIcon(0);
+			Icon icon = aItem.getIcon(aListView.getModel().getColumn(0));
 			boolean drawBorder = icon != null;
 
 			int tw = mIconWidth;
@@ -172,7 +172,7 @@ public class TileItemRenderer implements ListViewItemRenderer
 		{
 			ListViewColumn column = model.getColumn(col);
 
-			Object label = aItem.getValue(col);
+			Object label = aItem.getValue(column);
 			if (column.getFormatter() != null)
 			{
 				label = column.getFormatter().format(label);

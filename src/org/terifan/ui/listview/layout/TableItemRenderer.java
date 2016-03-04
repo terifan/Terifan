@@ -135,7 +135,7 @@ public class TableItemRenderer implements ListViewItemRenderer
 
 	protected ListViewCellRenderer getCellRenderer(ListView aListView, ListViewItem aItem, int aIndex)
 	{
-		Object v = aItem.getValue(aIndex);
+		Object v = aItem.getValue(aListView.getModel().getColumn(aIndex));
 		if (v instanceof JComponent)
 		{
 			return new ComponentWrapper((JComponent) v);

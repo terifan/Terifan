@@ -25,14 +25,9 @@ public class DefaultListViewItem extends AbstractListViewItem
 
 
 	@Override
-	public Object getValue(int aIndex)
+	public Object getValue(ListViewColumn aColumn)
 	{
-		if (aIndex < 0 || aIndex >= mValues.length)
-		{
-			throw new IllegalArgumentException("Item don't have column index: " + aIndex + ", max: " + mValues.length);
-		}
-
-		return mValues[aIndex];
+		return mValues[aColumn.getModel().getColumnIndex(aColumn)];
 	}
 
 
@@ -48,19 +43,9 @@ public class DefaultListViewItem extends AbstractListViewItem
 
 
 	@Override
-	public Icon getIcon(int aIndex)
+	public Icon getIcon(ListViewColumn aColumn)
 	{
-//		if (aIndex < 0 || aIndex >= mValues.length)
-//		{
-//			throw new IllegalArgumentException("Item don't have column index: " + aIndex);
-//		}
-
-		if (aIndex >= mValues.length)
-		{
-			return null;
-		}
-
-		return mIcons[aIndex];
+		return mIcons[aColumn.getModel().getColumnIndex(aColumn)];
 	}
 
 

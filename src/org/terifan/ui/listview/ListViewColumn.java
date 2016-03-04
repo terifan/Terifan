@@ -3,13 +3,15 @@ package org.terifan.ui.listview;
 import org.terifan.ui.listview.util.Formatter;
 import java.awt.Font;
 import java.util.Comparator;
+import java.util.HashMap;
 import javax.swing.SortOrder;
 import org.terifan.ui.Alignment;
 
 
 public class ListViewColumn
 {
-	protected String mId;
+	private final ListViewModel mModel;
+	protected String mKey;
 	protected Alignment mAlignment;
 	protected String mLabel;
 	protected int mWidth;
@@ -25,17 +27,21 @@ public class ListViewColumn
 	protected Comparator mGroupComparator;
 	protected Formatter mFormatter;
 	protected Formatter mGroupFormatter;
+	protected HashMap<Object,Object> mUserObject;
+	
 
-
-	public ListViewColumn(String aId, String aLabel, int aWidth)
+	public ListViewColumn(ListViewModel aModel, String aKey, String aLabel, int aWidth)
 	{
-		setId(aId);
+		setKey(aKey);
 		setLabel(aLabel);
 		setWidth(aWidth);
 		setAlignment(Alignment.LEFT);
 		setVisible(true);
 		setInitialSortOrder(SortOrder.ASCENDING);
 		setSortOrder(SortOrder.ASCENDING);
+		mModel = aModel;
+
+		mUserObject = new HashMap<>();
 	}
 
 
@@ -193,16 +199,16 @@ public class ListViewColumn
 	}
 
 
-	public ListViewColumn setId(String aId)
+	public ListViewColumn setKey(String aKey)
 	{
-		mId = aId;
+		mKey = aKey;
 		return this;
 	}
 
 
-	public String getId()
+	public String getKey()
 	{
-		return mId;
+		return mKey;
 	}
 
 
@@ -232,9 +238,27 @@ public class ListViewColumn
 	}
 
 
+	public ListViewModel getModel()
+	{
+		return mModel;
+	}
+
+
 	@Override
 	public String toString()
 	{
 		return mLabel;
+	}
+	
+	
+	public Object getUserObject(Object aOwner)
+	{
+		return mUserObject.get(aOwner);
+	}
+	
+
+	public void setUserObject(Object aOwner, Object aValue)
+	{
+		mUserObject.put(aOwner, aValue);
 	}
 }

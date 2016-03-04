@@ -105,7 +105,7 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 
 	public Object getValueAt(int aRow, int aColumn)
 	{
-		return mItems.get(aRow).getValue(aColumn);
+		return mItems.get(aRow).getValue(getColumn(aColumn));
 	}
 
 
@@ -119,7 +119,7 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	{
 		for (T item : mItems)
 		{
-			if (item.getValue(aColumnIndex).equals(aObject))
+			if (item.getValue(getColumn(aColumnIndex)).equals(aObject))
 			{
 				return item;
 			}
@@ -287,15 +287,17 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 
 	// -- Columns -----------------
 
-	public ListViewColumn addColumn(String aIdAndLabel, int aWidth)
+	public ListViewColumn addColumn(String aKeyAndLabel, int aWidth)
 	{
-		return addColumn(new ListViewColumn(aIdAndLabel, aIdAndLabel, aWidth));
+		return addColumn(aKeyAndLabel, aKeyAndLabel, aWidth);
 	}
 
 
-	public ListViewColumn addColumn(String aId, String aLabel, int aWidth)
+	public ListViewColumn addColumn(String aKey, String aLabel, int aWidth)
 	{
-		return addColumn(new ListViewColumn(aId, aLabel, aWidth));
+		ListViewColumn column = new ListViewColumn(this, aKey, aLabel, aWidth);
+		mColumns.add(column);
+		return column;
 	}
 
 
@@ -321,7 +323,7 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	{
 		for (int i = 0; i < mColumns.size(); i++)
 		{
-			if (mColumns.get(i).getId().equals(aColumnName))
+			if (mColumns.get(i).getKey().equals(aColumnName))
 			{
 				return i;
 			}
@@ -337,18 +339,11 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
-	public ListViewColumn addColumn(ListViewColumn aColumn)
-	{
-		mColumns.add(aColumn);
-		return aColumn;
-	}
-
-
 	public ListViewColumn getColumn(String aColumnId)
 	{
 		for (ListViewColumn c : mColumns)
 		{
-			if (aColumnId.equals(c.getId()))
+			if (aColumnId.equals(c.getKey()))
 			{
 				return c;
 			}
@@ -495,7 +490,7 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 				{
 					int groupColumnIndex = mGroups.get(groupIndex);
 
-					Object groupKey = item.getValue(groupColumnIndex);
+					Object groupKey = item.getValue(getColumn(groupColumnIndex));
 
 					Formatter formatter = mColumns.get(groupColumnIndex).getGroupFormatter();
 					if (formatter != null)
@@ -672,8 +667,8 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 
 			if (!(mComparator instanceof ListViewItemComparator) && (t1 instanceof ListViewItem))
 			{
-				v1 = ((T)t1).getValue(mColumnIndex);
-				v2 = ((T)t2).getValue(mColumnIndex);
+				v1 = ((T)t1).getValue(getColumn(mColumnIndex));
+				v2 = ((T)t2).getValue(getColumn(mColumnIndex));
 			}
 
 			if (v1 == null && v2 != null)

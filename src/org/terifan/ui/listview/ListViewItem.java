@@ -5,9 +5,9 @@ import org.terifan.ui.Icon;
 
 public interface ListViewItem
 {
-	Object getValue(int aIndex);
+	Object getValue(ListViewColumn aColumn);
 
-	Icon getIcon(int aIndex);
+	Icon getIcon(ListViewColumn aColumn);
 
 	Object getRenderingHint(Object aKey);
 

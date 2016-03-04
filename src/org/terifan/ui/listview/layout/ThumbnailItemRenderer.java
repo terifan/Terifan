@@ -117,7 +117,7 @@ public class ThumbnailItemRenderer implements ListViewItemRenderer
 		int sx = x+(w-sw)/2;
 		int sy = y+h-sh;
 
-		Icon icon = aItem.getIcon(0);
+		Icon icon = aItem.getIcon(aListView.getModel().getColumn(0));
 
 		boolean drawBorder = icon != null && aItem.getRenderingHint(ListViewRenderingHints.KEY_DRAW_BORDER) != ListViewRenderingHints.VALUE_DRAW_BORDER_OFF;
 
@@ -154,7 +154,7 @@ public class ThumbnailItemRenderer implements ListViewItemRenderer
 		aGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		icon.paintIcon(null, aGraphics, tx, ty, tw, th);
 
-		Object label = aItem.getValue(0);
+		Object label = aItem.getValue(aListView.getModel().getColumn(0));
 
 		if (label != null && mLabelHeight > 0)
 		{

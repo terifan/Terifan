@@ -72,7 +72,7 @@ public class CellRenderer extends JComponent implements ListViewCellRenderer
 		Rectangle rect = getBounds();
 		Rectangle tr = mTempRectangle;
 
-		Object value = mItem.getValue(mColumnIndex);
+		Object value = mItem.getValue(column);
 		if (column.getFormatter() != null)
 		{
 			value = column.getFormatter().format(value);
@@ -125,7 +125,7 @@ public class CellRenderer extends JComponent implements ListViewCellRenderer
 //			aGraphics.drawLine(rect.x, rect.y+rect.height-2, rect.x+rect.width, rect.y+rect.height-2);
 //		}
 
-		Icon icon = mItem.getIcon(mColumnIndex);
+		Icon icon = mItem.getIcon(column);
 
 		if (icon != null && column.getIconWidth() > 0)
 		{

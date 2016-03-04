@@ -232,10 +232,10 @@ public class ListViewHeader extends JComponent
 
 				if (column.isGroupOnSort() && model.getGroupCount() > 0)
 				{
-					String newGroup = event.getListViewColumn().getId();
+					String newGroup = event.getListViewColumn().getKey();
 					if (!model.isGrouped(model.getColumnIndex(newGroup)))
 					{
-						String lastGroup = model.getColumn(model.getGroup(model.getGroupCount()-1)).getId();
+						String lastGroup = model.getColumn(model.getGroup(model.getGroupCount()-1)).getKey();
 						model.removeGroup(lastGroup);
 						model.addGroup(newGroup);
 						model.validate();
