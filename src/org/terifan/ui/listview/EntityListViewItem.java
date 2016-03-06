@@ -41,12 +41,16 @@ public class EntityListViewItem extends AbstractListViewItem
 			{
 				return method.invoke(this);
 			}
+			else
+			{
+				return "#missing";
+			}
 		}
 		catch (IllegalAccessException | InvocationTargetException e)
 		{
 			e.printStackTrace(Log.out);
-		}
 
-		return "";
+			return "#error";
+		}
 	}
 }

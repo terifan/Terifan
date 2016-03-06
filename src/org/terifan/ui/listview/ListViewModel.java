@@ -137,13 +137,13 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 
 	// -- Groups -----------------
 
-	public boolean addGroup(String aColumnName)
+	public boolean addGroup(ListViewColumn aColumn)
 	{
-		int index = getColumnIndex(aColumnName);
+		int index = getColumnIndex(aColumn);
 
 		if (index == -1)
 		{
-			throw new IllegalArgumentException("No column with ID: " + aColumnName);
+			throw new IllegalArgumentException();
 		}
 
 		if (mGroups.contains(index))
@@ -156,13 +156,13 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
-	public boolean removeGroup(String aColumnName)
+	public boolean removeGroup(ListViewColumn aColumn)
 	{
-		int index = getColumnIndex(aColumnName);
+		int index = getColumnIndex(aColumn);
 
 		if (index == -1)
 		{
-			throw new IllegalArgumentException("No column with ID: " + aColumnName);
+			throw new IllegalArgumentException();
 		}
 
 		for (int i = 0; i < mGroups.size(); i++)
@@ -193,6 +193,12 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	public boolean isGrouped(int aIndex)
 	{
 		return mGroups.contains(aIndex);
+	}
+
+
+	public boolean isGrouped(ListViewColumn aColumn)
+	{
+		return mGroups.contains(getColumnIndex(aColumn));
 	}
 
 
@@ -287,9 +293,9 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 
 	// -- Columns -----------------
 
-	public ListViewColumn addColumn(String aKeyAndLabel, int aWidth)
+	public ListViewColumn addColumn(String aKey, int aWidth)
 	{
-		return addColumn(aKeyAndLabel, aKeyAndLabel, aWidth);
+		return addColumn(aKey, aKey, aWidth);
 	}
 
 
@@ -307,23 +313,17 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
-	public void removeColumn(String aId)
-	{
-		mColumns.remove(getColumnIndex(aId));
-	}
-
-
 	public Iterable<ListViewColumn> getColumns()
 	{
 		return mColumns;
 	}
 
 
-	public int getColumnIndex(String aColumnName)
+	public int getColumnIndex(String aColumnKey)
 	{
 		for (int i = 0; i < mColumns.size(); i++)
 		{
-			if (mColumns.get(i).getKey().equals(aColumnName))
+			if (mColumns.get(i).getKey().equals(aColumnKey))
 			{
 				return i;
 			}
@@ -339,11 +339,11 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
-	public ListViewColumn getColumn(String aColumnId)
+	public ListViewColumn getColumn(String aColumnKey)
 	{
 		for (ListViewColumn c : mColumns)
 		{
-			if (aColumnId.equals(c.getKey()))
+			if (aColumnKey.equals(c.getKey()))
 			{
 				return c;
 			}
@@ -365,16 +365,21 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
-	public void setSortedColumn(ListViewColumn aSortedColumnId)
+	public void setSortedColumn(ListViewColumn aSortedColumn)
 	{
-		mSortedColumn = aSortedColumnId;
+		mSortedColumn = aSortedColumn;
 	}
 
 
-	public void setSortedColumn(String aSortedColumnId)
-	{
-		setSortedColumn(getColumn(aSortedColumnId));
-	}
+//	public void setSortedColumn(String aSortedColumn)
+//	{
+//		ListViewColumn column = getColumn(aSortedColumn);
+//		if (column == null)
+//		{
+//			throw new IllegalArgumentException("Column not found: " + aSortedColumn);
+//		}
+//		setSortedColumn(column);
+//	}
 
 
 	public ListViewColumn getSortedColumn()
@@ -383,10 +388,10 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 	}
 
 
-	public int getSortedColumnIndex()
-	{
-		return mColumns.indexOf(mSortedColumn);
-	}
+//	public int getSortedColumnIndex()
+//	{
+//		return mColumns.indexOf(mSortedColumn);
+//	}
 
 	// -- Tree -----------------
 
@@ -434,7 +439,6 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 			{
 				return;
 			}
-
 			column = mSortedColumn;
 			list = aParent.getItems();
 			comparator = column.getComparator();
@@ -477,7 +481,7 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 		}
 		else
 		{
-			ListViewGroup<T> root = new ListViewGroup<T>(null,0,null);
+			ListViewGroup<T> root = new ListViewGroup<>(null,0,null);
 			root.setChildren(new SortedMap<>());
 
 			for (T item : mItems)
@@ -522,9 +526,6 @@ public class ListViewModel<T extends ListViewItem> implements Iterable<T>
 			}
 
 			root.aggregate();
-
-//			System.out.println("[i="+root.getItemCount() + " g=" + root.getGroupCount() + "]");
-//			System.out.println(root);
 
 			mTree = root;
 		}
