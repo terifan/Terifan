@@ -37,7 +37,7 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.text.JTextComponent;
 import javax.swing.undo.UndoManager;
-import static org.terifan.ui.listview.TextRenderer.lineBreakText;
+import static org.terifan.ui.TextRenderer.lineBreakText;
 
 
 public final class Utilities

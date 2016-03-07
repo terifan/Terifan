@@ -1,4 +1,4 @@
-package org.terifan.ui.listview;
+package org.terifan.ui;
 
 import java.awt.Color;
 import java.awt.Font;

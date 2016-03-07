@@ -13,7 +13,7 @@ import javax.swing.JSplitPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.terifan.ui.StyleSheet;
-import org.terifan.ui.listview.TextRenderer;
+import org.terifan.ui.TextRenderer;
 
 
 public class PropertyGrid extends JPanel
