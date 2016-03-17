@@ -169,26 +169,22 @@ public class Delegate extends AbstractAction
 	@Override
 	public void actionPerformed(ActionEvent aEvent)
 	{
-		SwingUtilities.invokeLater(new Runnable()
+		SwingUtilities.invokeLater(() ->
 		{
-			@Override
-			public void run()
+			try
 			{
-				try
+				if (mParameters.length == 0)
 				{
-					if (mParameters.length == 0)
-					{
-						mMethod.invoke(mObject);
-					}
-					else
-					{
-						mMethod.invoke(mObject, mParameters);
-					}
+					mMethod.invoke(mObject);
 				}
-				catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+				else
 				{
-					throw new RuntimeException(e);
+					mMethod.invoke(mObject, mParameters);
 				}
+			}
+			catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+			{
+				throw new RuntimeException(e);
 			}
 		});
 	}
