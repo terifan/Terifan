@@ -58,7 +58,7 @@ public class ErrorReportWindow
 
 		try
 		{
-			aThrowable.printStackTrace(Log.err);
+			aThrowable.printStackTrace(Log.out);
 		}
 		catch (Throwable e)
 		{
