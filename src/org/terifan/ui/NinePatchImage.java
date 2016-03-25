@@ -1,18 +1,12 @@
 package org.terifan.ui;
 
-import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 
 /**
@@ -234,5 +228,11 @@ public class NinePatchImage
 	public Insets getPadding()
 	{
 		return mPadding;
+	}
+
+
+	public BufferedImage getImage()
+	{
+		return mImage;
 	}
 }
