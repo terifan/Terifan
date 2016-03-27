@@ -1,5 +1,6 @@
 package org.terifan.ui;
 
+import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
@@ -10,11 +11,8 @@ import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
-import java.awt.dnd.DragSourceContext;
-import java.awt.dnd.DragSourceDragEvent;
 import java.awt.dnd.DragSourceDropEvent;
 import java.io.IOException;
-import java.io.Serializable;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,6 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.JTree;
 import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 import org.terifan.util.log.Log;
 
 
@@ -47,8 +47,22 @@ import org.terifan.util.log.Log;
  */
 public abstract class DragAndDrop
 {
-	private final static DataFlavor javaSerializedObjectMimeType = new DataFlavor(Serializable.class, "Java Serialized Object");
+//	private final static DataFlavor javaObjectMimeType = new DataFlavor(Object.class, "Java Object");
 
+	private final static DataFlavor DATA_FLAVOR;
+
+	static 
+	{
+		try
+		{
+			DATA_FLAVOR = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType);
+		}
+		catch (Exception e)
+		{
+			throw new Error("Error", e);
+		}
+	}
+	
 	protected JComponent mComponent;
 
 
@@ -56,7 +70,7 @@ public abstract class DragAndDrop
 	{
 		mComponent = aComponent;
 
-		DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(mComponent, DnDConstants.ACTION_COPY, new MyDragGestureListener());
+		DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(mComponent, DnDConstants.ACTION_COPY_OR_MOVE, new MyDragGestureListener());
 
 		mComponent.setTransferHandler(new MyTransferHandler());
 	}
@@ -111,7 +125,7 @@ public abstract class DragAndDrop
 	 * @param aDropEvent
 	 *   an object containing details about the drop.
 	 */
-	public void dragEnd(boolean aSuccess, Object aDropValue)
+	public void dragEnd(boolean aSuccess, Object aDropValue, int aDropAction)
 	{
 	}
 
@@ -121,14 +135,14 @@ public abstract class DragAndDrop
 		@Override
 		public void dragGestureRecognized(DragGestureEvent aDrag)
 		{
-			aDrag.startDrag(DragSource.DefaultCopyDrop, new MyTransferable(aDrag), new DragSourceAdapter()
+			aDrag.startDrag(null, new MyTransferable(aDrag), new DragSourceAdapter()
 			{
 				@Override
 				public void dragDropEnd(DragSourceDropEvent aDragSourceDropEvent)
 				{
 					try
 					{
-						dragEnd(aDragSourceDropEvent.getDropSuccess(), aDragSourceDropEvent.getDragSourceContext().getTransferable().getTransferData(javaSerializedObjectMimeType));
+						dragEnd(aDragSourceDropEvent.getDropSuccess(), aDragSourceDropEvent.getDragSourceContext().getTransferable().getTransferData(DATA_FLAVOR), aDragSourceDropEvent.getDropAction());
 					}
 					catch (UnsupportedFlavorException | IOException e)
 					{
@@ -145,7 +159,7 @@ public abstract class DragAndDrop
 		@Override
 		public boolean canImport(TransferSupport aSupport)
 		{
-			return aSupport.isDataFlavorSupported(javaSerializedObjectMimeType) && canDrop(new DropEvent(aSupport));
+			return aSupport.isDataFlavorSupported(DATA_FLAVOR) && aSupport.getTransferable() != null && canDrop(new DropEvent(aSupport));
 		}
 
 
@@ -186,14 +200,14 @@ public abstract class DragAndDrop
 		@Override
 		public DataFlavor[] getTransferDataFlavors()
 		{
-			return new DataFlavor[]{javaSerializedObjectMimeType};
+			return new DataFlavor[]{DATA_FLAVOR};
 		}
 
 
 		@Override
 		public boolean isDataFlavorSupported(DataFlavor aFlavor)
 		{
-			return javaSerializedObjectMimeType.equals(aFlavor);
+			return DATA_FLAVOR.equals(aFlavor);
 		}
 
 
@@ -219,7 +233,7 @@ public abstract class DragAndDrop
 		{
 			try
 			{
-				mTransferData = aSupport.getTransferable().getTransferData(javaSerializedObjectMimeType);
+				mTransferData = aSupport.getTransferable().getTransferData(DATA_FLAVOR);
 			}
 			catch (UnsupportedFlavorException | IOException e)
 			{
@@ -282,15 +296,30 @@ public abstract class DragAndDrop
 			new DragAndDrop(tree)
 			{
 				@Override
+				public boolean canDrop(DropEvent aDropEvent)
+				{
+					return true;
+				}
+
+				@Override
+				public void drop(DropEvent aDropEvent)
+				{
+					TreePath path = tree.getClosestPathForLocation(aDropEvent.getDropLocation().x, aDropEvent.getDropLocation().y);
+					DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode)path.getLastPathComponent();
+					lastPathComponent.add(new DefaultMutableTreeNode(aDropEvent.getTransferData()));
+					tree.expandPath(path);
+				}
+
+				@Override
 				public Object drag(Point aDragOrigin)
 				{
 					return tree.getClosestPathForLocation(aDragOrigin.x, aDragOrigin.y).getLastPathComponent().toString();
 				}
 
 				@Override
-				public void dragEnd(boolean aSuccess, Object aTransferData)
+				public void dragEnd(boolean aSuccess, Object aTransferData, int aDropAction)
 				{
-					Log.out.println(aSuccess+" "+aTransferData);
+					Log.out.println(aSuccess+" "+aTransferData+" "+aDropAction);
 				}
 			};
 
@@ -299,7 +328,7 @@ public abstract class DragAndDrop
 				@Override
 				public boolean canDrop(DropEvent aDropEvent)
 				{
-					return !"food".equals(aDropEvent.getTransferData().toString());
+					return aDropEvent.getTransferData() != null && !"food".equals(aDropEvent.getTransferData().toString());
 				}
 
 				@Override
@@ -310,6 +339,26 @@ public abstract class DragAndDrop
 					label.setSize(100,20);
 					panel.add(label);
 					panel.repaint();
+
+					new DragAndDrop(label)
+					{
+						@Override
+						public Object drag(Point aDragOrigin)
+						{
+							return ((JLabel)mComponent).getText();
+						}
+
+						@Override
+						public void dragEnd(boolean aSuccess, Object aDropValue, int aDropAction)
+						{
+							if (aSuccess && aDropAction == DropEvent.MOVE)
+							{
+								Container parent = mComponent.getParent();
+								parent.remove(mComponent);
+								parent.repaint();
+							}
+						}
+					};
 				}
 			};
 
