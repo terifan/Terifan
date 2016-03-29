@@ -20,6 +20,7 @@ import static org.terifan.ui.Anchor.NORTH;
 import static org.terifan.ui.Anchor.NORTH_EAST;
 import static org.terifan.ui.Anchor.SOUTH;
 import static org.terifan.ui.Anchor.SOUTH_EAST;
+import org.terifan.util.log.Log;
 
 
 public class TextBox implements Cloneable
@@ -541,6 +542,9 @@ public class TextBox implements Cloneable
 		Insets ti = mTextBorder != null ? mTextBorder.getBorderInsets(null) : ZERO_INSETS;
 		LineMetrics lm = mFont.getLineMetrics("Adgj", mFontRenderContext);
 
+		aGraphics.setColor(mForeground);
+		aGraphics.setFont(mFont);
+		
 		for (int i = 0, sz = mTextBounds.size(); i < sz; i++)
 		{
 			Rectangle r = mTextBounds.get(i);
@@ -609,12 +613,18 @@ public class TextBox implements Cloneable
 
 		LineMetrics lm = mFont.getLineMetrics("Adgj", mFontRenderContext);
 		int lineHeight = (int)lm.getHeight() + mPadding.top + mPadding.bottom;
+
+		if (boxH < lineHeight)
+		{
+			boxH = lineHeight;
+		}
+
 		int lineHeightExtra = lineHeight + mLineSpacing + extraLineHeight;
 		int boxHeightExtra = boxH + mLineSpacing + extraLineHeight;
-
+		
 		int lineY = boxY;
 		int lineCount = Math.min(Math.min(mTextLines.size(), mMaxLineCount > 0 ? mMaxLineCount : Integer.MAX_VALUE), boxHeightExtra / lineHeightExtra);
-
+		
 		switch (mAnchor)
 		{
 			case SOUTH_EAST:
@@ -685,9 +695,10 @@ public class TextBox implements Cloneable
 				{
 					int w = getStringLength(str, mFont);
 					String tmp;
+
 					if (w > boxW)
 					{
-						int offset = findStringLimit(str, boxW);
+						int offset = Math.max(findStringLimit(str, boxW), 1);
 						int temp = offset;
 
 						outer: for (; temp > 1; temp--)
@@ -773,12 +784,11 @@ public class TextBox implements Cloneable
 		{
 			aGraphics.setColor(mHighlight);
 			aGraphics.fillRect(aOffsetX, aOffsetY, aWidth, aHeight);
+			aGraphics.setColor(mForeground);
 		}
 
 		int adjust = (int)(aLineMetrics.getHeight() - aLineMetrics.getDescent());
 
-		aGraphics.setColor(mForeground);
-		aGraphics.setFont(mFont);
 		aGraphics.drawString(aText, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
 	}
 
