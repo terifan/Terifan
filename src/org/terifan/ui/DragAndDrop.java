@@ -21,6 +21,7 @@ import javax.swing.JTree;
 import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import org.terifan.util.log.Log;
 
@@ -68,9 +69,18 @@ public abstract class DragAndDrop
 
 	public DragAndDrop(JComponent aComponent)
 	{
+		this(aComponent, true);
+	}
+	
+	
+	public DragAndDrop(JComponent aComponent, boolean aCanDrag)
+	{
 		mComponent = aComponent;
 
-		DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(mComponent, DnDConstants.ACTION_COPY_OR_MOVE, new MyDragGestureListener());
+		if (aCanDrag)
+		{
+			DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(mComponent, DnDConstants.ACTION_COPY_OR_MOVE, new MyDragGestureListener());
+		}
 
 		mComponent.setTransferHandler(new MyTransferHandler());
 	}
@@ -272,7 +282,11 @@ public abstract class DragAndDrop
 
 		public <E> E getTransferData(Class<E> aType)
 		{
-			return (E)mTransferData;
+			if (aType.isAssignableFrom(mTransferData.getClass()))
+			{
+				return (E)mTransferData;
+			}
+			return null;
 		}
 
 
@@ -307,6 +321,7 @@ public abstract class DragAndDrop
 					TreePath path = tree.getClosestPathForLocation(aDropEvent.getDropLocation().x, aDropEvent.getDropLocation().y);
 					DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode)path.getLastPathComponent();
 					lastPathComponent.add(new DefaultMutableTreeNode(aDropEvent.getTransferData()));
+					((DefaultTreeModel)tree.getModel()).reload();
 					tree.expandPath(path);
 				}
 
