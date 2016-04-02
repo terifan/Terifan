@@ -73,6 +73,7 @@ public class ImagePane extends JPanel
 	private boolean mMouseButtonPressed;
 	private double mScaledScale;
 	private ImagePaneResampler mImageFilter;
+	private Overlay mOverlay;
 
 	private BufferedImage mBackgroundImage;
 	private BufferedImage mPlaceholder;
@@ -157,6 +158,18 @@ public class ImagePane extends JPanel
 	}
 
 
+	public Overlay getOverlay()
+	{
+		return mOverlay;
+	}
+
+
+	public void setOverlay(Overlay aOverlay)
+	{
+		mOverlay = aOverlay;
+	}
+
+
 	@Override
 	public Dimension getPreferredSize()
 	{
@@ -230,13 +243,13 @@ public class ImagePane extends JPanel
 			int y = aInputB[i];
 			int r0 = 0xff & (x >> 16);
 			int g0 = 0xff & (x >> 8);
-			int b0 = 0xff & (x);
+			int b0 = 0xff & x;
 			int r1 = 0xff & (y >> 16);
 			int g1 = 0xff & (y >> 8);
-			int b1 = 0xff & (y);
-			int r = (aAlpha * r1 + invAlpha * r0 + 1) >> 8;
-			int g = (aAlpha * g1 + invAlpha * g0 + 1) >> 8;
-			int b = (aAlpha * b1 + invAlpha * b0 + 1) >> 8;
+			int b1 = 0xff & y;
+			int r = (aAlpha * r1 + invAlpha * r0) >> 8;
+			int g = (aAlpha * g1 + invAlpha * g0) >> 8;
+			int b = (aAlpha * b1 + invAlpha * b0) >> 8;
 			aOutput[i] = (r << 16) + (g << 8) + b;
 		}
 	}
@@ -343,16 +356,19 @@ public class ImagePane extends JPanel
 			mImageFilter.abort();
 		}
 
+		int h = getHeight();
+		int w = getWidth();
+
 		if (mDoScaleTouchInside)
 		{
-			setScale(Math.min(getWidth() / (double) mImageWidth, getHeight() / (double) mImageHeight));
+			setScale(Math.min(w / (double)mImageWidth, h / (double)mImageHeight));
 			mDoScaleTouchInside = false;
 			mOffsetX = 0;
 			mOffsetY = 0;
 		}
 		if (mDoScaleTouchOutside)
 		{
-			setScale(Math.max(getWidth() / (double) mImageWidth, getHeight() / (double) mImageHeight));
+			setScale(Math.max(w / (double)mImageWidth, h / (double)mImageHeight));
 			mDoScaleTouchOutside = false;
 
 			if (mDoCenterOnMouse)
@@ -370,34 +386,41 @@ public class ImagePane extends JPanel
 
 		if (mBackgroundImage != null)
 		{
-			aGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			aGraphics.drawImage(mBackgroundImage, 0, 0, getWidth(), getHeight(), this);
+//			aGraphics.drawImage(mBackgroundImage, 0, 0, getWidth(), getHeight(), this);
+
+			for (int y = 0; y < h; y+=mBackgroundImage.getHeight())
+			{
+				for (int x = 0; x < w; x+=mBackgroundImage.getWidth())
+				{
+					aGraphics.drawImage(mBackgroundImage, x, y, this);
+				}
+			}
 		}
 		else
 		{
 			aGraphics.setColor(getBackground());
-			aGraphics.fillRect(0, 0, getWidth(), getHeight());
+			aGraphics.fillRect(0, 0, w, h);
 		}
 
 		aGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
 		if (mImage != null)
 		{
-			int w = (int) (mScaleValue * mImageWidth);
-			int h = (int) (mScaleValue * mImageHeight);
+			int iw = (int)(mScaleValue * mImageWidth);
+			int ih = (int)(mScaleValue * mImageHeight);
 
-			int x = (getWidth() - w) / 2 + mOffsetX;
-			int y = (getHeight() - h) / 2 + mOffsetY;
+			int x = (w - iw) / 2 + mOffsetX;
+			int y = (h - ih) / 2 + mOffsetY;
 
-			Rectangle2D screenRect = new Rectangle(x, y, w, h).createIntersection(new Rectangle(0, 0, getWidth(), getHeight()));
+			Rectangle2D screenRect = new Rectangle(x, y, iw, ih).createIntersection(new Rectangle(0, 0, w, h));
 
 			int dx = Math.max(0, x);
 			int dy = Math.max(0, y);
-			int dw = Math.min(getWidth(), w);
-			int dh = Math.min(getHeight(), h);
+			int dw = Math.min(w, iw);
+			int dh = Math.min(h, ih);
 
-			int sx = x < 0 ? (int) (-x / mScaleValue) : 0;
-			int sy = y < 0 ? (int) (-y / mScaleValue) : 0;
+			int sx = x < 0 ? (int)(-x / mScaleValue) : 0;
+			int sy = y < 0 ? (int)(-y / mScaleValue) : 0;
 			int sw = (int)Math.round(screenRect.getWidth() / mScaleValue);
 			int sh = (int)Math.round(screenRect.getHeight() / mScaleValue);
 
@@ -412,7 +435,7 @@ public class ImagePane extends JPanel
 
 			if (mScaledImage == null && aDirectFilterImage && sc < 1)
 			{
-				new ImagePaneResampler(mImage, sx, sy, sw, sh, dw, dh, (e) ->
+				new ImagePaneResampler(mImage, sx, sy, sw, sh, dw, dh, e ->
 				{
 					mScaledImage = e;
 					mScaledScale = sc;
@@ -434,7 +457,7 @@ public class ImagePane extends JPanel
 			{
 				if (sc < 1)
 				{
-					mImageFilter = new ImagePaneResampler(mImage, sx, sy, sw, sh, dw, dh, (e) ->
+					mImageFilter = new ImagePaneResampler(mImage, sx, sy, sw, sh, dw, dh, e ->
 					{
 						mScaledImage = e;
 						mScaledScale = sc;
@@ -454,6 +477,11 @@ public class ImagePane extends JPanel
 		{
 			aGraphics.drawImage(mPlaceholder, mPlaceholderX, mPlaceholderY, mPlaceholderWidth, mPlaceholderHeight, this);
 		}
+		
+		if (mOverlay != null)
+		{
+			mOverlay.drawOverlay(aGraphics);
+		}
 	}
 
 
@@ -465,8 +493,8 @@ public class ImagePane extends JPanel
 		{
 			int canvasWidth = getWidth();
 			int canvasHeight = getHeight();
-			int imageWidth = (int) (mImageWidth * mScaleValue);
-			int imageHeight = (int) (mImageHeight * mScaleValue);
+			int imageWidth = (int)(mImageWidth * mScaleValue);
+			int imageHeight = (int)(mImageHeight * mScaleValue);
 
 			if (canvasWidth >= imageWidth)
 			{
@@ -680,8 +708,8 @@ public class ImagePane extends JPanel
 		double mx = Math.min(Math.max(x, px), px + pw);
 		double my = Math.min(Math.max(y, py), py + ph);
 
-		int dx = (int) (mx - ImagePane.this.getWidth() / 2);
-		int dy = (int) (my - ImagePane.this.getHeight() / 2);
+		int dx = (int)(mx - ImagePane.this.getWidth() / 2);
+		int dy = (int)(my - ImagePane.this.getHeight() / 2);
 
 		mOffsetX -= dx;
 		mOffsetY -= dy;
@@ -707,5 +735,12 @@ public class ImagePane extends JPanel
 		mOffsetY += dy;
 
 		setScale(scale);
+	}
+	
+	
+	@FunctionalInterface
+	public interface Overlay
+	{
+		void drawOverlay(Graphics2D aGraphics);
 	}
 }
