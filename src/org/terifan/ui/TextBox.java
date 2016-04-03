@@ -44,6 +44,8 @@ public class TextBox implements Cloneable
 	private int mMaxLineCount;
 	private char[] mBreakChars;
 	private FontRenderContext mFontRenderContext;
+	private int mMaxWidth;
+	private int mMinWidth;
 
 	private boolean mDirty;
 	private ArrayList<String> mTextLines;
@@ -418,6 +420,14 @@ public class TextBox implements Cloneable
 		{
 			mBounds.setBounds(0, 0, Short.MAX_VALUE, Short.MAX_VALUE);
 		}
+		if (mMaxWidth > 0)
+		{
+			mBounds.width = Math.min(mBounds.width, mMaxWidth);
+		}
+		if (mMinWidth > 0)
+		{
+			mBounds.width = Math.max(mBounds.width, mMinWidth);
+		}
 
 		if (mDirty)
 		{
@@ -487,6 +497,8 @@ public class TextBox implements Cloneable
 			textBox.mText = this.mText;
 			textBox.mTextBorder = this.mTextBorder;
 			textBox.mTextLines = this.mTextLines == null ? null : new ArrayList<>(this.mTextLines);
+			textBox.mMaxWidth = this.mMaxWidth;
+			textBox.mMinWidth = this.mMinWidth;
 
 			return textBox;
 		}
@@ -554,7 +566,7 @@ public class TextBox implements Cloneable
 				mTextBorder.paintBorder(null, aGraphics, r.x - ti.left, r.y - ti.top, r.width + ti.left + ti.right, r.height + ti.top + ti.bottom);
 			}
 
-			drawSingleLine(aGraphics, mTextLines.get(i), lm, r.x, r.y, r.width, r.height);
+			drawSingleLine(aGraphics, mTextLines.get(i), lm, boxX + r.x, boxY + r.y, r.width, r.height);
 		}
 
 		aGraphics.translate(-aTranslateX, -aTranslateY);
@@ -790,6 +802,32 @@ public class TextBox implements Cloneable
 		int adjust = (int)(aLineMetrics.getHeight() - aLineMetrics.getDescent());
 
 		aGraphics.drawString(aText, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
+	}
+
+
+	public int getMinWidth()
+	{
+		return mMinWidth;
+	}
+
+
+	public TextBox setMinWidth(int aMinWidth)
+	{
+		mMinWidth = aMinWidth;
+		return this;
+	}
+
+
+	public int getMaxWidth()
+	{
+		return mMaxWidth;
+	}
+
+
+	public TextBox setMaxWidth(int aMaxWidth)
+	{
+		mMaxWidth = aMaxWidth;
+		return this;
 	}
 
 

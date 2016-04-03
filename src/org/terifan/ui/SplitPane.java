@@ -14,7 +14,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
-import javax.swing.Icon;
+import java.awt.image.BufferedImage;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.UIManager;
@@ -22,24 +22,25 @@ import javax.swing.UIManager;
 
 public class SplitPane extends JComponent
 {
-	public final static int VERTICAL_SPLIT = 1;
-	public final static int HORIZONTAL_SPLIT = 2;
-
-	public final static int NONE = 0;
-	public final static int LEFT = 1;
-	public final static int RIGHT = 2;
+	public enum FixedComponent
+	{
+		NONE,
+		LEFT,
+		RIGHT
+	}
 
 	private int mDividerPosition;
-	private int mOrientation;
+	private Orientation mOrientation;
 	private double mResizeWeight;
 	private int mDividerSize;
-	private Icon mDividerImage;
+	private BufferedImage mDividerImage;
 	private Color mDividerBackground;
 	private int mLastLayoutSize;
-	private int mFixedComponent;
+	private FixedComponent mFixedComponent;
 	private boolean mResizing;
 	private Point mClickPosition;
 	private boolean mDividerBorderEnabled;
+	private ImageScaleFunction mDividerFunction;
 
 
 	/**
@@ -51,7 +52,7 @@ public class SplitPane extends JComponent
 	 * @param aLeftComponent
 	 * @param aRightComponent
 	 */
-	public SplitPane(int aOrientation, double aResizeWeight, int aFixedComponent, Component aLeftComponent, Component aRightComponent)
+	public SplitPane(Orientation aOrientation, double aResizeWeight, FixedComponent aFixedComponent, Component aLeftComponent, Component aRightComponent)
 	{
 		Class clazz = getClass();
 		while (!clazz.getName().equals("org.terifan.ui.SplitPane"))
@@ -65,6 +66,7 @@ public class SplitPane extends JComponent
 		mOrientation = aOrientation;
 		mDividerSize = 7;
 		mDividerBackground = UIManager.getColor("Button.background");
+		mDividerFunction = ImageScaleFunction.RESIZE;
 
 		Component divider = createDivider();
 		divider.addMouseListener(mMouseListener);
@@ -103,7 +105,7 @@ public class SplitPane extends JComponent
 	}
 
 
-	public SplitPane setDividerImage(Icon aDividerImage)
+	public SplitPane setDividerImage(BufferedImage aDividerImage)
 	{
 		mDividerImage = aDividerImage;
 
@@ -111,7 +113,7 @@ public class SplitPane extends JComponent
 	}
 
 
-	public Icon getDividerImage()
+	public BufferedImage getDividerImage()
 	{
 		return mDividerImage;
 	}
@@ -122,6 +124,18 @@ public class SplitPane extends JComponent
 		mDividerSize = aDividerSize;
 
 		return this;
+	}
+
+
+	public ImageScaleFunction getDividerFunction()
+	{
+		return mDividerFunction;
+	}
+
+
+	public void setDividerFunction(ImageScaleFunction aDividerFunction)
+	{
+		mDividerFunction = aDividerFunction;
 	}
 
 
@@ -145,9 +159,9 @@ public class SplitPane extends JComponent
 	}
 
 
-	public SplitPane setOrientation(int aOrientation)
+	public SplitPane setOrientation(Orientation aOrientation)
 	{
-		if (aOrientation != VERTICAL_SPLIT && aOrientation != HORIZONTAL_SPLIT)
+		if (aOrientation != Orientation.VERTICAL && aOrientation != Orientation.HORIZONTAL)
 		{
 			throw new IllegalArgumentException("aOrientation has an illegal value: " + aOrientation);
 		}
@@ -158,7 +172,7 @@ public class SplitPane extends JComponent
 	}
 
 
-	public int getOrientation()
+	public Orientation getOrientation()
 	{
 		return mOrientation;
 	}
@@ -244,7 +258,7 @@ public class SplitPane extends JComponent
 
 				if (mDividerBorderEnabled)
 				{
-					if (mOrientation == VERTICAL_SPLIT)
+					if (mOrientation == Orientation.VERTICAL)
 					{
 						g.setColor(mDividerBackground.brighter());
 						g.drawLine(0, 0, width, 0);
@@ -262,7 +276,43 @@ public class SplitPane extends JComponent
 
 				if (mDividerImage != null)
 				{
-					mDividerImage.paintIcon(this, g, (width - mDividerImage.getIconWidth()) / 2, (height - mDividerImage.getIconHeight()) / 2);
+					int dw = mDividerImage.getWidth();
+					int dh = mDividerImage.getHeight();
+					int cx = (width - dw) / 2;
+					int cy = (height - dh) / 2;
+
+					switch (mDividerFunction)
+					{
+						case RESIZE:
+							if (mOrientation == Orientation.VERTICAL)
+							{
+								g.drawImage(mDividerImage, 0, cy, width, dh, null);
+							}
+							else
+							{
+								g.drawImage(mDividerImage, cx, 0, dw, height, null);
+							}
+							break;
+						case CENTER:
+							g.drawImage(mDividerImage, cx, cy, null);
+							break;
+						case REPEAT:
+							if (mOrientation == Orientation.VERTICAL)
+							{
+								for (int x = 0; x < width; x+=dw)
+								{
+									g.drawImage(mDividerImage, x, cy, dw, dh, null);
+								}
+							}
+							else
+							{
+								for (int y = 0; y < height; y+=dh)
+								{
+									g.drawImage(mDividerImage, cx, y, dw, dh, null);
+								}
+							}
+							break;
+					}
 				}
 			}
 		};
@@ -299,7 +349,7 @@ public class SplitPane extends JComponent
 		@Override
 		public void mouseEntered(MouseEvent aEvent)
 		{
-			if (mOrientation == VERTICAL_SPLIT)
+			if (mOrientation == Orientation.VERTICAL)
 			{
 				setCursor(Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR));
 			}
@@ -318,13 +368,13 @@ public class SplitPane extends JComponent
 		{
 			if (mResizing)
 			{
-				if (mOrientation == HORIZONTAL_SPLIT)
+				if (mOrientation == Orientation.VERTICAL)
 				{
-					mDividerPosition += aEvent.getX() - mClickPosition.x;
+					mDividerPosition += aEvent.getY() - mClickPosition.y;
 				}
 				else
 				{
-					mDividerPosition += aEvent.getY() - mClickPosition.y;
+					mDividerPosition += aEvent.getX() - mClickPosition.x;
 				}
 
 				revalidate();
@@ -354,15 +404,15 @@ public class SplitPane extends JComponent
 			Dimension d1 = getLeftComponent().getPreferredSize();
 			Dimension d2 = getRightComponent().getPreferredSize();
 
-			if (mOrientation == HORIZONTAL_SPLIT)
-			{
-				return new Dimension(insets.left + insets.right + d1.width + mDividerSize + d2.width,
-					insets.top + insets.bottom + Math.max(d1.height, d2.height));
-			}
-			else
+			if (mOrientation == Orientation.VERTICAL)
 			{
 				return new Dimension(insets.left + insets.right + Math.max(d1.width, d2.width),
 					insets.top + insets.bottom + d1.height + mDividerSize + d2.height);
+			}
+			else
+			{
+				return new Dimension(insets.left + insets.right + d1.width + mDividerSize + d2.width,
+					insets.top + insets.bottom + Math.max(d1.height, d2.height));
 			}
 		}
 
@@ -374,15 +424,15 @@ public class SplitPane extends JComponent
 			Dimension d1 = getLeftComponent().getMinimumSize();
 			Dimension d2 = getRightComponent().getMinimumSize();
 
-			if (mOrientation == HORIZONTAL_SPLIT)
-			{
-				return new Dimension(insets.left + insets.right + d1.width + mDividerSize + d2.width,
-					insets.top + insets.bottom + Math.max(d1.height, d2.height));
-			}
-			else
+			if (mOrientation == Orientation.VERTICAL)
 			{
 				return new Dimension(insets.left + insets.right + Math.max(d1.width, d2.width),
 					insets.top + insets.bottom + d1.height + mDividerSize + d2.height);
+			}
+			else
+			{
+				return new Dimension(insets.left + insets.right + d1.width + mDividerSize + d2.width,
+					insets.top + insets.bottom + Math.max(d1.height, d2.height));
 			}
 		}
 
@@ -406,35 +456,35 @@ public class SplitPane extends JComponent
 
 			validateDivider(w, h);
 
-			if (mOrientation == HORIZONTAL_SPLIT)
-			{
-				c1.setBounds(insets.left, insets.top, mDividerPosition, h);
-				c3.setBounds(insets.left + mDividerPosition, insets.top, mDividerSize, h);
-				c2.setBounds(insets.left + mDividerPosition + mDividerSize, insets.top, w - mDividerPosition - mDividerSize, h);
-			}
-			else
+			if (mOrientation == Orientation.VERTICAL)
 			{
 				c1.setBounds(insets.left, insets.top, w, mDividerPosition);
 				c3.setBounds(insets.left, insets.top + mDividerPosition, w, mDividerSize);
 				c2.setBounds(insets.left, insets.top + mDividerPosition + mDividerSize, w, h - mDividerPosition - mDividerSize);
+			}
+			else
+			{
+				c1.setBounds(insets.left, insets.top, mDividerPosition, h);
+				c3.setBounds(insets.left + mDividerPosition, insets.top, mDividerSize, h);
+				c2.setBounds(insets.left + mDividerPosition + mDividerSize, insets.top, w - mDividerPosition - mDividerSize, h);
 			}
 		}
 
 
 		private void validateDivider(int w, int h)
 		{
-			int newSize = mOrientation == HORIZONTAL_SPLIT ? w : h;
+			int newSize = mOrientation == Orientation.VERTICAL ? h : w;
 			int newPosition = mDividerPosition;
 
 			if (newPosition <= -1)
 			{
 				newPosition = (int)(newSize * mResizeWeight);
 			}
-			else if (mFixedComponent == RIGHT)
+			else if (mFixedComponent == FixedComponent.RIGHT)
 			{
 				newPosition += newSize - mLastLayoutSize;
 			}
-			else if (mFixedComponent == NONE)
+			else if (mFixedComponent == FixedComponent.NONE)
 			{
 				newPosition += (int)((newSize-mLastLayoutSize) * mResizeWeight);
 			}
@@ -443,15 +493,15 @@ public class SplitPane extends JComponent
 			Component c2 = getRightComponent();
 
 			int min, max;
-			if (mOrientation == HORIZONTAL_SPLIT)
-			{
-				min = c1.getMinimumSize().width;
-				max = newSize - c2.getMinimumSize().width;
-			}
-			else
+			if (mOrientation == Orientation.VERTICAL)
 			{
 				min = c1.getMinimumSize().height;
 				max = newSize - c2.getMinimumSize().height;
+			}
+			else
+			{
+				min = c1.getMinimumSize().width;
+				max = newSize - c2.getMinimumSize().width;
 			}
 
 			mLastLayoutSize = newSize;
