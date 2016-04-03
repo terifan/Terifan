@@ -321,7 +321,6 @@ public abstract class DragAndDrop
 					TreePath path = tree.getClosestPathForLocation(aDropEvent.getDropLocation().x, aDropEvent.getDropLocation().y);
 					DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode)path.getLastPathComponent();
 					lastPathComponent.add(new DefaultMutableTreeNode(aDropEvent.getTransferData()));
-					((DefaultTreeModel)tree.getModel()).reload();
 					tree.expandPath(path);
 				}
 
