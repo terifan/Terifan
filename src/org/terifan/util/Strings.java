@@ -1,10 +1,7 @@
 package org.terifan.util;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
-import static jdk.nashorn.internal.objects.NativeArray.map;
-import org.terifan.util.log.Log;
 
 
 public class Strings
@@ -328,7 +325,7 @@ public class Strings
 
 
 	/**
-	 * Removes all non-Java identifier characters from the string.
+	 * Removes all characters not being either letter, digits or underscore from the string.
 	 */
 	public static String sanitizeString(String aString)
 	{
@@ -337,7 +334,7 @@ public class Strings
 		for (int i = 0; i < aString.length(); i++)
 		{
 			char c = aString.charAt(i);
-			if (Character.isJavaIdentifierPart(c))
+			if (Character.isLetterOrDigit(c) || c == '_')
 			{
 				sb.append(c);
 			}
