@@ -282,13 +282,13 @@ public class Strings
 	}
 
 
-	public static String replaceParams(String aText, ParamProvider aParamProvider)
+	public static String replaceParams(String aText, StringLookup aParamProvider)
 	{
 		return replaceParams("${", "}", aText, aParamProvider);
 	}
 
 
-	public static String replaceParams(String aKeywordPrefix, String aKeywordSuffix, String aText, ParamProvider aParamProvider)
+	public static String replaceParams(String aKeywordPrefix, String aKeywordSuffix, String aText, StringLookup aParamProvider)
 	{
 		StringBuilder text = new StringBuilder(aText.length());
 		int prefixLength = aKeywordPrefix.length();
@@ -320,29 +320,29 @@ public class Strings
 	}
 
 
-	public interface ParamProvider
+	@FunctionalInterface
+	public interface StringLookup
 	{
 		String get(String aName);
 	}
 
 
-//	public static void main(String ... args)
-//	{
-//		try
-//		{
-//			Map<String, Object> map = new HashMap<>();
-//			map.put("a", "A");
-//			map.put("b", "B");
-//
-//			Log.out.println(replaceParams("${a} ${b}", map));
-//
-//			Log.out.println(replaceParams("${a} ${b}", e->e.toUpperCase()));
-//
-//			Log.out.println(replaceParams("****", "#", "****a# ****b#", e->e.toUpperCase()));
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
+	/**
+	 * Removes all non-Java identifier characters from the string.
+	 */
+	public static String sanitizeString(String aString)
+	{
+		StringBuilder sb = new StringBuilder(aString.length());
+
+		for (int i = 0; i < aString.length(); i++)
+		{
+			char c = aString.charAt(i);
+			if (Character.isJavaIdentifierPart(c))
+			{
+				sb.append(c);
+			}
+		}
+
+		return sb.toString();
+	}
 }
