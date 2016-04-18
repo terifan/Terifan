@@ -28,7 +28,7 @@ public final class Streams
 	/**
 	 * Read all bytes from the input.
 	 */
-	public static byte[] fetch(Object aInput) throws IOException
+	public static byte[] readAll(Object aInput) throws IOException
 	{
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		transfer(aInput, output);

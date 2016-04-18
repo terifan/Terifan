@@ -16,7 +16,7 @@ public class JavaDocBuilder extends AbstractBuilder
 {
 	public void generate(PrintStream out, AbstractRemoteService ... aServices) throws IOException
 	{
-		XmlDocument template = new XmlDocument(new ByteArrayInputStream(Streams.fetch(JavaDocBuilder.class.getResourceAsStream("JavaDocTemplate.xsl"))));
+		XmlDocument template = new XmlDocument(new ByteArrayInputStream(Streams.readAll(JavaDocBuilder.class.getResourceAsStream("JavaDocTemplate.xsl"))));
 
 		XmlDocument doc = new XmlDocument();
 		XmlElement root = doc.appendElement("doc");

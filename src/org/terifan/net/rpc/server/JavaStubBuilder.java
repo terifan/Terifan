@@ -16,7 +16,7 @@ public class JavaStubBuilder extends AbstractBuilder
 {
 	public void generate(PrintStream out, AbstractRemoteService ... aServices) throws IOException
 	{
-		XmlDocument template = new XmlDocument(new ByteArrayInputStream(Streams.fetch(JavaStubBuilder.class.getResourceAsStream("JavaStubTemplate.xsl"))));
+		XmlDocument template = new XmlDocument(new ByteArrayInputStream(Streams.readAll(JavaStubBuilder.class.getResourceAsStream("JavaStubTemplate.xsl"))));
 
 		XmlDocument doc = new XmlDocument();
 		XmlElement root = doc.appendElement("doc");

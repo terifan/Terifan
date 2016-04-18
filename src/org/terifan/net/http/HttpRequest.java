@@ -232,7 +232,7 @@ public abstract class HttpRequest<E extends HttpRequest>
 		}
 		else
 		{
-			response.setContent(Streams.fetch(in));
+			response.setContent(Streams.readAll(in));
 		}
 
 		return response;
