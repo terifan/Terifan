@@ -542,7 +542,7 @@ public class TextBox implements Cloneable
 			boxX += bi.left;
 			boxY += bi.top;
 			boxW -= bi.left + bi.right;
-			boxH -= bi.left + bi.bottom;
+			boxH -= bi.top + bi.bottom;
 		}
 
 		if (mBackground != null)
@@ -566,7 +566,7 @@ public class TextBox implements Cloneable
 				mTextBorder.paintBorder(null, aGraphics, r.x - ti.left, r.y - ti.top, r.width + ti.left + ti.right, r.height + ti.top + ti.bottom);
 			}
 
-			drawSingleLine(aGraphics, mTextLines.get(i), lm, boxX + r.x, boxY + r.y, r.width, r.height);
+			drawSingleLine(aGraphics, mTextLines.get(i), lm, r.x, r.y, r.width, r.height);
 		}
 
 		aGraphics.translate(-aTranslateX, -aTranslateY);
