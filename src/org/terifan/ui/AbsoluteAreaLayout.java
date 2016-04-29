@@ -92,13 +92,16 @@ public class AbsoluteAreaLayout implements LayoutManager2
 
 				if (component.isVisible())
 				{
+					Rectangle tmp = component.getBounds();
+					tmp.width = component.getMinimumSize().width;
+					tmp.height = component.getMinimumSize().height;
 					if (bounds == null)
 					{
-						bounds = new Rectangle(component.getBounds());
+						bounds = new Rectangle(tmp);
 					}
 					else
 					{
-						bounds.add(component.getBounds());
+						bounds.add(tmp);
 					}
 				}
 			}
@@ -127,21 +130,19 @@ public class AbsoluteAreaLayout implements LayoutManager2
 	{
 		synchronized (aParent.getTreeLock())
 		{
-			Insets border;
+			int x = 0;
+			int y = 0;
+			int w = aParent.getWidth();
+			int h = aParent.getHeight();
 
-			if (aParent instanceof JComponent)
+			if (aParent instanceof JComponent && ((JComponent)aParent).getBorder() != null)
 			{
-				border = ((JComponent)aParent).getBorder().getBorderInsets((JComponent)aParent);
+				Insets borderInsets = ((JComponent)aParent).getBorder().getBorderInsets((JComponent)aParent);
+				x += borderInsets.left;
+				y += borderInsets.top;
+				w -= borderInsets.left + borderInsets.right;
+				h -= borderInsets.top + borderInsets.bottom;
 			}
-			else
-			{
-				border = new Insets(0,0,0,0);
-			}
-
-			int x = border.left;
-			int y = border.top;
-			int w = aParent.getWidth() - border.left - border.right;
-			int h = aParent.getHeight() - border.top - border.bottom;
 
 			if (w <= 0)
 			{
