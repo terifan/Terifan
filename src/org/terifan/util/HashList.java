@@ -159,4 +159,17 @@ public class HashList<K,V> extends HashMap<K,ArrayList<V>> implements Iterable<A
 	{
 		return values().iterator();
 	}
+
+
+	public int sizeTotal()
+	{
+		int size = 0;
+
+		for (K k : keySet())
+		{
+			size += size(k);
+		}
+	
+		return size;
+	}
 }
