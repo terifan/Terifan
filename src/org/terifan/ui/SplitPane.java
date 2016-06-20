@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.UIManager;
+import org.terifan.util.log.Log;
 
 
 public class SplitPane extends JComponent
@@ -40,7 +41,7 @@ public class SplitPane extends JComponent
 	private boolean mResizing;
 	private Point mClickPosition;
 	private boolean mDividerBorderEnabled;
-	private ImageScaleFunction mDividerFunction;
+	private ImageScaleFunction mDividerScaleFunction;
 
 
 	/**
@@ -66,7 +67,7 @@ public class SplitPane extends JComponent
 		mOrientation = aOrientation;
 		mDividerSize = 7;
 		mDividerBackground = UIManager.getColor("Button.background");
-		mDividerFunction = ImageScaleFunction.RESIZE;
+		mDividerScaleFunction = ImageScaleFunction.RESIZE;
 
 		Component divider = createDivider();
 		divider.addMouseListener(mMouseListener);
@@ -127,15 +128,15 @@ public class SplitPane extends JComponent
 	}
 
 
-	public ImageScaleFunction getDividerFunction()
+	public ImageScaleFunction getDividerScaleFunction()
 	{
-		return mDividerFunction;
+		return mDividerScaleFunction;
 	}
 
 
-	public void setDividerFunction(ImageScaleFunction aDividerFunction)
+	public void setDividerScaleFunction(ImageScaleFunction aDividerScaleFunction)
 	{
-		mDividerFunction = aDividerFunction;
+		mDividerScaleFunction = aDividerScaleFunction;
 	}
 
 
@@ -281,7 +282,7 @@ public class SplitPane extends JComponent
 					int cx = (width - dw) / 2;
 					int cy = (height - dh) / 2;
 
-					switch (mDividerFunction)
+					switch (mDividerScaleFunction)
 					{
 						case RESIZE:
 							if (mOrientation == Orientation.VERTICAL)

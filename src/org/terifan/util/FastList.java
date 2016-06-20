@@ -138,7 +138,7 @@ public class FastList<T> implements Iterable<T>
 
 	protected void resize(int aSize)
 	{
-		if (aSize > mElementData.length)
+		if (aSize != mElementData.length)
 		{
 			mElementData = Arrays.copyOfRange(mElementData, 0, aSize);
 		}
