@@ -23,7 +23,7 @@ public class SparseDoubleArray implements Iterable<Integer>
 
 	public double get(int aIndex, double aDefaultValue)
 	{
-		return mValues.get(aIndex);
+		return mValues.getOrDefault(aIndex, aDefaultValue);
 	}
 	
 	
