@@ -23,13 +23,13 @@ public class SparseDoubleArray implements Iterable<Integer>
 
 	public double get(int aIndex, double aDefaultValue)
 	{
-		return mValues.get(aIndex);
+		return mValues.getOrDefault(aIndex, aDefaultValue);
 	}
 	
 	
 	public int size()
 	{
-		return mValues.lastKey();
+		return mValues.isEmpty() ? 0 : mValues.lastKey();
 	}
 	
 	
@@ -48,5 +48,37 @@ public class SparseDoubleArray implements Iterable<Integer>
 	public Iterator<Integer> iterator()
 	{
 		return mValues.keySet().iterator();
+	}
+
+
+	public double maxValue()
+	{
+		double max = -Double.MAX_VALUE;
+		for (Double d : mValues.values())
+		{
+			if (d > max)
+			{
+				max = d;
+			}
+		}
+		return max;
+	}
+
+
+	public int minIndex()
+	{
+		return mValues.firstKey();
+	}
+
+
+	public int maxIndex()
+	{
+		return mValues.lastKey();
+	}
+	
+	
+	public boolean contains(Integer aIndex)
+	{
+		return mValues.containsKey(aIndex);
 	}
 }
