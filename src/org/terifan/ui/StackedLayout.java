@@ -11,17 +11,15 @@ import javax.swing.JComponent;
 import org.terifan.util.log.Log;
 
 
-public class AbsoluteAreaLayout implements LayoutManager2
+public class StackedLayout implements LayoutManager2
 {
-	private HashMap<Component,Rectangle> mConstraints;
+	private HashMap<Component,LayoutParams> mConstraints;
 	private int mVerGap;
-	private int mHorGap;
 
 
-	public AbsoluteAreaLayout(int aHorGap, int aVerGap)
+	public StackedLayout(int aVerGap)
 	{
 		mConstraints = new HashMap<>();
-		mHorGap = aHorGap;
 		mVerGap = aVerGap;
 	}
 
@@ -29,7 +27,7 @@ public class AbsoluteAreaLayout implements LayoutManager2
 	@Override
 	public void addLayoutComponent(Component aComp, Object aConstraints)
 	{
-		mConstraints.put(aComp, (Rectangle)aConstraints);
+		mConstraints.put(aComp, (LayoutParams)aConstraints);
 	}
 
 
@@ -85,16 +83,21 @@ public class AbsoluteAreaLayout implements LayoutManager2
 			}
 
 			Rectangle bounds = null;
+			int height = 0;
 
-			for (int i = 0; i < aParent.getComponentCount(); i++) // ??? i = 1
+			for (int i = 0; i < aParent.getComponentCount(); i++)
 			{
-				Component component = aParent.getComponent(i);
+				Component comp = aParent.getComponent(i);
 
-				if (component.isVisible())
+				if (comp.isVisible())
 				{
-					Rectangle tmp = component.getBounds();
-					tmp.width = component.getPreferredSize().width; // ??? minimum
-					tmp.height = component.getPreferredSize().height;
+					LayoutParams params = mConstraints.get(comp);
+					Rectangle tmp = comp.getBounds();
+					tmp.x = 0;
+					tmp.y = height;
+					tmp.width = comp.getPreferredSize().width;
+					tmp.height = Math.max(comp.getPreferredSize().height, params.height);
+					height += tmp.height;
 					if (bounds == null)
 					{
 						bounds = new Rectangle(tmp);
@@ -144,12 +147,12 @@ public class AbsoluteAreaLayout implements LayoutManager2
 				h -= borderInsets.top + borderInsets.bottom;
 			}
 
+			Dimension prefSize = guessPreferredSize(aParent);
 			if (w <= 0)
 			{
-				Dimension d = guessPreferredSize(aParent);
-				w = d.width;
-				h = d.height;
+				w = prefSize.width;
 			}
+			int extraHeight = Math.max(h - prefSize.height, 0);
 
 			for (int i = 0; i < aParent.getComponentCount(); i++)
 			{
@@ -157,27 +160,20 @@ public class AbsoluteAreaLayout implements LayoutManager2
 
 				if (comp.isVisible())
 				{
-					Rectangle rect = mConstraints.get(comp);
-					int ix = x + (int)(rect.x * w / 100.0);
-					int iy = y + (int)(rect.y * h / 100.0);
-					int iw = (int)(rect.width * w / 100.0);
-					int ih = (int)(rect.height * h / 100.0);
-					if (ix + iw < w)
-					{
-						iw -= mHorGap;
-					}
-					if (iy + ih < h)
-					{
-						ih -= mVerGap;
-					}
+					LayoutParams params = mConstraints.get(comp);
+					int ix = x;
+					int iy = y;
+					int iw = w;
+					int ih = (int)(Math.max(params.height, comp.getPreferredSize().height) + params.weight * extraHeight);
 					comp.setBounds(ix, iy, iw, ih);
+					y += ih + mVerGap;
 				}
 			}
 		}
 	}
 
 
-	public Rectangle getConstraints(Component aComponent)
+	public LayoutParams getConstraints(Component aComponent)
 	{
 		return mConstraints.get(aComponent);
 	}
@@ -194,29 +190,28 @@ public class AbsoluteAreaLayout implements LayoutManager2
 
 			if (comp.isVisible())
 			{
-				Rectangle rect = mConstraints.get(comp);
+				LayoutParams params = mConstraints.get(comp);
 
 				Dimension dim = comp.getPreferredSize();
 
-				if (rect.width >= 100)
-				{
-					w = (int)Math.max(w, mHorGap + dim.width);
-				}
-				else
-				{
-					w = (int)Math.max(w, mHorGap + dim.width / (1 - rect.width / 100.0));
-				}
-				if (rect.height >= 100)
-				{
-					h = (int)Math.max(h, mVerGap + dim.height);
-				}
-				else
-				{
-					h = (int)Math.max(h, mVerGap + dim.height / (1 - rect.height / 100.0));
-				}
+				w = Math.max(w, dim.width);
+				h += mVerGap + Math.max(dim.height, params.height);
 			}
 		}
 
-		return new Dimension(w, h);
+		return new Dimension(w, h == 0 ? 0 : h - mVerGap);
+	}
+
+
+	public static class LayoutParams
+	{
+		int height;
+		double weight;
+
+		public LayoutParams(int aHeight, double aWeight)
+		{
+			height = aHeight;
+			weight = aWeight;
+		}
 	}
 }
