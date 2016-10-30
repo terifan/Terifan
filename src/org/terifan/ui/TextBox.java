@@ -50,6 +50,7 @@ public class TextBox implements Cloneable
 	private boolean mDirty;
 	private ArrayList<String> mTextLines;
 	private ArrayList<Rectangle> mTextBounds;
+	private Color mShadowColor;
 
 
 	public TextBox()
@@ -517,6 +518,18 @@ public class TextBox implements Cloneable
 
 	public TextBox render(Graphics aGraphics, int aTranslateX, int aTranslateY)
 	{
+		boolean hasShadow = mShadowColor != null;
+
+		if (mShadowColor != null)
+		{
+			renderImpl(aGraphics, aTranslateX - 1, aTranslateY + 1, hasShadow, true);
+		}
+		return renderImpl(aGraphics, aTranslateX, aTranslateY, hasShadow, false);
+	}
+	
+	
+	protected TextBox renderImpl(Graphics aGraphics, int aTranslateX, int aTranslateY, boolean aHasShadow, boolean aShadow)
+	{
 		if (mDirty)
 		{
 			layout();
@@ -545,7 +558,7 @@ public class TextBox implements Cloneable
 			boxH -= bi.top + bi.bottom;
 		}
 
-		if (mBackground != null)
+		if (mBackground != null && (aShadow || !aHasShadow))
 		{
 			aGraphics.setColor(mBackground);
 			aGraphics.fillRect(boxX, boxY, boxW, boxH);
@@ -566,7 +579,7 @@ public class TextBox implements Cloneable
 				mTextBorder.paintBorder(null, aGraphics, r.x - ti.left, r.y - ti.top, r.width + ti.left + ti.right, r.height + ti.top + ti.bottom);
 			}
 
-			drawSingleLine(aGraphics, mTextLines.get(i), lm, r.x, r.y, r.width, r.height);
+			drawSingleLine(aGraphics, mTextLines.get(i), lm, r.x, r.y, r.width, r.height, aHasShadow, aShadow);
 		}
 
 		aGraphics.translate(-aTranslateX, -aTranslateY);
@@ -790,13 +803,17 @@ public class TextBox implements Cloneable
 	}
 
 
-	private void drawSingleLine(Graphics aGraphics, String aText, LineMetrics aLineMetrics, int aOffsetX, int aOffsetY, int aWidth, int aHeight)
+	private void drawSingleLine(Graphics aGraphics, String aText, LineMetrics aLineMetrics, int aOffsetX, int aOffsetY, int aWidth, int aHeight, boolean aHasShadow, boolean aShadow)
 	{
-		if (mHighlight != null)
+		if (mHighlight != null && (aShadow || !aHasShadow))
 		{
 			aGraphics.setColor(mHighlight);
 			aGraphics.fillRect(aOffsetX, aOffsetY, aWidth, aHeight);
 			aGraphics.setColor(mForeground);
+		}
+		else if (aShadow)
+		{
+			aGraphics.setColor(mShadowColor);
 		}
 
 		int adjust = (int)(aLineMetrics.getHeight() - aLineMetrics.getDescent());
@@ -828,6 +845,19 @@ public class TextBox implements Cloneable
 	{
 		mMaxWidth = aMaxWidth;
 		return this;
+	}
+
+
+	public TextBox setShadow(Color aColor)
+	{
+		mShadowColor = aColor;
+		return this;
+	}
+
+
+	public Color getShadowColor()
+	{
+		return mShadowColor;
 	}
 
 
