@@ -9,9 +9,9 @@ import org.terifan.util.log.Log;
  *
  * new FormattedString("hello ${name}").put("name", "Patrik").toString();
  */
-public class FormattedString
+public class ParameterizedString
 {
-	private final static String TAG = FormattedString.class.getName();
+	private final static String TAG = ParameterizedString.class.getName();
 
 	private final static char START_SYMBOL = '$';
 	private final static char LEFT_BRACE = '{';
@@ -21,13 +21,13 @@ public class FormattedString
 	private HashMap<String, Object> mParameters;
 
 
-	public FormattedString()
+	public ParameterizedString()
 	{
 		mParameters = new HashMap<>();
 	}
 
 
-	public FormattedString(String aFormat)
+	public ParameterizedString(String aFormat)
 	{
 		this();
 
@@ -35,14 +35,14 @@ public class FormattedString
 	}
 
 
-	public FormattedString setFormat(String aFormat)
+	public ParameterizedString setFormat(String aFormat)
 	{
 		mFormat = aFormat;
 		return this;
 	}
 
 
-	public FormattedString put(String aName, Object aValue)
+	public ParameterizedString put(String aName, Object aValue)
 	{
 		mParameters.put(aName, aValue);
 		return this;
@@ -93,11 +93,11 @@ public class FormattedString
 	{
 		try
 		{
-			Log.out.println(new FormattedString("hello ${name} $").put("name", "Patrik").put("family", "Olsson").toString());
-			Log.out.println(new FormattedString("hello ${name} ${").put("name", "Patrik").put("family", "Olsson").toString());
-			Log.out.println(new FormattedString("hello ${name} ${}").put("name", "Patrik").put("family", "Olsson").toString());
-			Log.out.println(new FormattedString("hello ${name} ${x}").put("name", "Patrik").put("family", "Olsson").toString());
-			Log.out.println(new FormattedString("hello ${name} ${family} ${name}!").put("name", "Patrik").put("family", "Olsson").toString());
+			Log.out.println(new ParameterizedString("hello ${name} $").put("name", "Patrik").put("family", "Olsson").toString());
+			Log.out.println(new ParameterizedString("hello ${name} ${").put("name", "Patrik").put("family", "Olsson").toString());
+			Log.out.println(new ParameterizedString("hello ${name} ${}").put("name", "Patrik").put("family", "Olsson").toString());
+			Log.out.println(new ParameterizedString("hello ${name} ${x}").put("name", "Patrik").put("family", "Olsson").toString());
+			Log.out.println(new ParameterizedString("hello ${name} ${family} ${name}!").put("name", "Patrik").put("family", "Olsson").toString());
 		}
 		catch (Throwable e)
 		{
