@@ -14,6 +14,10 @@ public class Convert
 {
 	private final static char[] HEX = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
+	public final static int SECONDS = 1000;
+	public final static int MINUTES = 60 * SECONDS;
+	public final static int HOURS = 60 * MINUTES;
+
 
 	private Convert()
 	{
@@ -684,15 +688,11 @@ public class Convert
 	}
 
 
-	public static void main(String ... args)
+	/**
+	 * Return the provided source time in milliseconds.
+	 */
+	public static long toMilliseconds(int aSourceUnit, int aSourceTime)
 	{
-		try
-		{
-			Log.out.println(Arrays.toString(toInts(new Long[]{7L})));
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
+		return aSourceTime * aSourceUnit;
 	}
 }
