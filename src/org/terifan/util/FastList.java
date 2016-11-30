@@ -3,21 +3,36 @@ package org.terifan.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
+import org.terifan.util.log.Log;
 
 
 public class FastList<T> implements Iterable<T>
 {
 	private final static int GROWTH = 1000;
-	
+
 	protected Class<T> mType;
 	protected T[] mElementData;
 	protected int mSize;
+	protected boolean mLocked;
 
 
 	public FastList(Class<T> aType)
 	{
 		mType = aType;
 		mElementData = (T[])Array.newInstance(aType, 0);
+	}
+
+
+	public boolean isLocked()
+	{
+		return mLocked;
+	}
+
+
+	public FastList<T> setLocked(boolean aLocked)
+	{
+		mLocked = aLocked;
+		return this;
 	}
 
 
@@ -93,7 +108,7 @@ public class FastList<T> implements Iterable<T>
 		return new Iterator<T>()
 		{
 			int mIndex;
-			
+
 			@Override
 			public boolean hasNext()
 			{
@@ -137,7 +152,7 @@ public class FastList<T> implements Iterable<T>
 
 	protected void resize(int aSize)
 	{
-		if (aSize != mElementData.length)
+		if (!mLocked && aSize != mElementData.length && mLocked || aSize > mElementData.length)
 		{
 			mElementData = Arrays.copyOfRange(mElementData, 0, aSize);
 		}
