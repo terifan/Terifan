@@ -20,21 +20,26 @@ public class ImageResizer
 		{
 			BufferedImage src = ImageIO.read(new File("f:/temp/1acpph578vor.jpg"));
 
+//			int W = 1920;
+//			int H = 1080;
+			int W = 256;
+			int H = 256;
+
 			StopWatch stopWatch = new StopWatch();
 
-			BufferedImage dst1 = resizeAspect(src, 1920, 1080, null, false);
+			BufferedImage dst1 = resizeAspect(src, W, H, null, false);
 
 			stopWatch.split();
 
-			BufferedImage dst2 = resizeAspect(src, 1920, 1080, null, true);
+			BufferedImage dst2 = resizeAspect(src, W, H, null, true);
 
 			stopWatch.split();
 
-			BufferedImage dst4 = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC, 1920, 1080);
+			BufferedImage dst4 = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC, W, H);
 
 			stopWatch.split();
 
-			BufferedImage dst5 = Scalr.resize(src, Scalr.Method.ULTRA_QUALITY, Scalr.Mode.AUTOMATIC, 1920, 1080);
+			BufferedImage dst5 = Scalr.resize(src, Scalr.Method.ULTRA_QUALITY, Scalr.Mode.AUTOMATIC, W, H);
 
 			stopWatch.stop();
 
