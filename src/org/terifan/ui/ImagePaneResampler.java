@@ -1,6 +1,7 @@
 package org.terifan.ui;
 
 import java.awt.Graphics;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.terifan.util.log.Log;
@@ -48,8 +49,7 @@ class ImagePaneResampler extends Thread
 		g.drawImage(mInput, 0, 0, mSrcWidth, mSrcHeight, mSrcX, mSrcY, mSrcX + mSrcWidth, mSrcY + mSrcHeight, null);
 		g.dispose();
 
-		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, FilterFactory.Lanczos3, mAbort);
-//		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, FilterFactory.Box, mAbort);
+		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, mAbort, true);
 
 		if (!mAbort.get())
 		{
