@@ -351,11 +351,6 @@ public class ImagePane extends JPanel
 
 	protected void paintImage(Graphics2D aGraphics, boolean aLazyFilterImage, boolean aDirectFilterImage)
 	{
-		if (mImageFilter != null && mScaleValue != mScaledScale)
-		{
-			mImageFilter.abort();
-		}
-
 		int h = getHeight();
 		int w = getWidth();
 

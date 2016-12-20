@@ -1,15 +1,11 @@
 package org.terifan.ui;
 
 import java.awt.Graphics;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.atomic.AtomicBoolean;
-import org.terifan.util.log.Log;
 
 
 class ImagePaneResampler extends Thread
 {
-	private AtomicBoolean mAbort;
 	private BufferedImage mInput;
 	private ResampledImageCallback mCallback;
 	private int mSrcX;
@@ -30,13 +26,6 @@ class ImagePaneResampler extends Thread
 		mDstWidth = aDstWidth;
 		mDstHeight = aDstHeight;
 		mCallback = aCallback;
-		mAbort = new AtomicBoolean();
-	}
-
-
-	public void abort()
-	{
-		mAbort.set(true);
 	}
 
 
@@ -49,12 +38,9 @@ class ImagePaneResampler extends Thread
 		g.drawImage(mInput, 0, 0, mSrcWidth, mSrcHeight, mSrcX, mSrcY, mSrcX + mSrcWidth, mSrcY + mSrcHeight, null);
 		g.dispose();
 
-		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, mAbort, true);
+		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, true);
 
-		if (!mAbort.get())
-		{
-			mCallback.update(output);
-		}
+		mCallback.update(output);
 	}
 	
 	

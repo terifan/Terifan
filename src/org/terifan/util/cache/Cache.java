@@ -144,8 +144,6 @@ public class Cache<K,V> implements Iterable<K>
 			entry.value = aValue;
 			entry.size = aItemSize;
 			entry.time = System.currentTimeMillis();
-
-			shrink();
 		}
 		else
 		{
@@ -160,9 +158,9 @@ public class Cache<K,V> implements Iterable<K>
 			mUsedSize += aItemSize;
 			mCacheOrder.addFirst(aKey);
 			mKeyValueMap.put(aKey, entry);
-
-			shrink();
 		}
+
+		shrink();
 
 		return prevValue;
 	}
@@ -224,49 +222,6 @@ public class Cache<K,V> implements Iterable<K>
 		}
 
 		return null;
-	}
-
-
-	/**
-	 * Returns the value to which the specified key is mapped in this identity
-	 * hash map, or null if the map contains no mapping for this key. A return
-	 * value of null does not necessarily indicate that the map contains no
-	 * mapping for the key; it is also possible that the map explicitly maps
-	 * the key to null. The containsKey method may be used to distinguish
-	 * these two cases.<p>
-	 *
-	 * Getting a value will cause a reorder of items. The retrieved key will be
-	 * moved to the top of the cache.
-	 *
-	 * @param aKey
-	 *   Key whose associated value is to be returned. Must not be null or
-	 *   zero length.
-	 * @param aProvider
-	 *   A provider capable of producing a value for the key.
-	 * @return
-	 *   The value to which this map maps the specified key, or null if the
-	 *   map contains no mapping for this key.
-	 */
-	public synchronized V get(K aKey, CacheProvider<K,V> aProvider)
-	{
-		Entry<K, V> entry = mKeyValueMap.get(aKey);
-
-		if (entry != null)
-		{
-			mCacheOrder.remove(aKey);
-			mCacheOrder.addFirst(aKey);
-
-			return entry.value;
-		}
-
-		V value = aProvider.get(aKey);
-
-		if (value != null)
-		{
-			put(aKey, value, 1);
-		}
-
-		return value;
 	}
 
 
@@ -416,6 +371,18 @@ public class Cache<K,V> implements Iterable<K>
 			remove(mCacheOrder.getLast());
 		}
 
+		mUsedSize = 0;
+		mKeyValueMap.clear();
+		mCacheOrder.clear();
+	}
+
+
+	/**
+	 * Removes all mappings from this map without calling any listeners or the
+	 * CacheBackend if one exists.
+	 */
+	public synchronized void clearQuiet()
+	{
 		mUsedSize = 0;
 		mKeyValueMap.clear();
 		mCacheOrder.clear();
