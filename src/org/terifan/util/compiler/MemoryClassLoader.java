@@ -16,7 +16,7 @@ public class MemoryClassLoader extends ClassLoader
 
 	public void addFile(MemoryFileObject aFile)
 	{
-		//System.out.println("MemoryClassLoader::addFile "+aFile.getName());
+		System.out.println("MemoryClassLoader::addFile "+aFile.getName());
 		mFiles.put(aFile.getName(), aFile);
 	}
 
