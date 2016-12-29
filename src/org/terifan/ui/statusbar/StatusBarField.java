@@ -1,23 +1,26 @@
 package org.terifan.ui.statusbar;
 
 import java.awt.Color;
-import java.awt.Font;
+import java.awt.Graphics;
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+import javax.swing.border.Border;
 import org.terifan.ui.NinePatchImage;
 
 
 public class StatusBarField extends JLabel
 {
+	private static final long serialVersionUID = 1L;
+
+	public final static Border LOWERED = BorderFactory.createLoweredBevelBorder();
+	public final static Border RAISED = BorderFactory.createRaisedBevelBorder();
+	public final static Border NONE = null;
+
 	public final static int CONTENT = 0;
 	public final static int SPRING = -1;
 
-	public final static int LOWERED = 0;
-	public final static int RAISED = 1;
-	public final static int NONE = 2;
-
 	private int mAutoSize;
-	private int mBorderStyle;
 	private NinePatchImage mBackgroundImage;
 
 
@@ -46,10 +49,10 @@ public class StatusBarField extends JLabel
 	{
 		super(aText, aHorizontalAlignment);
 
-		setForeground(Color.WHITE);
-		setFont(new Font("arial", Font.PLAIN, 11));
-
 		mAutoSize = aSize;
+
+		super.setOpaque(true);
+		super.setBorder(LOWERED);
 	}
 
 
@@ -66,15 +69,9 @@ public class StatusBarField extends JLabel
 	}
 
 
-	public int getBorderStyle()
+	public StatusBarField setBorderStyle(Border aBorder)
 	{
-		return mBorderStyle;
-	}
-
-
-	public StatusBarField setBorderStyle(int aBorder)
-	{
-		mBorderStyle = aBorder;
+		super.setBorder(aBorder);
 		return this;
 	}
 
@@ -88,6 +85,7 @@ public class StatusBarField extends JLabel
 	public StatusBarField setBackgroundImage(NinePatchImage aBackgroundImage)
 	{
 		mBackgroundImage = aBackgroundImage;
+		super.setOpaque(mBackgroundImage != null);
 		return this;
 	}
 
@@ -96,5 +94,17 @@ public class StatusBarField extends JLabel
 	{
 		super.setForeground(aColor);
 		return this;
+	}
+
+
+	@Override
+	protected void paintComponent(Graphics aGraphics)
+	{
+		if (mBackgroundImage != null)
+		{
+			mBackgroundImage.paintImage(aGraphics, 0, 0, getWidth(), getHeight());
+		}
+
+		super.paintComponent(aGraphics);
 	}
 }

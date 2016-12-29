@@ -8,7 +8,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.LayoutManager;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 import javax.swing.JComponent;
@@ -19,12 +18,10 @@ import org.terifan.ui.NinePatchImage;
 
 public class StatusBar extends JComponent implements LayoutManager, Iterable<StatusBarField>
 {
-	private final static Color DARKER = new Color(0,0,0,64);
-	private final static Color BRIGHTER = new Color(255,255,255,64);
+	private static final long serialVersionUID = 1L;
 
-	private Insets mMargin;
-	private Insets mPadding;
 	private int mSpacing;
+	private Insets mMargin;
 	private NinePatchImage mBackgroundImage;
 
 
@@ -33,8 +30,7 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 		setLayout(this);
 
 		mSpacing = 4;
-		mMargin = new Insets(2, 5, 2, 5);
-		mPadding = new Insets(2, 5, 2, 5);
+		mMargin = new Insets(2, 0, 2, 0);
 	}
 
 
@@ -64,19 +60,6 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 	}
 
 
-	public Insets getPadding()
-	{
-		return mPadding;
-	}
-
-
-	public StatusBar setPadding(Insets aPadding)
-	{
-		mPadding = aPadding;
-		return this;
-	}
-
-
 	public int getSpacing()
 	{
 		return mSpacing;
@@ -93,63 +76,15 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 	@Override
 	protected void paintComponent(Graphics g)
 	{
-		mBackgroundImage.paintImage(g, 0, 0, getWidth(), getHeight());
-
-		int n = getComponentCount();
-
-		for (int i = 0; i < n; i++)
+		if (mBackgroundImage != null)
 		{
-			Component comp = getComponent(i);
-			Rectangle r = comp.getBounds();
-
-			if (comp instanceof StatusBarSeparator)
-			{
-				int x = r.x+r.width/2;
-				paintBorder(comp, g, x, r.y-mPadding.top, 1, r.height+mPadding.top+mPadding.bottom);
-			}
-			else
-			{
-				NinePatchImage background = null;
-
-				if (comp instanceof StatusBarField)
-				{
-					StatusBarField field = (StatusBarField)comp;
-
-					background = field.getBackgroundImage();
-				}
-
-				if (background != null)
-				{
-					background.paintImage(g, r.x-mPadding.left, r.y-mPadding.top, r.width+mPadding.left+mPadding.right, r.height+mPadding.top+mPadding.bottom);
-				}
-
-				paintBorder(comp, g, r.x-mPadding.left, r.y-mPadding.top, r.width+mPadding.left+mPadding.right, r.height+mPadding.top+mPadding.bottom);
-			}
+			mBackgroundImage.paintImage(g, 0, 0, getWidth(), getHeight());
 		}
-	}
-
-
-	protected void paintBorder(Component comp, Graphics g, int x, int y, int w, int h)
-	{
-		boolean lowered = true;
-
-		if (comp instanceof StatusBarField)
+		else
 		{
-			StatusBarField field = (StatusBarField)comp;
-			lowered = field.getBorderStyle() == StatusBarField.LOWERED;
-
-			if (field.getBorderStyle() == StatusBarField.NONE)
-			{
-				return;
-			}
+			g.setColor(getBackground());
+			g.fillRect(0, 0, getWidth(), getHeight());
 		}
-
-		g.setColor(lowered ? DARKER : BRIGHTER);
-		g.drawLine(x, y, x+w, y);
-		g.drawLine(x, y+1, x, y+h);
-		g.setColor(lowered ? BRIGHTER : DARKER);
-		g.drawLine(x+w, y+1, x+w, y+h);
-		g.drawLine(x+1, y+h, x+w-1, y+h);
 	}
 
 
@@ -195,7 +130,7 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 			h = Math.max(h, d.height);
 		}
 
-		return new Dimension(w + (mPadding.left + mPadding.right) * n + mSpacing * (n - 1) + mMargin.left + mMargin.right, h + mMargin.top + mMargin.bottom + mPadding.top + mPadding.bottom);
+		return new Dimension(w + mSpacing * (n - 1) + mMargin.left + mMargin.right, h + mMargin.top + mMargin.bottom);
 	}
 
 
@@ -229,18 +164,17 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 			h = Math.max(h, d.height);
 		}
 
-		return new Dimension(w + (mPadding.left + mPadding.right) * n + mSpacing * (n - 1) + mMargin.left + mMargin.right, h + mMargin.top + mMargin.bottom + mPadding.top + mPadding.bottom);
+		return new Dimension(w + mSpacing * (n - 1) + mMargin.left + mMargin.right, h + mMargin.top + mMargin.bottom);
 	}
 
 
 	@Override
 	public void layoutContainer(Container aParent)
 	{
-		int x = mMargin.left + mPadding.left;
-		int y = mMargin.top + mPadding.top;
+		int x = mMargin.left;
+		int y = mMargin.top;
 		int n = aParent.getComponentCount();
-		int h = aParent.getHeight() - mMargin.top - mMargin.bottom - mPadding.top - mPadding.bottom;
-		int extra = mPadding.left + mPadding.right;
+		int h = aParent.getHeight() - mMargin.top - mMargin.bottom;
 
 		int parentWidth = aParent.getWidth();
 		int width = preferredLayoutSize(aParent).width;
@@ -248,7 +182,7 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 		for (int i = 0; i < n; i++)
 		{
 			Component comp = aParent.getComponent(i);
-			int cw = comp.getPreferredSize().width + extra;
+			int cw = comp.getPreferredSize().width;
 			int w = cw;
 
 			if (comp instanceof StatusBarField)
@@ -256,7 +190,7 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 				StatusBarField field = (StatusBarField)comp;
 				if (field.getAutoSize() > 0)
 				{
-					w = Math.max(cw, field.getAutoSize() + extra);
+					w = Math.max(cw, field.getAutoSize());
 				}
 				else if (field.getAutoSize() == StatusBarField.SPRING)
 				{
@@ -270,7 +204,7 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 				}
 			}
 
-			comp.setBounds(x, y, w - extra, h);
+			comp.setBounds(x, y, w, h);
 
 			x += w + mSpacing;
 		}
@@ -286,7 +220,7 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 	@Override
 	public Iterator<StatusBarField> iterator()
 	{
-		ArrayList<StatusBarField> fields = new ArrayList<StatusBarField>();
+		ArrayList<StatusBarField> fields = new ArrayList<>();
 		for (int i = 0; i < getComponentCount(); i++)
 		{
 			Component comp = getComponent(i);
@@ -299,28 +233,25 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 	}
 
 
-	public static void main(String ... args)
+	public static void main(String... args)
 	{
 		try
 		{
-			NinePatchImage background = new NinePatchImage(StatusBar.class.getResource("black_bar.png"));
-			NinePatchImage fieldBackground = new NinePatchImage(StatusBar.class.getResource("black_field.png"));
-
-			StatusBar sb1 = new StatusBar();
-			sb1.setBackgroundImage(background);
-			sb1.add(new StatusBarField("test1", SwingConstants.LEFT, 100).setBackgroundImage(fieldBackground));
-			sb1.add(new StatusBarField("test2", SwingConstants.CENTER, 100).setBackgroundImage(fieldBackground));
-			sb1.add(new StatusBarField("test3", SwingConstants.RIGHT, 100).setBackgroundImage(fieldBackground));
-			sb1.add(new StatusBarField("test7", SwingConstants.RIGHT, StatusBarField.SPRING).setBorderStyle(StatusBarField.NONE));
-			sb1.add(new StatusBarSeparator());
-			sb1.add(new StatusBarField("test4").setBorderStyle(StatusBarField.NONE));
-			sb1.add(new StatusBarSeparator());
-			sb1.add(new StatusBarField("test5").setBorderStyle(StatusBarField.NONE));
-			sb1.add(new StatusBarSeparator(StatusBarSeparator.RAISED));
-			sb1.add(new StatusBarField("test6").setBorderStyle(StatusBarField.NONE));
+			StatusBar sb = new StatusBar();
+			sb.setBackground(new Color(255,0,0));
+			sb.add(new StatusBarField("test1", SwingConstants.LEFT, 100));
+			sb.add(new StatusBarField("test2", SwingConstants.CENTER, 100));
+			sb.add(new StatusBarField("test3", SwingConstants.RIGHT, 100));
+			sb.add(new StatusBarField("test7", SwingConstants.RIGHT, StatusBarField.SPRING).setBorderStyle(StatusBarField.NONE));
+			sb.add(new StatusBarSeparator());
+			sb.add(new StatusBarField("test4").setBorderStyle(StatusBarField.NONE));
+			sb.add(new StatusBarSeparator());
+			sb.add(new StatusBarField("test5").setBorderStyle(StatusBarField.NONE));
+			sb.add(new StatusBarSeparator());
+			sb.add(new StatusBarField("test6").setBorderStyle(StatusBarField.NONE));
 
 			JFrame frame = new JFrame();
-			frame.add(sb1, BorderLayout.SOUTH);
+			frame.add(sb, BorderLayout.SOUTH);
 			frame.setSize(1024, 768);
 			frame.setLocationRelativeTo(null);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

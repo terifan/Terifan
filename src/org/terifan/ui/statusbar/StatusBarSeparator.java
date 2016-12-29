@@ -1,28 +1,25 @@
 package org.terifan.ui.statusbar;
 
+import java.awt.Color;
 import java.awt.Graphics;
-import javax.swing.SwingConstants;
+import javax.swing.JComponent;
 
 
-
-public class StatusBarSeparator extends StatusBarField
+public class StatusBarSeparator extends JComponent
 {
 	public StatusBarSeparator()
 	{
-		this(LOWERED);
-	}
-
-	
-	public StatusBarSeparator(int aStyle)
-	{
-		super("", SwingConstants.LEFT, 2);
-		
-		setBorderStyle(aStyle);
 	}
 
 
 	@Override
-	protected void paintComponent(Graphics g)
+	protected void paintComponent(Graphics aGraphics)
 	{
+		boolean isLowered = true;
+
+		aGraphics.setColor(isLowered ? new Color(64, 64, 64) : new Color(255, 255, 255));
+		aGraphics.drawLine(0, 0, 0, 0 + getHeight());
+		aGraphics.setColor(!isLowered ? new Color(64, 64, 64) : new Color(255, 255, 255));
+		aGraphics.drawLine(0 + 1, 0, 0 + 1, 0 + getHeight());
 	}
 }
