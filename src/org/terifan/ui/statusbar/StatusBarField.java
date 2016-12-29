@@ -17,58 +17,77 @@ public class StatusBarField extends JLabel
 	public final static Border RAISED = BorderFactory.createRaisedBevelBorder();
 	public final static Border NONE = null;
 
-	public final static int CONTENT = 0;
-	public final static int SPRING = -1;
+	public enum Resize
+	{
+		//STATIC,
+		CONTENT,
+		SPRING
+	}
 
-	private int mAutoSize;
+	private Integer mFixedSize;
+	private Resize mResize;
 	private NinePatchImage mBackgroundImage;
 
 
 	public StatusBarField(String aText)
 	{
-		this(aText, SwingConstants.LEFT, CONTENT);
+		this(aText, SwingConstants.LEFT, Resize.CONTENT);
 	}
 
 
-	/**
-	 * Create a StatusBar field
-	 *
-     * @param aText
-	 *   The text to be displayed by the label.
-     * @param aHorizontalAlignment
-	 *   One of the following constants defined in <code>SwingConstants</code>:
-     *           <code>LEFT</code>,
-     *           <code>CENTER</code>,
-     *           <code>RIGHT</code>,
-     *           <code>LEADING</code> or
-     *           <code>TRAILING</code>.
-	 * @param aSize
-	 *   The size of the field in pixels or constants StatusBarField.SPRING or StatusBarField.CONTENT
-	 */
-	public StatusBarField(String aText, int aHorizontalAlignment, int aSize)
+	public StatusBarField(String aText, int aHorizontalAlignment, Resize aResize)
+	{
+		this(aText, aHorizontalAlignment, aResize, null);
+	}
+
+
+	public StatusBarField(String aText, int aHorizontalAlignment, int aFixedSize)
+	{
+		this(aText, aHorizontalAlignment, Resize.CONTENT, aFixedSize);
+	}
+
+
+	public StatusBarField(String aText, int aHorizontalAlignment, Resize aResize, Integer aFixedSize)
 	{
 		super(aText, aHorizontalAlignment);
 
-		mAutoSize = aSize;
+		mResize = aResize;
+		mFixedSize = aFixedSize;
 
 		super.setOpaque(true);
 		super.setBorder(LOWERED);
 	}
 
 
-	public int getAutoSize()
+	public Integer getFixedSize()
 	{
-		return mAutoSize;
+		return mFixedSize;
 	}
 
 
-	public StatusBarField setAutoSize(int aFixedSize)
+	public StatusBarField setFixedSize(Integer aFixedSize)
 	{
-		mAutoSize = aFixedSize;
+		mFixedSize = aFixedSize;
 		return this;
 	}
 
 
+	public Resize getResize()
+	{
+		return mResize;
+	}
+
+
+	public StatusBarField setResize(Resize aFixedSize)
+	{
+		mResize = aFixedSize;
+		return this;
+	}
+
+
+	/**
+	 * Same as setBorder(Border)
+	 */
 	public StatusBarField setBorderStyle(Border aBorder)
 	{
 		super.setBorder(aBorder);
@@ -90,6 +109,9 @@ public class StatusBarField extends JLabel
 	}
 
 
+	/**
+	 * Same as setForeground(Color)
+	 */
 	public StatusBarField setTextColor(Color aColor)
 	{
 		super.setForeground(aColor);

@@ -114,9 +114,9 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 			if (comp instanceof StatusBarField)
 			{
 				StatusBarField field = (StatusBarField)comp;
-				if (field.getAutoSize() > 0)
+				if (field.getFixedSize() != null)
 				{
-					w += field.getAutoSize();
+					w += field.getFixedSize();
 				}
 				else
 				{
@@ -148,9 +148,9 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 			if (comp instanceof StatusBarField)
 			{
 				StatusBarField field = (StatusBarField)comp;
-				if (field.getAutoSize() > 0)
+				if (field.getFixedSize() != null)
 				{
-					w += field.getAutoSize();
+					w += field.getFixedSize();
 				}
 				else
 				{
@@ -188,11 +188,11 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 			if (comp instanceof StatusBarField)
 			{
 				StatusBarField field = (StatusBarField)comp;
-				if (field.getAutoSize() > 0)
+				if (field.getFixedSize() != null)
 				{
-					w = Math.max(cw, field.getAutoSize());
+					w = Math.max(cw, field.getFixedSize());
 				}
-				else if (field.getAutoSize() == StatusBarField.SPRING)
+				else if (field.getResize() == StatusBarField.Resize.SPRING)
 				{
 					w = Math.max(cw, parentWidth - width + w);
 				}
@@ -242,7 +242,7 @@ public class StatusBar extends JComponent implements LayoutManager, Iterable<Sta
 			sb.add(new StatusBarField("test1", SwingConstants.LEFT, 100));
 			sb.add(new StatusBarField("test2", SwingConstants.CENTER, 100));
 			sb.add(new StatusBarField("test3", SwingConstants.RIGHT, 100));
-			sb.add(new StatusBarField("test7", SwingConstants.RIGHT, StatusBarField.SPRING).setBorderStyle(StatusBarField.NONE));
+			sb.add(new StatusBarField("test7", SwingConstants.RIGHT, StatusBarField.Resize.SPRING).setBorderStyle(StatusBarField.NONE));
 			sb.add(new StatusBarSeparator());
 			sb.add(new StatusBarField("test4").setBorderStyle(StatusBarField.NONE));
 			sb.add(new StatusBarSeparator());
