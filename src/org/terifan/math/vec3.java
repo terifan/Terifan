@@ -9,7 +9,7 @@ public class vec3 implements Cloneable, Serializable
 
 	public final double x, y, z;
 
-
+  
 	/**
 	 * Constructs a new Vector.
 	 */
