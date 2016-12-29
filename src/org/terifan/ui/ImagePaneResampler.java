@@ -38,7 +38,7 @@ class ImagePaneResampler extends Thread
 		g.drawImage(mInput, 0, 0, mSrcWidth, mSrcHeight, mSrcX, mSrcY, mSrcX + mSrcWidth, mSrcY + mSrcHeight, null);
 		g.dispose();
 
-		BufferedImage output = ImageResizer.resize(temp, mDstWidth, mDstHeight, true);
+		BufferedImage output = ImageResizer.getScaledImage(temp, mDstWidth, mDstHeight, true);
 
 		mCallback.update(output);
 	}

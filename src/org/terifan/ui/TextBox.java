@@ -20,7 +20,6 @@ import static org.terifan.ui.Anchor.NORTH;
 import static org.terifan.ui.Anchor.NORTH_EAST;
 import static org.terifan.ui.Anchor.SOUTH;
 import static org.terifan.ui.Anchor.SOUTH_EAST;
-import org.terifan.util.log.Log;
 
 
 public class TextBox implements Cloneable
@@ -46,7 +45,7 @@ public class TextBox implements Cloneable
 	private FontRenderContext mFontRenderContext;
 	private int mMaxWidth;
 	private int mMinWidth;
-
+	private String mSuffix;
 	private boolean mDirty;
 	private ArrayList<String> mTextLines;
 	private ArrayList<Rectangle> mTextBounds;
@@ -500,6 +499,7 @@ public class TextBox implements Cloneable
 			textBox.mTextLines = this.mTextLines == null ? null : new ArrayList<>(this.mTextLines);
 			textBox.mMaxWidth = this.mMaxWidth;
 			textBox.mMinWidth = this.mMinWidth;
+			textBox.mSuffix = this.mSuffix;
 
 			return textBox;
 		}
@@ -718,12 +718,21 @@ public class TextBox implements Cloneable
 			{
 				do
 				{
+					boolean isLastLine = mMaxLineCount > 0 && list.size() >= mMaxLineCount - 1;
 					int w = getStringLength(str, mFont);
-					String tmp;
+					String nextLine;
 
-					if (w > boxW)
+					String suffix = "";
+					int tmpBoxW = boxW;
+					if ((isLastLine || w < boxW) && mSuffix != null)
 					{
-						int offset = Math.max(findStringLimit(str, boxW), 1);
+						suffix = mSuffix;
+						tmpBoxW -= getStringLength(suffix, mFont);
+					}
+
+					if (w > tmpBoxW)
+					{
+						int offset = Math.max(findStringLimit(str, tmpBoxW), 1);
 						int temp = offset;
 
 						outer: for (; temp > 1; temp--)
@@ -743,18 +752,18 @@ public class TextBox implements Cloneable
 							offset = temp;
 						}
 
-						tmp = str.substring(0, offset);
+						nextLine = str.substring(0, offset) + suffix;
 						str = str.substring(offset).trim();
 					}
 					else
 					{
-						tmp = str;
+						nextLine = str + suffix;
 						str = "";
 					}
 
-					list.add(tmp.trim());
+					list.add(nextLine.trim());
 
-					if (mMaxLineCount > 0 && list.size() >= mMaxLineCount)
+					if (isLastLine)
 					{
 						break;
 					}
@@ -865,5 +874,18 @@ public class TextBox implements Cloneable
 	{
 		LineMetrics lm = aFont.getLineMetrics("Adgj", DEFAULT_RENDER_CONTEXT);
 		return (int)(lm.getHeight() - lm.getDescent());
+	}
+
+
+	public String getSuffix()
+	{
+		return mSuffix;
+	}
+
+
+	public TextBox setSuffix(String aPrefix)
+	{
+		mSuffix = aPrefix;
+		return this;
 	}
 }
