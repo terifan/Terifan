@@ -14,7 +14,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 import org.terifan.util.Calendar;
 
-
+ 
 public class MailTarget implements LogTarget
 {
 	private String mLocalHost;
