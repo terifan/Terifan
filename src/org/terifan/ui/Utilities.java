@@ -186,21 +186,18 @@ public final class Utilities
 	{
 		try
 		{
-			try (InputStream in = aObject.getClass().getResourceAsStream(aRelativePath))
+			BufferedImage image = ImageIO.read(aObject instanceof Class ? ((Class)aObject).getResource(aRelativePath) : aObject.getClass().getResource(aRelativePath));
+
+			if (image == null)
 			{
-				BufferedImage image = ImageIO.read(in);
-
-				if (image == null)
-				{
-					throw new IOException("File not found");
-				}
-
-				return image;
+				throw new IOException("File not found");
 			}
+
+			return image;
 		}
 		catch (Throwable e)
 		{
-			throw new IllegalArgumentException("Reading the large icon resource caused an exception: relative-path: " + aRelativePath, e);
+			throw new IllegalArgumentException("Reading the image resource caused an exception: relative-path: " + aRelativePath, e);
 		}
 	}
 

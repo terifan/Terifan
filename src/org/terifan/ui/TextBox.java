@@ -4,13 +4,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
-import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
@@ -25,30 +22,28 @@ import static org.terifan.ui.Anchor.SOUTH_EAST;
 public class TextBox implements Cloneable
 {
 	private final static Insets ZERO_INSETS = new Insets(0,0,0,0);
-	private static FontRenderContext DEFAULT_RENDER_CONTEXT = new FontRenderContext(new AffineTransform(), true, false);
-	private static char[] DEFAULT_BREAK_CHARS = {' ', '.', ',', '-', '_'};
+	private static char[] DEFAULT_BREAK_CHARS = {' ', '.', ',', '-', '_', ':', ';', '?', '!'};
 
+	private final Insets mMargins;
+	private final Insets mPadding;
+	private final Rectangle mBounds;
+	private ArrayList<String> mTextLines;
+	private ArrayList<Rectangle> mTextBounds;
 	private String mText;
 	private Font mFont;
 	private Color mForeground;
 	private Color mBackground;
 	private Color mHighlight;
-	private Insets mMargins;
-	private Insets mPadding;
 	private Border mBorder;
 	private Border mTextBorder;
-	private Rectangle mBounds;
 	private Anchor mAnchor;
 	private int mLineSpacing;
 	private int mMaxLineCount;
 	private char[] mBreakChars;
-	private FontRenderContext mFontRenderContext;
 	private int mMaxWidth;
 	private int mMinWidth;
 	private String mSuffix;
 	private boolean mDirty;
-	private ArrayList<String> mTextLines;
-	private ArrayList<Rectangle> mTextBounds;
 	private Color mShadowColor;
 
 
@@ -67,10 +62,7 @@ public class TextBox implements Cloneable
 		mForeground = Color.BLACK;
 		mAnchor = Anchor.NORTH_WEST;
 		mFont = UIManager.getDefaults().getFont("TextField.font");
-
 		mBreakChars = DEFAULT_BREAK_CHARS;
-		mFontRenderContext = DEFAULT_RENDER_CONTEXT;
-
 		mDirty = true;
 	}
 
@@ -248,7 +240,7 @@ public class TextBox implements Cloneable
 			throw new IllegalArgumentException("aBounds is null");
 		}
 
-		mBounds = new Rectangle(aBounds);
+		mBounds.setBounds(aBounds);
 		mDirty = true;
 		return this;
 	}
@@ -414,8 +406,24 @@ public class TextBox implements Cloneable
 	}
 
 
+	public boolean isLayoutRequired()
+	{
+		return mDirty;
+	}
+
+
 	public Rectangle measure()
 	{
+		return measure(new FontRenderContext(null, true, false));
+	}
+
+
+	public Rectangle measure(FontRenderContext aFontRenderContext)
+	{
+		if (aFontRenderContext == null)
+		{
+			return measure();
+		}
 		if (mBounds.isEmpty())
 		{
 			mBounds.setBounds(0, 0, Short.MAX_VALUE, Short.MAX_VALUE);
@@ -431,7 +439,7 @@ public class TextBox implements Cloneable
 
 		if (mDirty)
 		{
-			layout();
+			layout(aFontRenderContext);
 		}
 
 		if (mTextBounds.isEmpty())
@@ -440,10 +448,9 @@ public class TextBox implements Cloneable
 		}
 
 		Rectangle bounds = new Rectangle(mTextBounds.get(0));
-
-		for (int i = 1, sz = mTextBounds.size(); i < sz; i++)
+		for (Rectangle r : mTextBounds)
 		{
-			bounds.add(mTextBounds.get(i));
+			bounds.add(r);
 		}
 
 		if (mBorder != null)
@@ -483,17 +490,16 @@ public class TextBox implements Cloneable
 			textBox.mAnchor = this.mAnchor;
 			textBox.mBackground = this.mBackground;
 			textBox.mBorder = this.mBorder;
-			textBox.mBounds = (Rectangle)this.mBounds.clone();
+			textBox.mBounds.setBounds(this.mBounds);
 			textBox.mBreakChars = this.mBreakChars == DEFAULT_BREAK_CHARS ? DEFAULT_BREAK_CHARS : this.mBreakChars.clone();
 			textBox.mDirty = this.mDirty;
 			textBox.mFont = this.mFont;
-			textBox.mFontRenderContext = this.mFontRenderContext;
 			textBox.mForeground = this.mForeground;
 			textBox.mHighlight = this.mHighlight;
 			textBox.mMaxLineCount = this.mMaxLineCount;
 			textBox.mLineSpacing = this.mLineSpacing;
-			textBox.mMargins = (Insets)mMargins.clone();
-			textBox.mPadding = (Insets)mPadding.clone();
+			textBox.mMargins.set(mMargins.top, mMargins.left, mMargins.bottom, mMargins.right);
+			textBox.mPadding.set(mPadding.top, mPadding.left, mPadding.bottom, mPadding.right);
 			textBox.mText = this.mText;
 			textBox.mTextBorder = this.mTextBorder;
 			textBox.mTextLines = this.mTextLines == null ? null : new ArrayList<>(this.mTextLines);
@@ -532,15 +538,10 @@ public class TextBox implements Cloneable
 	{
 		if (mDirty)
 		{
-			layout();
+			layout(aGraphics.getFontMetrics().getFontRenderContext());
 		}
 
 		aGraphics.translate(aTranslateX, aTranslateY);
-
-		if (aGraphics instanceof Graphics2D)
-		{
-			((Graphics2D)aGraphics).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-		}
 
 		int boxX = mBounds.x;
 		int boxY = mBounds.y;
@@ -565,7 +566,7 @@ public class TextBox implements Cloneable
 		}
 
 		Insets ti = mTextBorder != null ? mTextBorder.getBorderInsets(null) : ZERO_INSETS;
-		LineMetrics lm = mFont.getLineMetrics("Adgj", mFontRenderContext);
+		LineMetrics lm = mFont.getLineMetrics("Adgj", aGraphics.getFontMetrics().getFontRenderContext());
 
 		aGraphics.setColor(mForeground);
 		aGraphics.setFont(mFont);
@@ -588,21 +589,29 @@ public class TextBox implements Cloneable
 	}
 
 
-	private synchronized void layout()
+	private synchronized void layout(FontRenderContext aFontRenderContext)
 	{
 		if (mText == null)
 		{
 			throw new IllegalStateException("Text is null");
 		}
+		if (mMaxWidth > 0)
+		{
+			mBounds.width = Math.min(mBounds.width, mMaxWidth);
+		}
+		if (mMinWidth > 0)
+		{
+			mBounds.width = Math.max(mBounds.width, mMinWidth);
+		}
 
-		layoutLines();
-		layoutBounds();
+		layoutLines(aFontRenderContext);
+		layoutBounds(aFontRenderContext);
 
 		mDirty = false;
 	}
 
 
-	private void layoutBounds()
+	private void layoutBounds(FontRenderContext aFontRenderContext)
 	{
 		ArrayList<Rectangle> list = new ArrayList<>();
 
@@ -636,7 +645,7 @@ public class TextBox implements Cloneable
 			extraLineHeight = bi.top + bi.bottom;
 		}
 
-		LineMetrics lm = mFont.getLineMetrics("Adgj", mFontRenderContext);
+		LineMetrics lm = mFont.getLineMetrics("Adgj", aFontRenderContext);
 		int lineHeight = (int)lm.getHeight() + mPadding.top + mPadding.bottom;
 
 		if (boxH < lineHeight)
@@ -669,7 +678,7 @@ public class TextBox implements Cloneable
 			String str = mTextLines.get(i);
 
 			int lineX = boxX;
-			int lineW = getStringLength(str, mFont) + mPadding.left + mPadding.right;
+			int lineW = getStringLength(aFontRenderContext, str, mFont) + mPadding.left + mPadding.right;
 
 			switch (mAnchor)
 			{
@@ -694,7 +703,7 @@ public class TextBox implements Cloneable
 	}
 
 
-	private void layoutLines()
+	private void layoutLines(FontRenderContext aFontRenderContext)
 	{
 		ArrayList<String> list = new ArrayList<>();
 
@@ -719,20 +728,20 @@ public class TextBox implements Cloneable
 				do
 				{
 					boolean isLastLine = mMaxLineCount > 0 && list.size() >= mMaxLineCount - 1;
-					int w = getStringLength(str, mFont);
+					int w = getStringLength(aFontRenderContext, str, mFont);
 					String nextLine;
-
+					
 					String suffix = "";
 					int tmpBoxW = boxW;
 					if ((isLastLine || w < boxW) && mSuffix != null)
 					{
 						suffix = mSuffix;
-						tmpBoxW -= getStringLength(suffix, mFont);
+						tmpBoxW -= getStringLength(aFontRenderContext, suffix, mFont);
 					}
 
 					if (w > tmpBoxW)
 					{
-						int offset = Math.max(findStringLimit(str, tmpBoxW), 1);
+						int offset = Math.max(findStringLimit(aFontRenderContext, str, tmpBoxW), 1);
 						int temp = offset;
 
 						outer: for (; temp > 1; temp--)
@@ -781,7 +790,7 @@ public class TextBox implements Cloneable
 	}
 
 
-	private int findStringLimit(String aString, int aWidth)
+	private int findStringLimit(FontRenderContext aFontRenderContext, String aString, int aWidth)
 	{
 		int min = 0;
 		int max = aString.length();
@@ -790,7 +799,7 @@ public class TextBox implements Cloneable
 		{
 			int mid = (max + min) / 2;
 
-			int w = getStringLength(aString.substring(0, mid), mFont);
+			int w = getStringLength(aFontRenderContext, aString.substring(0, mid), mFont);
 
 			if (w > aWidth)
 			{
@@ -806,9 +815,9 @@ public class TextBox implements Cloneable
 	}
 
 
-	private int getStringLength(String aString, Font aFont)
+	private int getStringLength(FontRenderContext aFontRenderContext, String aString, Font aFont)
 	{
-		return (int)Math.ceil(aFont.getStringBounds(aString, mFontRenderContext).getWidth());
+		return (int)Math.ceil(aFont.getStringBounds(aString, aFontRenderContext).getWidth());
 	}
 
 
@@ -840,6 +849,7 @@ public class TextBox implements Cloneable
 	public TextBox setMinWidth(int aMinWidth)
 	{
 		mMinWidth = aMinWidth;
+		mDirty = true;
 		return this;
 	}
 
@@ -853,6 +863,7 @@ public class TextBox implements Cloneable
 	public TextBox setMaxWidth(int aMaxWidth)
 	{
 		mMaxWidth = aMaxWidth;
+		mDirty = true;
 		return this;
 	}
 
@@ -870,13 +881,6 @@ public class TextBox implements Cloneable
 	}
 
 
-	static int getBaseLine(Font aFont, int aHeight)
-	{
-		LineMetrics lm = aFont.getLineMetrics("Adgj", DEFAULT_RENDER_CONTEXT);
-		return (int)(lm.getHeight() - lm.getDescent());
-	}
-
-
 	public String getSuffix()
 	{
 		return mSuffix;
@@ -886,6 +890,7 @@ public class TextBox implements Cloneable
 	public TextBox setSuffix(String aPrefix)
 	{
 		mSuffix = aPrefix;
+		mDirty = true;
 		return this;
 	}
 }
