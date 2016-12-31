@@ -100,7 +100,7 @@ public class ImageResizer
 			aSource = tmp;
 			flush = true;
 		}
-		while (currentWidth != aWidth || currentHeight != aHeight);
+		while (currentWidth > aWidth || currentHeight > aHeight);
 
 		return aSource;
 	}
