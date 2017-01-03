@@ -1,7 +1,7 @@
 package org.terifan.util;
 
 
-public class StringFormatter 
+public class SimpleStringFormatter
 {
 	/**
 	 * 3s, 1m09s, 1h04m02s

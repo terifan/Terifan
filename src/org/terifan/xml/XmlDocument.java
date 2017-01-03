@@ -16,7 +16,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.terifan.util.log.Log;
 import static org.terifan.xml.XmlNode.newTransformer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -31,61 +30,7 @@ public class XmlDocument extends XmlNode
 {
     public XmlDocument()
     {
-		super(newDocument(false));
-    }
-
-
-    public XmlDocument(boolean aNamespaceAware)
-    {
-		super(newDocument(aNamespaceAware));
-    }
-
-
-    public XmlDocument(String aXmlContent)
-    {
-		super(parse(false, aXmlContent));
-    }
-
-
-    public XmlDocument(boolean aNamespaceAware, String aXmlContent)
-    {
-		super(parse(aNamespaceAware, aXmlContent));
-    }
-
-
-    public XmlDocument(File aXmlFile)
-    {
-		super(parse(false, aXmlFile));
-    }
-
-
-    public XmlDocument(boolean aNamespaceAware, File aXmlFile)
-    {
-		super(parse(aNamespaceAware, aXmlFile));
-    }
-
-
-    public XmlDocument(Reader aXmlStream)
-    {
-		super(parse(false, aXmlStream));
-    }
-
-
-    public XmlDocument(boolean aNamespaceAware, Reader aXmlStream)
-    {
-		super(parse(aNamespaceAware, aXmlStream));
-    }
-
-
-    public XmlDocument(InputStream aXmlStream)
-    {
-		super(parse(false, aXmlStream));
-    }
-
-
-    public XmlDocument(boolean aNamespaceAware, InputStream aXmlStream)
-    {
-		super(parse(aNamespaceAware, aXmlStream));
+		super(newDocument());
     }
 
 
@@ -95,31 +40,79 @@ public class XmlDocument extends XmlNode
     }
 
 
-    public XmlDocument(Element aXmlElement)
+    public XmlDocument(String aXmlContent)
     {
-		super(parse(false, aXmlElement));
+		this(aXmlContent, true);
     }
 
 
-    public XmlDocument(boolean aNamespaceAware, Element aXmlElement)
+    public XmlDocument(File aXmlFile)
     {
-		super(parse(aNamespaceAware, aXmlElement));
+		this(aXmlFile, true);
+    }
+
+
+    public XmlDocument(Reader aXmlStream)
+    {
+		this(aXmlStream, true);
+    }
+
+
+    public XmlDocument(InputStream aXmlStream)
+    {
+		this(aXmlStream, true);
+    }
+
+
+    public XmlDocument(Element aXmlElement)
+    {
+		this(aXmlElement, true);
     }
 
 
     public XmlDocument(URL aXmlURL)
     {
-		super(parse(false, aXmlURL));
+		this(aXmlURL, true);
     }
 
 
-    public XmlDocument(boolean aNamespaceAware, URL aXmlURL)
+    public XmlDocument(String aXmlContent, boolean aNamespaceAware)
     {
-		super(parse(aNamespaceAware, aXmlURL));
+		super(parse(aXmlContent, aNamespaceAware));
     }
 
 
-    public static Document parse(boolean aNamespaceAware, Object aXmlDocument)
+    public XmlDocument(File aXmlFile, boolean aNamespaceAware)
+    {
+		super(parse(aXmlFile, aNamespaceAware));
+    }
+
+
+    public XmlDocument(Reader aXmlStream, boolean aNamespaceAware)
+    {
+		super(parse(aXmlStream, aNamespaceAware));
+    }
+
+
+    public XmlDocument(InputStream aXmlStream, boolean aNamespaceAware)
+    {
+		super(parse(aXmlStream, aNamespaceAware));
+    }
+
+
+    public XmlDocument(Element aXmlElement, boolean aNamespaceAware)
+    {
+		super(parse(aXmlElement, aNamespaceAware));
+    }
+
+
+    public XmlDocument(URL aXmlURL, boolean aNamespaceAware)
+    {
+		super(parse(aXmlURL, aNamespaceAware));
+    }
+
+
+    public static Document parse(final Object aXmlDocument, boolean aNamespaceAware)
     {
 		if (aXmlDocument == null)
 		{
@@ -228,15 +221,22 @@ public class XmlDocument extends XmlNode
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(aNamespaceAware);
 
-		return factory.newDocumentBuilder();
+		DocumentBuilder documentBuilder = factory.newDocumentBuilder();
+
+		return documentBuilder;
 	}
 
 
-	private static Document newDocument(boolean aNamespaceAware)
+	private static Document newDocument()
 	{
         try
         {
-            return newBuilder(aNamespaceAware).newDocument();
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			factory.setNamespaceAware(true);
+
+			DocumentBuilder documentBuilder = factory.newDocumentBuilder();
+
+            return documentBuilder.newDocument();
         }
         catch (ParserConfigurationException e)
         {
@@ -278,17 +278,4 @@ public class XmlDocument extends XmlNode
 
 		return null;
 	}
-
-
-//	public static void main(String ... args)
-//	{
-//		try
-//		{
-//			Log.out.println(new XmlDocument().appendElement("test").appendTextNode("v", "x").toXmlString());
-//		}
-//		catch (Exception e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
 }
