@@ -1,7 +1,5 @@
 package org.terifan.ui;
 
-import java.awt.Container;
-import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -12,58 +10,44 @@ import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceDropEvent;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTree;
 import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import org.terifan.util.log.Log;
 
 
 /**
- * Default Drag-n-Drop implementation that wraps/hides Oracle's garbage implementation.
- *
- * <code>
- *	new DragAndDrop(component)
- *	{
- *		@Override
- *		public Object drag(Point aDragOrigin)
- *		{
- *			return "hello world"; // a serializable object
- *		}
- *
- *		@Override
- *		public void drop(DropEvent aDropEvent)
- *		{
- *			System.out.println(aDropEvent.getTransferData());
- *		}
- *	};
- * </code>
+ * Implement Drag-n-Drop on a component. Use the static <code>register</code> method to enable default DND or instantiate and override the
+ * various methods for custom handling.
  */
 public abstract class DragAndDrop
 {
-//	private final static DataFlavor javaObjectMimeType = new DataFlavor(Object.class, "Java Object");
+	public final static DataFlavor DATA_FLAVOR;
+	public final static DataFlavor FILE_FLAVOR;
+	public final static DataFlavor IMAGE_FLAVOR;
+	public final static DataFlavor STRING_FLAVOR;
+	public final static DataFlavor HTML_FLAVOR;
+	public final static DataFlavor HTML_FRAGMENT_FLAVOR;
 
-	private final static DataFlavor DATA_FLAVOR;
-
-	static 
+	static
 	{
 		try
 		{
 			DATA_FLAVOR = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType);
+			FILE_FLAVOR = DataFlavor.javaFileListFlavor;
+			IMAGE_FLAVOR = DataFlavor.imageFlavor;
+			STRING_FLAVOR = DataFlavor.stringFlavor;
+			HTML_FLAVOR = DataFlavor.allHtmlFlavor;
+			HTML_FRAGMENT_FLAVOR = DataFlavor.fragmentHtmlFlavor;
 		}
 		catch (Exception e)
 		{
 			throw new Error("Error", e);
 		}
 	}
-	
+
 	protected JComponent mComponent;
 
 
@@ -71,8 +55,8 @@ public abstract class DragAndDrop
 	{
 		this(aComponent, true);
 	}
-	
-	
+
+
 	public DragAndDrop(JComponent aComponent, boolean aCanDrag)
 	{
 		mComponent = aComponent;
@@ -83,6 +67,46 @@ public abstract class DragAndDrop
 		}
 
 		mComponent.setTransferHandler(new MyTransferHandler());
+	}
+
+
+	/**
+	 * Helper function to register a component as capable of dragging.
+	 *
+	 * @param aComponent
+	 *   the component that can be dragged
+	 * @param aFlavorProvider
+	 *   provides the type of content dragged from a certain position
+	 * @param aDragProvider
+	 *   provides the value dragged from a position
+	 * @param aDragEndProvider
+	 *   optional, executed when a drop has completed
+	 */
+	public static void register(JComponent aComponent, FlavorProvider aFlavorProvider, DragProvider aDragProvider, DragEndProvider aDragEndProvider)
+	{
+		new DragAndDrop(aComponent)
+		{
+			@Override
+			public DataFlavor dragFlavor(Point aDragOrigin)
+			{
+				return aFlavorProvider.dragFlavor(aDragOrigin);
+			}
+
+			@Override
+			public Object drag(Point aDragOrigin)
+			{
+				return aDragProvider.drag(aDragOrigin);
+			}
+
+			@Override
+			public void dragEnd(boolean aSuccess, Object aDropValue, int aDropAction)
+			{
+				if (aDragEndProvider != null)
+				{
+					aDragEndProvider.dragEnd(aSuccess, aDropValue, aDropAction);
+				}
+			}
+		};
 	}
 
 
@@ -140,19 +164,34 @@ public abstract class DragAndDrop
 	}
 
 
+	/**
+	 * Return the type of data that can be dragged from the current location
+	 *
+	 * @param aDragOrigin
+	 *   the position on the component where the drag may occur.
+	 */
+	public DataFlavor dragFlavor(Point aDragOrigin)
+	{
+		return DATA_FLAVOR;
+	}
+
+
 	private class MyDragGestureListener implements DragGestureListener
 	{
 		@Override
 		public void dragGestureRecognized(DragGestureEvent aDrag)
 		{
-			aDrag.startDrag(null, new MyTransferable(aDrag), new DragSourceAdapter()
+			MyTransferable transferable = new MyTransferable(aDrag, dragFlavor(aDrag.getDragOrigin()));
+
+			aDrag.startDrag(null, transferable, new DragSourceAdapter()
 			{
 				@Override
 				public void dragDropEnd(DragSourceDropEvent aDragSourceDropEvent)
 				{
 					try
 					{
-						dragEnd(aDragSourceDropEvent.getDropSuccess(), aDragSourceDropEvent.getDragSourceContext().getTransferable().getTransferData(DATA_FLAVOR), aDragSourceDropEvent.getDropAction());
+						Object transferData = aDragSourceDropEvent.getDragSourceContext().getTransferable().getTransferData(transferable.getTransferDataFlavors()[0]);
+						dragEnd(aDragSourceDropEvent.getDropSuccess(), transferData, aDragSourceDropEvent.getDropAction());
 					}
 					catch (UnsupportedFlavorException | IOException e)
 					{
@@ -191,7 +230,8 @@ public abstract class DragAndDrop
 		@Override
 		protected Transferable createTransferable(JComponent aComponent)
 		{
-			return new MyTransferable(null);
+			throw new UnsupportedOperationException("Swing DND is enabled on component!");
+//			return new MyTransferable(null);
 		}
 	}
 
@@ -199,32 +239,48 @@ public abstract class DragAndDrop
 	private class MyTransferable implements Transferable
 	{
 		private Point mDragOrigin;
+		private DataFlavor mFlavor;
 
 
-		public MyTransferable(DragGestureEvent aEvent)
+		public MyTransferable(DragGestureEvent aEvent, DataFlavor aFlavor)
 		{
 			mDragOrigin = aEvent.getDragOrigin();
+			mFlavor = aFlavor;
 		}
 
 
 		@Override
 		public DataFlavor[] getTransferDataFlavors()
 		{
-			return new DataFlavor[]{DATA_FLAVOR};
+			return new DataFlavor[]{mFlavor};
 		}
 
 
 		@Override
 		public boolean isDataFlavorSupported(DataFlavor aFlavor)
 		{
-			return DATA_FLAVOR.equals(aFlavor);
+			return aFlavor.equals(mFlavor);
 		}
 
 
 		@Override
 		public Object getTransferData(DataFlavor aFlavor)
 		{
-			return drag(mDragOrigin);
+			Object drag = drag(mDragOrigin);
+
+			if (mFlavor == FILE_FLAVOR)
+			{
+				if (drag instanceof File)
+				{
+					drag = Arrays.asList((File)drag);
+				}
+				else if (drag instanceof File[])
+				{
+					drag = Arrays.asList((File[])drag);
+				}
+			}
+
+			return drag;
 		}
 	}
 
@@ -300,96 +356,117 @@ public abstract class DragAndDrop
 	}
 
 
-	public static void main(String ... args)
+	@FunctionalInterface
+	public interface FlavorProvider
 	{
-		try
-		{
-			JTree tree = new JTree();
-			JPanel panel = new JPanel(null);
-
-			new DragAndDrop(tree)
-			{
-				@Override
-				public boolean canDrop(DropEvent aDropEvent)
-				{
-					return true;
-				}
-
-				@Override
-				public void drop(DropEvent aDropEvent)
-				{
-					TreePath path = tree.getClosestPathForLocation(aDropEvent.getDropLocation().x, aDropEvent.getDropLocation().y);
-					DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode)path.getLastPathComponent();
-					lastPathComponent.add(new DefaultMutableTreeNode(aDropEvent.getTransferData()));
-					tree.expandPath(path);
-				}
-
-				@Override
-				public Object drag(Point aDragOrigin)
-				{
-					return tree.getClosestPathForLocation(aDragOrigin.x, aDragOrigin.y).getLastPathComponent().toString();
-				}
-
-				@Override
-				public void dragEnd(boolean aSuccess, Object aTransferData, int aDropAction)
-				{
-					Log.out.println(aSuccess+" "+aTransferData+" "+aDropAction);
-				}
-			};
-
-			new DragAndDrop(panel)
-			{
-				@Override
-				public boolean canDrop(DropEvent aDropEvent)
-				{
-					return aDropEvent.getTransferData() != null && !"food".equals(aDropEvent.getTransferData().toString());
-				}
-
-				@Override
-				public void drop(DropEvent aDropEvent)
-				{
-					JLabel label = new JLabel(aDropEvent.getTransferData().toString());
-					label.setLocation(aDropEvent.getDropLocation());
-					label.setSize(100,20);
-					panel.add(label);
-					panel.repaint();
-
-					new DragAndDrop(label)
-					{
-						@Override
-						public Object drag(Point aDragOrigin)
-						{
-							return ((JLabel)mComponent).getText();
-						}
-
-						@Override
-						public void dragEnd(boolean aSuccess, Object aDropValue, int aDropAction)
-						{
-							if (aSuccess && aDropAction == DropEvent.MOVE)
-							{
-								Container parent = mComponent.getParent();
-								parent.remove(mComponent);
-								parent.repaint();
-							}
-						}
-					};
-				}
-			};
-
-			JPanel pane = new JPanel(new GridLayout(1,2));
-			pane.add(tree);
-			pane.add(panel);
-
-			JFrame frame = new JFrame();
-			frame.add(pane);
-			frame.setSize(1024, 768);
-			frame.setLocationRelativeTo(null);
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setVisible(true);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
+		DataFlavor dragFlavor(Point aDragOrigin);
 	}
+
+
+	@FunctionalInterface
+	public interface DragProvider
+	{
+		Object drag(Point aDragOrigin);
+	}
+
+
+	@FunctionalInterface
+	public interface DragEndProvider
+	{
+		void dragEnd(boolean aSuccess, Object aDropValue, int aDropAction);
+	}
+
+
+//	public static void main(String ... args)
+//	{
+//		try
+//		{
+//			JTree tree = new JTree();
+//			JPanel panel = new JPanel(null);
+//
+//			new DragAndDrop(tree)
+//			{
+//				@Override
+//				public boolean canDrop(DropEvent aDropEvent)
+//				{
+//					return true;
+//				}
+//
+//				@Override
+//				public void drop(DropEvent aDropEvent)
+//				{
+//					TreePath path = tree.getClosestPathForLocation(aDropEvent.getDropLocation().x, aDropEvent.getDropLocation().y);
+//					DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode)path.getLastPathComponent();
+//					lastPathComponent.add(new DefaultMutableTreeNode(aDropEvent.getTransferData()));
+//					tree.expandPath(path);
+//				}
+//
+//				@Override
+//				public Object drag(Point aDragOrigin)
+//				{
+//					return tree.getClosestPathForLocation(aDragOrigin.x, aDragOrigin.y).getLastPathComponent().toString();
+//				}
+//
+//				@Override
+//				public void dragEnd(boolean aSuccess, Object aTransferData, int aDropAction)
+//				{
+//					Log.out.println(aSuccess+" "+aTransferData+" "+aDropAction);
+//				}
+//			};
+//
+//			new DragAndDrop(panel)
+//			{
+//				@Override
+//				public boolean canDrop(DropEvent aDropEvent)
+//				{
+//					return aDropEvent.getTransferData() != null && !"food".equals(aDropEvent.getTransferData().toString());
+//				}
+//
+//				@Override
+//				public void drop(DropEvent aDropEvent)
+//				{
+//					JLabel label = new JLabel(aDropEvent.getTransferData().toString());
+//					label.setLocation(aDropEvent.getDropLocation());
+//					label.setSize(100,20);
+//					panel.add(label);
+//					panel.repaint();
+//
+//					new DragAndDrop(label)
+//					{
+//						@Override
+//						public Object drag(Point aDragOrigin)
+//						{
+//							return ((JLabel)mComponent).getText();
+//						}
+//
+//						@Override
+//						public void dragEnd(boolean aSuccess, Object aDropValue, int aDropAction)
+//						{
+//							if (aSuccess && aDropAction == DropEvent.MOVE)
+//							{
+//								Container parent = mComponent.getParent();
+//								parent.remove(mComponent);
+//								parent.repaint();
+//							}
+//						}
+//					};
+//				}
+//			};
+//
+//			JPanel pane = new JPanel(new GridLayout(1,2));
+//			pane.add(tree);
+//			pane.add(panel);
+//
+//			JFrame frame = new JFrame();
+//			frame.add(pane);
+//			frame.setSize(1024, 768);
+//			frame.setLocationRelativeTo(null);
+//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame.setVisible(true);
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }
