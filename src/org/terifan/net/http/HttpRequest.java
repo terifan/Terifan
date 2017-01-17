@@ -23,12 +23,16 @@ public abstract class HttpRequest<E extends HttpRequest>
 	protected String mLoginName;
 	protected String mPassword;
 	protected Long mContentLength;
+	protected int mConnectTimeOut;
+	protected int mReadTimeOut;
 
 
 	public HttpRequest()
 	{
 		mHeaders = new LinkedHashMap<>();
 		mCharSet = "utf-8";
+		mConnectTimeOut = 1 * 60 * 1000;
+		mReadTimeOut = 5 * 60 * 1000;
 	}
 
 
@@ -166,6 +170,32 @@ public abstract class HttpRequest<E extends HttpRequest>
 	}
 
 
+	public int getConnectTimeOut()
+	{
+		return mConnectTimeOut;
+	}
+
+
+	public E setConnectTimeOut(int aConnectTimeOut)
+	{
+		mConnectTimeOut = aConnectTimeOut;
+		return (E)this;
+	}
+
+
+	public int getReadTimeOut()
+	{
+		return mReadTimeOut;
+	}
+
+
+	public E setReadTimeOut(int aReadTimeOut)
+	{
+		mReadTimeOut = aReadTimeOut;
+		return (E)this;
+	}
+
+
 	public abstract HttpResponse execute() throws IOException;
 
 
@@ -178,6 +208,8 @@ public abstract class HttpRequest<E extends HttpRequest>
 
 		HttpURLConnection conn = (HttpURLConnection)mURL.openConnection();
 		conn.setRequestMethod(mMethod);
+		conn.setReadTimeout(mReadTimeOut);
+		conn.setConnectTimeout(mConnectTimeOut);
 
 		for (Map.Entry<String, String> entry : mHeaders.entrySet())
 		{
@@ -187,11 +219,15 @@ public abstract class HttpRequest<E extends HttpRequest>
 		if ("POST".equals(mMethod) || "PUT".equals(mMethod))
 		{
 			conn.setDoOutput(true);
-		}
 
-		if (mContentLength != null)
-		{
-			conn.setFixedLengthStreamingMode(mContentLength);
+			if (mContentLength != null)
+			{
+				conn.setFixedLengthStreamingMode(mContentLength);
+			}
+			else
+			{
+				conn.setChunkedStreamingMode(1024);
+			}
 		}
 
 		if (mContentType != null)
@@ -205,6 +241,10 @@ public abstract class HttpRequest<E extends HttpRequest>
 				conn.setRequestProperty("Content-Type", mContentType + "; charset=" + mCharSet);
 			}
 		}
+		else
+		{
+			conn.setRequestProperty("Content-Type", "application/octet-stream");
+		}
 
 		if (mLoginName != null && mPassword != null)
 		{
@@ -217,22 +257,29 @@ public abstract class HttpRequest<E extends HttpRequest>
 
 	protected HttpResponse buildResponse(HttpURLConnection aConnection) throws IOException
 	{
-		InputStream in = aConnection.getErrorStream();
+		InputStream in;
 
-		if (in == null)
+		if (aConnection.getResponseCode() > 400)
+		{
+			in = aConnection.getErrorStream();
+		}
+		else
 		{
 			in = aConnection.getInputStream();
 		}
 
 		HttpResponse response = new HttpResponse(aConnection);
 
-		if (mTarget != null)
+		if (in != null)
 		{
-			Streams.transfer(in, mTarget);
-		}
-		else
-		{
-			response.setContent(Streams.readAll(in));
+			if (mTarget != null)
+			{
+				Streams.transfer(in, mTarget);
+			}
+			else
+			{
+				response.setContent(Streams.readAll(in));
+			}
 		}
 
 		return response;

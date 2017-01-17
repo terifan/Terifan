@@ -8,6 +8,7 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
+import java.io.Serializable;
 import java.util.ArrayList;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
@@ -19,32 +20,33 @@ import static org.terifan.ui.Anchor.SOUTH;
 import static org.terifan.ui.Anchor.SOUTH_EAST;
 
 
-public class TextBox implements Cloneable
+public class TextBox implements Cloneable, Serializable
 {
+	private static final long serialVersionUID = 1L;
 	private final static Insets ZERO_INSETS = new Insets(0,0,0,0);
 	private static char[] DEFAULT_BREAK_CHARS = {' ', '.', ',', '-', '_', ':', ';', '?', '!'};
 
-	private final Insets mMargins;
-	private final Insets mPadding;
-	private final Rectangle mBounds;
-	private ArrayList<String> mTextLines;
-	private ArrayList<Rectangle> mTextBounds;
-	private String mText;
-	private Font mFont;
-	private Color mForeground;
-	private Color mBackground;
-	private Color mHighlight;
-	private Border mBorder;
-	private Border mTextBorder;
-	private Anchor mAnchor;
-	private int mLineSpacing;
-	private int mMaxLineCount;
-	private char[] mBreakChars;
-	private int mMaxWidth;
-	private int mMinWidth;
-	private String mSuffix;
-	private boolean mDirty;
-	private Color mShadowColor;
+	protected final Insets mMargins;
+	protected final Insets mPadding;
+	protected final Rectangle mBounds;
+	protected ArrayList<String> mTextLines;
+	protected ArrayList<Rectangle> mTextBounds;
+	protected String mText;
+	protected Font mFont;
+	protected Color mForeground;
+	protected Color mBackground;
+	protected Color mHighlight;
+	protected Border mBorder;
+	protected Border mTextBorder;
+	protected Anchor mAnchor;
+	protected int mLineSpacing;
+	protected int mMaxLineCount;
+	protected char[] mBreakChars;
+	protected int mMaxWidth;
+	protected int mMinWidth;
+	protected String mSuffix;
+	protected boolean mDirty;
+	protected Color mShadowColor;
 
 
 	public TextBox()
@@ -532,8 +534,8 @@ public class TextBox implements Cloneable
 		}
 		return renderImpl(aGraphics, aTranslateX, aTranslateY, hasShadow, false);
 	}
-	
-	
+
+
 	protected TextBox renderImpl(Graphics aGraphics, int aTranslateX, int aTranslateY, boolean aHasShadow, boolean aShadow)
 	{
 		if (mDirty)
@@ -570,7 +572,7 @@ public class TextBox implements Cloneable
 
 		aGraphics.setColor(mForeground);
 		aGraphics.setFont(mFont);
-		
+
 		for (int i = 0, sz = mTextBounds.size(); i < sz; i++)
 		{
 			Rectangle r = mTextBounds.get(i);
@@ -655,10 +657,10 @@ public class TextBox implements Cloneable
 
 		int lineHeightExtra = lineHeight + mLineSpacing + extraLineHeight;
 		int boxHeightExtra = boxH + mLineSpacing + extraLineHeight;
-		
+
 		int lineY = boxY;
 		int lineCount = Math.min(Math.min(mTextLines.size(), mMaxLineCount > 0 ? mMaxLineCount : Integer.MAX_VALUE), boxHeightExtra / lineHeightExtra);
-		
+
 		switch (mAnchor)
 		{
 			case SOUTH_EAST:
@@ -730,7 +732,7 @@ public class TextBox implements Cloneable
 					boolean isLastLine = mMaxLineCount > 0 && list.size() >= mMaxLineCount - 1;
 					int w = getStringLength(aFontRenderContext, str, mFont);
 					String nextLine;
-					
+
 					String suffix = "";
 					int tmpBoxW = boxW;
 					if ((isLastLine || w < boxW) && mSuffix != null)
