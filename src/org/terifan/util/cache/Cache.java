@@ -225,6 +225,48 @@ public class Cache<K,V> implements Iterable<K>
 	}
 
 
+	public synchronized V get(K aKey, Provider<K,V> aProvider)
+	{
+		Entry<K, V> entry = mKeyValueMap.get(aKey);
+
+		if (entry != null)
+		{
+			mCacheOrder.remove(aKey);
+			mCacheOrder.addFirst(aKey);
+
+			return entry.value;
+		}
+		
+		if (aProvider != null)
+		{
+			try
+			{
+				V value = aProvider.create(aKey);
+
+				if (value != null)
+				{
+					put(aKey, value, 1);
+				}
+
+				return value;
+			}
+			catch (Exception e)
+			{
+				throw new IllegalStateException(e);
+			}
+		}
+
+		return null;
+	}
+	
+
+	@FunctionalInterface
+	public interface Provider<K,V>
+	{
+		V create(K aKey) throws Exception;
+	}
+
+
 	/**
 	 * Returns the value to which the specified key is mapped in this identity
 	 * hash map, or null if the map contains no mapping for this key. A return
