@@ -3,6 +3,8 @@ package org.terifan.ui.graph;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
@@ -19,36 +21,84 @@ public class Graph extends JComponent
 	private Date[] mTimes;
 	private long mMaxValue;
 	private long mAverageValue;
-	private int mBarWidth;
 	private int mCounter;
+	private String mTitle;
+	private long mConstantMaxValue;
+	private String mUnit;
+
+	private Color mLineColor = new Color(17, 125, 187);
+	private Color mBottomLineColor = new Color(64,64,64);
+	private Color mAverageLineColor = new Color(128,160,255);
+	private Color mBorderColor = new Color(17, 125, 187);
+	private Color mGridColor = new Color(241, 246, 250);
+	private Color mFillColor = new Color(17, 125, 187, 32);
 
 
-	public Graph()
+	public Graph(String aTitle, String aUnit)
 	{
-		mValues = new long[200];
-		mTimes = new Date[200];
-		mBarWidth = 4;
+		mTitle = aTitle;
+		mUnit = aUnit;
+
+		mValues = new long[100];
+		mTimes = new Date[100];
 
 		setBackground(Color.WHITE);
 	}
 
 
-	public int getBarWidth()
+	public Color getBottomLineColor()
 	{
-		return mBarWidth;
+		return mBottomLineColor;
 	}
 
 
-	public Graph setBarWidth(int aBarWidth)
+	public void setBottomLineColor(Color aBottomLineColor)
 	{
-		mBarWidth = aBarWidth;
+		this.mBottomLineColor = aBottomLineColor;
+	}
+
+
+	public Color getAverageLineColor()
+	{
+		return mAverageLineColor;
+	}
+
+
+	public void setAverageLineColor(Color aAverageLineColor)
+	{
+		this.mAverageLineColor = aAverageLineColor;
+	}
+
+
+	public Color getLineColor()
+	{
+		return mLineColor;
+	}
+
+
+	public void setLineColor(Color aLineColor)
+	{
+		this.mLineColor = aLineColor;
+	}
+
+
+	public long getConstantMaxValue()
+	{
+		return mConstantMaxValue;
+	}
+
+
+	public Graph setConstantMaxValue(long aConstantMaxValue)
+	{
+		mConstantMaxValue = aConstantMaxValue;
+		mMaxValue = aConstantMaxValue;
 		return this;
 	}
 
 
 	public synchronized void add(long aValue)
 	{
-		if (mValues[mValues.length - 1] == mMaxValue)
+		if (mConstantMaxValue == 0 && mValues[mValues.length - 1] == mMaxValue)
 		{
 			mMaxValue = 0;
 			for (int i = 0; i < mValues.length - 1; i++)
@@ -66,7 +116,11 @@ public class Graph extends JComponent
 		mTimes[0] = new Date();
 
 		mCounter++;
-		mMaxValue = Math.max(mMaxValue, aValue);
+
+		if (mConstantMaxValue == 0)
+		{
+			mMaxValue = Math.max(mMaxValue, aValue);
+		}
 
 		SwingUtilities.invokeLater(()->repaint());
 	}
@@ -75,55 +129,83 @@ public class Graph extends JComponent
 	@Override
 	protected void paintComponent(Graphics aGraphics)
 	{
+		Graphics2D g = (Graphics2D)aGraphics;
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		int x = 4;
+		int y = 28;
 		int w = getWidth();
 		int h = getHeight();
-		int right = w - 50;
-		int bottom = h - 16;
+		int w1 = w - 50 - x;
+		int h1 = h - 16 - y;
 
-		aGraphics.setColor(getBackground());
-		aGraphics.fillRect(0, 0, w, h);
+		double stepSize = w1 / (double)mValues.length;
 
-		double a = mAverageValue / (double)Math.min(mCounter, mValues.length) / mMaxValue;
+		g.setColor(getBackground());
+		g.fillRect(0, 0, w, h);
 
-		aGraphics.setColor(Color.BLACK);
-		aGraphics.drawString("" + mMaxValue, right + 5, 13);
-		aGraphics.drawString("" + (int)(a*mMaxValue), right + 5, bottom-4);
+		g.setColor(Color.BLACK);
+		g.drawString(mTitle, 4, 13);
+		g.drawString(mMaxValue + " " + mUnit, w1 + 5, 13);
 
-		int vv = (int)(bottom * a);
+		g.translate(x, y);
 
-		aGraphics.setColor(Color.LIGHT_GRAY);
-		aGraphics.drawLine(0, bottom*1/4, right, bottom*1/4);
-		aGraphics.drawLine(0, bottom*2/4, right, bottom*2/4);
-		aGraphics.drawLine(0, bottom*3/4, right, bottom*3/4);
-
-		aGraphics.setColor(Color.GRAY);
-		aGraphics.drawLine(0, bottom, right, bottom);
-
-		aGraphics.setColor(Color.BLUE);
-		aGraphics.drawLine(0, bottom-vv, right, bottom-vv);
-
-		for (int i = 0, x = right - mBarWidth; x > -mBarWidth && i < mValues.length; i++)
+		g.setColor(mGridColor);
+		for (int i = 0; i < h1; i += h1 / 5)
 		{
-			int v = (int)(bottom * mValues[i] / (double)mMaxValue);
-
-			aGraphics.setColor(Color.GREEN);
-			aGraphics.fillRect(x, bottom - v, mBarWidth, v);
-
-			if (((i-mCounter+1) % 50) == 0 && mTimes[i] != null)
-			{
-				aGraphics.setColor(Color.BLACK);
-				aGraphics.drawString("" + TIME_FORMAT.format(mTimes[i]), x-25, h-3);
-			}
-
-			x -= mBarWidth + 1;
+			g.drawLine(x, i, w1, i);
 		}
+
+		int vy = h1 - (int)(h1 * mValues[0] / (mMaxValue == 0 ? 1 : mMaxValue));
+
+		g.setColor(Color.BLACK);
+		g.drawString("" + mValues[0], w1 + 5, vy);
+
+		for (int i = 0; i < mValues.length; i++)
+		{
+			if (((i - mCounter + 1) % 25) == 0 && mTimes[i] != null)
+			{
+				g.drawString(TIME_FORMAT.format(mTimes[i]), (int)(w1 - i * stepSize)-40, h1 + 13);
+			}
+		}
+
+		int[] xp = new int[mValues.length + 3];
+		int[] yp = new int[mValues.length + 3];
+
+		for (int i = 0; i < mValues.length; i++)
+		{
+			int v = (int)(h1 * mValues[i] / (double)mMaxValue);
+
+			xp[i] = (int)(w1 - i * stepSize);
+			yp[i] = h1 - v;
+
+			g.setColor(mGridColor);
+			g.drawLine(xp[i], 0, xp[i], h1);
+		}
+
+		g.setColor(mGridColor);
+		g.drawLine(x, 0, x, h1);
+
+		xp[mValues.length + 0] = xp[mValues.length - 1];
+		yp[mValues.length + 0] = h1;
+		xp[mValues.length + 1] = w1;
+		yp[mValues.length + 1] = h1;
+		xp[mValues.length + 2] = w1;
+		yp[mValues.length + 2] = yp[0];
+
+		g.setColor(mFillColor);
+		g.fillPolygon(xp, yp, xp.length);
+		g.setColor(mLineColor);
+		g.drawPolyline(xp, yp, xp.length - 3);
+
+		g.translate(x, -y);
 	}
 
 
 	@Override
 	public Dimension getPreferredSize()
 	{
-		return new Dimension(400, 80);
+		return new Dimension(mValues.length * 5, 80);
 	}
 
 
@@ -131,7 +213,7 @@ public class Graph extends JComponent
 	{
 		try
 		{
-			Graph graph = new Graph();
+			Graph graph = new Graph("test", "rpm");
 
 			JFrame frame = new JFrame();
 			frame.add(graph);
@@ -146,7 +228,7 @@ public class Graph extends JComponent
 			{
 				graph.add(r.nextInt(1<<(2+r.nextInt(10))));
 
-				Thread.sleep(1000);
+				Thread.sleep(100);
 			}
 		}
 		catch (Throwable e)
