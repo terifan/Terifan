@@ -11,6 +11,8 @@ import java.util.Random;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import org.terifan.ui.Anchor;
+import org.terifan.ui.TextBox;
 
 
 public class Graph extends JComponent
@@ -27,11 +29,8 @@ public class Graph extends JComponent
 	private String mUnit;
 
 	private Color mLineColor = new Color(17, 125, 187);
-	private Color mBottomLineColor = new Color(64,64,64);
-	private Color mAverageLineColor = new Color(128,160,255);
-	private Color mBorderColor = new Color(17, 125, 187);
-	private Color mGridColor = new Color(241, 246, 250);
 	private Color mFillColor = new Color(17, 125, 187, 32);
+	private Color mGridColor = new Color(241, 246, 250);
 
 
 	public Graph(String aTitle, String aUnit)
@@ -46,39 +45,15 @@ public class Graph extends JComponent
 	}
 
 
-	public Color getBottomLineColor()
+	public Color getGridColor()
 	{
-		return mBottomLineColor;
+		return mGridColor;
 	}
 
 
-	public void setBottomLineColor(Color aBottomLineColor)
+	public void setGridColor(Color aGridColor)
 	{
-		this.mBottomLineColor = aBottomLineColor;
-	}
-
-
-	public Color getAverageLineColor()
-	{
-		return mAverageLineColor;
-	}
-
-
-	public void setAverageLineColor(Color aAverageLineColor)
-	{
-		this.mAverageLineColor = aAverageLineColor;
-	}
-
-
-	public Color getLineColor()
-	{
-		return mLineColor;
-	}
-
-
-	public void setLineColor(Color aLineColor)
-	{
-		this.mLineColor = aLineColor;
+		this.mGridColor = aGridColor;
 	}
 
 
@@ -122,83 +97,112 @@ public class Graph extends JComponent
 			mMaxValue = Math.max(mMaxValue, aValue);
 		}
 
-		SwingUtilities.invokeLater(()->repaint());
+		SwingUtilities.invokeLater(() -> repaint());
 	}
 
+
+		int tbHeight = 16;
+		int vbWidth = 50;
 
 	@Override
 	protected void paintComponent(Graphics aGraphics)
 	{
-		Graphics2D g = (Graphics2D)aGraphics;
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
 		int x = 4;
-		int y = 28;
+		int y = 24;
 		int w = getWidth();
 		int h = getHeight();
-		int w1 = w - 50 - x;
-		int h1 = h - 16 - y;
+		int w1 = w - vbWidth - x;
+		int h1 = h - tbHeight - y;
 
-		double stepSize = w1 / (double)mValues.length;
-
+		Graphics2D g = (Graphics2D)aGraphics;
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setColor(getBackground());
 		g.fillRect(0, 0, w, h);
 
-		g.setColor(Color.BLACK);
-		g.drawString(mTitle, 4, 13);
-		g.drawString(mMaxValue + " " + mUnit, w1 + 5, 13);
+		TextBox textBox = new TextBox().setForeground(getForeground()).setBounds(x, 0, w1, y);
+		textBox.setAnchor(Anchor.WEST).setText(mTitle).render(g);
+		textBox.setAnchor(Anchor.EAST).setText(mMaxValue + " " + mUnit).render(g);
 
 		g.translate(x, y);
 
-		g.setColor(mGridColor);
-		for (int i = 0; i < h1; i += h1 / 5)
-		{
-			g.drawLine(x, i, w1, i);
-		}
+		drawGrid(g, w1, h1);
+		drawValues(g, w1, h1);
+		drawGraph(g, w1, h1);
 
-		int vy = h1 - (int)(h1 * mValues[0] / (mMaxValue == 0 ? 1 : mMaxValue));
+		g.translate(x, -y);
+	}
 
-		g.setColor(Color.BLACK);
-		g.drawString("" + mValues[0], w1 + 5, vy);
+
+	private void drawValues(Graphics2D g, int aWidth, int aHeight)
+	{
+		double stepSize = aWidth / (double)(mValues.length - 1);
+
+		TextBox textBox = new TextBox().setForeground(getForeground()).setBounds(0, 0, aWidth, 24);
+
+		int vy = aHeight - (int)(aHeight * mValues[0] / (mMaxValue == 0 ? 1 : mMaxValue));
+
+		textBox.setBounds((int)(aWidth + 5), vy - 9, vbWidth, 18).setAnchor(Anchor.WEST).setText("" + mValues[0]).render(g);
 
 		for (int i = 0; i < mValues.length; i++)
 		{
 			if (((i - mCounter + 1) % 25) == 0 && mTimes[i] != null)
 			{
-				g.drawString(TIME_FORMAT.format(mTimes[i]), (int)(w1 - i * stepSize)-40, h1 + 13);
+				textBox.setBounds((int)(aWidth - i * stepSize) - 100, aHeight, 100, tbHeight).setAnchor(Anchor.EAST).setText(TIME_FORMAT.format(mTimes[i])).render(g);
 			}
 		}
+	}
+
+
+	private void drawGrid(Graphics2D g, int aWidth, int aHeight)
+	{
+		double stepSize = aWidth / (double)(mValues.length - 1);
+
+		int R = 8;
+
+		g.setColor(mGridColor);
+
+		for (int i = 0; i <= aHeight / R; i++)
+		{
+			int iy = (int)(i * aHeight / (double)(aHeight / R));
+			g.drawLine(0, iy, aWidth, iy);
+		}
+		for (int i = 0; i < mValues.length; i++)
+		{
+			if (((i - mCounter) % 5) == 0)
+			{
+				int ix = (int)(aWidth - i * stepSize);
+
+				g.drawLine(ix, 0, ix, aHeight);
+			}
+		}
+	}
+
+
+	private void drawGraph(Graphics2D g, int aWidth, int aHeight)
+	{
+		double stepSize = aWidth / (double)(mValues.length - 1);
 
 		int[] xp = new int[mValues.length + 3];
 		int[] yp = new int[mValues.length + 3];
 
 		for (int i = 0; i < mValues.length; i++)
 		{
-			int v = (int)(h1 * mValues[i] / (double)mMaxValue);
-
-			xp[i] = (int)(w1 - i * stepSize);
-			yp[i] = h1 - v;
-
-			g.setColor(mGridColor);
-			g.drawLine(xp[i], 0, xp[i], h1);
+			int v = (int)(aHeight * mValues[i] / (double)mMaxValue);
+			xp[i] = (int)(aWidth - i * stepSize);
+			yp[i] = aHeight - v;
 		}
 
-		g.setColor(mGridColor);
-		g.drawLine(x, 0, x, h1);
-
 		xp[mValues.length + 0] = xp[mValues.length - 1];
-		yp[mValues.length + 0] = h1;
-		xp[mValues.length + 1] = w1;
-		yp[mValues.length + 1] = h1;
-		xp[mValues.length + 2] = w1;
+		yp[mValues.length + 0] = aHeight;
+		xp[mValues.length + 1] = aWidth;
+		yp[mValues.length + 1] = aHeight;
+		xp[mValues.length + 2] = aWidth;
 		yp[mValues.length + 2] = yp[0];
 
 		g.setColor(mFillColor);
 		g.fillPolygon(xp, yp, xp.length);
 		g.setColor(mLineColor);
 		g.drawPolyline(xp, yp, xp.length - 3);
-
-		g.translate(x, -y);
 	}
 
 
@@ -209,11 +213,13 @@ public class Graph extends JComponent
 	}
 
 
-	public static void main(String ... args)
+	public static void main(String... args)
 	{
 		try
 		{
 			Graph graph = new Graph("test", "rpm");
+			graph.setBackground(new Color(240, 240, 240));
+			graph.setGridColor(new Color(221, 226, 230));
 
 			JFrame frame = new JFrame();
 			frame.add(graph);
@@ -226,7 +232,7 @@ public class Graph extends JComponent
 
 			for (;;)
 			{
-				graph.add(r.nextInt(1<<(2+r.nextInt(10))));
+				graph.add(r.nextInt(1 << (2 + r.nextInt(10))));
 
 				Thread.sleep(100);
 			}
