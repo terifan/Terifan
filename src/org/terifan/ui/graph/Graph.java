@@ -19,27 +19,33 @@ public class Graph extends JComponent
 {
 	private final static SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
 
-	private long[] mValues;
-	private Date[] mTimes;
+	private final long[] mValues;
+	private final long[] mTimes;
+	private long mConstantMaxValue;
+	private long mCumulativeSum;
 	private long mMaxValue;
-	private long mAverageValue;
 	private int mCounter;
 	private String mTitle;
-	private long mConstantMaxValue;
 	private String mUnit;
 
 	private Color mLineColor = new Color(17, 125, 187);
 	private Color mFillColor = new Color(17, 125, 187, 32);
 	private Color mGridColor = new Color(241, 246, 250);
+	private Color mAverageLineColor = new Color(50,255,80, 128);
+	private int mBottomLegendHeight = 16;
+	private int mRightLegendWidth = 40;
+	private int mTitleLegendHeight = 24;
+	private int mTimeSpacing = 60;
+	private int mGridSize = 8;
 
 
-	public Graph(String aTitle, String aUnit)
+	public Graph(String aTitle, String aUnit, int aSequenceLength)
 	{
 		mTitle = aTitle;
 		mUnit = aUnit;
 
-		mValues = new long[100];
-		mTimes = new Date[100];
+		mValues = new long[aSequenceLength];
+		mTimes = new long[aSequenceLength];
 
 		setBackground(Color.WHITE);
 	}
@@ -82,13 +88,13 @@ public class Graph extends JComponent
 			}
 		}
 
-		mAverageValue -= mValues[mValues.length - 1];
-		mAverageValue += aValue;
+		mCumulativeSum -= mValues[mValues.length - 1];
+		mCumulativeSum += aValue;
 
 		System.arraycopy(mValues, 0, mValues, 1, mValues.length - 1);
 		System.arraycopy(mTimes, 0, mTimes, 1, mTimes.length - 1);
 		mValues[0] = aValue;
-		mTimes[0] = new Date();
+		mTimes[0] = System.currentTimeMillis();
 
 		mCounter++;
 
@@ -101,18 +107,15 @@ public class Graph extends JComponent
 	}
 
 
-		int tbHeight = 16;
-		int vbWidth = 50;
-
 	@Override
 	protected void paintComponent(Graphics aGraphics)
 	{
 		int x = 4;
-		int y = 24;
+		int y = mTitleLegendHeight;
 		int w = getWidth();
 		int h = getHeight();
-		int w1 = w - vbWidth - x;
-		int h1 = h - tbHeight - y;
+		int w1 = w - mRightLegendWidth - x;
+		int h1 = h - mBottomLegendHeight - y;
 
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -137,19 +140,25 @@ public class Graph extends JComponent
 	{
 		double stepSize = aWidth / (double)(mValues.length - 1);
 
-		TextBox textBox = new TextBox().setForeground(getForeground()).setBounds(0, 0, aWidth, 24);
+		TextBox textBox = new TextBox().setForeground(getForeground()).setBounds(0, 0, aWidth, mTitleLegendHeight);
 
 		int vy = aHeight - (int)(aHeight * mValues[0] / (mMaxValue == 0 ? 1 : mMaxValue));
 
-		textBox.setBounds((int)(aWidth + 5), vy - 9, vbWidth, 18).setAnchor(Anchor.WEST).setText("" + mValues[0]).render(g);
+		textBox.setBounds(aWidth + 5, vy - 9, mRightLegendWidth, 18).setAnchor(Anchor.WEST).setText("" + mValues[0]).render(g);
+
+		int modulo = (int)Math.max(Math.ceil(mTimeSpacing / (aWidth / (double)mValues.length)), 2);
 
 		for (int i = 0; i < mValues.length; i++)
 		{
-			if (((i - mCounter + 1) % 25) == 0 && mTimes[i] != null)
+			if (((i - mCounter + 1) % modulo) == 0 && mTimes[i] != 0)
 			{
-				textBox.setBounds((int)(aWidth - i * stepSize) - 100, aHeight, 100, tbHeight).setAnchor(Anchor.EAST).setText(TIME_FORMAT.format(mTimes[i])).render(g);
+				textBox.setBounds(aWidth - (int)(i * stepSize) - mTimeSpacing, aHeight, mTimeSpacing, mBottomLegendHeight).setAnchor(Anchor.EAST).setText(TIME_FORMAT.format(new Date(mTimes[i]))).render(g);
 			}
 		}
+
+		int y = aHeight - (int)(aHeight * mCumulativeSum / Math.min(mCounter, mValues.length) / (double)mMaxValue);
+		g.setColor(mAverageLineColor);
+		g.drawLine(0, y, aWidth, y);
 	}
 
 
@@ -157,18 +166,19 @@ public class Graph extends JComponent
 	{
 		double stepSize = aWidth / (double)(mValues.length - 1);
 
-		int R = 8;
-
 		g.setColor(mGridColor);
 
-		for (int i = 0; i <= aHeight / R; i++)
+		for (int i = 0; i <= aHeight / mGridSize; i++)
 		{
-			int iy = (int)(i * aHeight / (double)(aHeight / R));
+			int iy = (int)(i * aHeight / (double)(aHeight / mGridSize));
 			g.drawLine(0, iy, aWidth, iy);
 		}
+
+		int modulo = (int)Math.max(Math.ceil(mGridSize / (aWidth / (double)mValues.length)), 2);
+
 		for (int i = 0; i < mValues.length; i++)
 		{
-			if (((i - mCounter) % 5) == 0)
+			if (((i - mCounter) % modulo) == 0)
 			{
 				int ix = (int)(aWidth - i * stepSize);
 
@@ -217,7 +227,7 @@ public class Graph extends JComponent
 	{
 		try
 		{
-			Graph graph = new Graph("test", "rpm");
+			Graph graph = new Graph("test", "rpm", 1000);
 			graph.setBackground(new Color(240, 240, 240));
 			graph.setGridColor(new Color(221, 226, 230));
 
