@@ -37,6 +37,7 @@ public class Graph extends JComponent
 	private int mTitleLegendHeight = 24;
 	private int mTimeSpacing = 60;
 	private int mGridSize = 8;
+	private boolean mDrawAverage;
 
 
 	public Graph(String aTitle, String aUnit, int aSequenceLength)
@@ -156,9 +157,12 @@ public class Graph extends JComponent
 			}
 		}
 
-		int y = aHeight - (int)(aHeight * mCumulativeSum / Math.min(mCounter, mValues.length) / (double)mMaxValue);
-		g.setColor(mAverageLineColor);
-		g.drawLine(0, y, aWidth, y);
+		if (mDrawAverage)
+		{
+			int y = aHeight - (int)(aHeight * mCumulativeSum / Math.min(mCounter, mValues.length) / (double)mMaxValue);
+			g.setColor(mAverageLineColor);
+			g.drawLine(0, y, aWidth, y);
+		}
 	}
 
 
@@ -220,6 +224,18 @@ public class Graph extends JComponent
 	public Dimension getPreferredSize()
 	{
 		return new Dimension(mValues.length * 5, 80);
+	}
+
+
+	public boolean isDrawAverage()
+	{
+		return mDrawAverage;
+	}
+
+
+	public void setDrawAverage(boolean aDrawAverage)
+	{
+		mDrawAverage = aDrawAverage;
 	}
 
 
