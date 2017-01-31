@@ -1,6 +1,7 @@
 package org.terifan.util;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -261,15 +262,143 @@ public class Strings
 	}
 
 
+	/**
+	 * Return a comma separated list of all items in the list.
+	 * @param aList
+	 *   a list of items
+	 * @return
+	 *   a String of all items
+	 */
+	public static String listToString(Collection aList)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (Object item : aList)
+		{
+			if (sb.length() > 0)
+			{
+				sb.append(',');
+			}
+			sb.append(item);
+		}
+		return sb.toString();
+	}
+
+
+	public static String listToString(Object... aList)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (Object item : aList)
+		{
+			if (sb.length() > 0)
+			{
+				sb.append(',');
+			}
+			sb.append(item);
+		}
+		return sb.toString();
+	}
+
+
 	public static String emptyToNull(String aString)
 	{
 		return aString == null || aString.isEmpty() ? null : aString;
 	}
 
 
+	/**
+	 * Join two strings inserting the separator between ensuring the separator only exists once.
+	 *
+	 * E.g: join("c:/files/", "/", "/my_file.txt") returns "c:/files/my_file.txt".
+	 *
+	 * @return
+	 *   strings join with the separator in-between.
+	 */
+	public static String concat(String aHead, String aSeparator, String aTail)
+	{
+		if (!aSeparator.isEmpty())
+		{
+			while (aHead.endsWith(aSeparator))
+			{
+				aHead = aHead.substring(0, aHead.length()-1);
+			}
+			while (aTail.startsWith(aSeparator))
+			{
+				aTail = aTail.substring(1);
+			}
+		}
+		return aHead + (!aHead.isEmpty() && !aTail.isEmpty() ? aSeparator : "") + aTail;
+	}
+
+
+	/**
+	 * Joins the string excluding any empty or null parts.
+	 *
+	 * @param aSeparator
+	 *   separator between parts
+	 * @param aStrings
+	 *   parts to join
+	 * @return
+	 *   the joined strings
+	 */
+	public static String join(String aSeparator, String... aStrings)
+	{
+		return join(aSeparator, false, aStrings);
+	}
+
+
+	/**
+	 * Joins the string excluding any null parts.
+	 *
+	 * @param aSeparator
+	 *   separator between parts
+	 * @param aIncludeEmptyParts
+	 *   true if empty parts should be included
+	 * @param aStrings
+	 *   parts to join
+	 * @return
+	 *   the joined strings
+	 */
+	public static String join(String aSeparator, boolean aIncludeEmptyParts, String... aStrings)
+	{
+		if (aStrings == null)
+		{
+			return null;
+		}
+		if (aStrings.length == 0)
+		{
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (String s : aStrings)
+		{
+			if (s != null && (aIncludeEmptyParts || !s.isEmpty()))
+			{
+				if (sb.length() > 0)
+				{
+					sb.append(aSeparator);
+				}
+				sb.append(s);
+			}
+		}
+		return sb.toString();
+	}
+
+
 	public static String replaceNull(Object aString, String aReplacedWith)
 	{
 		return aString == null ? aReplacedWith : aString.toString();
+	}
+
+
+	public static String replaceEmptyOrNull(String aString, String aReplacedWith)
+	{
+		return isEmptyOrNull(aString) ? aReplacedWith : aString;
+	}
+
+
+	public static String toTimeString(long aMillis)
+	{
+		return String.format("%d:%02d:%02d.%03d", aMillis/60/60/1000, (aMillis/60/1000)%60, (aMillis/1000)%60, aMillis%1000);
 	}
 
 
