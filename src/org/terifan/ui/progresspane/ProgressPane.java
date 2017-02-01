@@ -1,29 +1,72 @@
 package org.terifan.ui.progresspane;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Shape;
 import java.util.ArrayList;
-import java.util.Random;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 
 public class ProgressPane extends JPanel
 {
 	private ArrayList<Work> mWork;
-	
-	
+	private long mLastRepaint;
+	private int mCollapseAnimationDelay;
+	private int mRepaintFrequency;
+
+
 	public ProgressPane()
 	{
 		mWork = new ArrayList<>();
+		mCollapseAnimationDelay = 25;
+		mRepaintFrequency = 50;
 	}
-	
-	
-	public void add(Work aWork)
+
+
+	public ProgressPane add(Work aWork)
 	{
+		aWork.mPane = this;
 		mWork.add(aWork);
+		return this;
+	}
+
+
+	public int getCollapseAnimationDelay()
+	{
+		return mCollapseAnimationDelay;
+	}
+
+
+	public ProgressPane setCollapseAnimationDelay(int aCollapseAnimationDelay)
+	{
+		mCollapseAnimationDelay = aCollapseAnimationDelay;
+		return this;
+	}
+
+
+	public int getRepaintFrequency()
+	{
+		return mRepaintFrequency;
+	}
+
+
+	public ProgressPane setRepaintFrequency(int aRepaintFrequency)
+	{
+		mRepaintFrequency = aRepaintFrequency;
+		return this;
+	}
+
+
+	public void update()
+	{
+		long t = System.currentTimeMillis();
+
+		if (t - mLastRepaint > mRepaintFrequency)
+		{
+			mLastRepaint = t;
+			repaint();
+		}
 	}
 
 
@@ -39,12 +82,11 @@ public class ProgressPane extends JPanel
 	{
 		aGraphics.setColor(Color.WHITE);
 		aGraphics.fillRect(0, 0, getWidth(), getHeight());
-		
+
 		paintImpl(aGraphics, 0, 0, mWork);
 	}
-	
-	
-	
+
+
 	private int paintImpl(Graphics aGraphics, int x, int y, ArrayList<Work> aWork)
 	{
 		int s = 30;
@@ -54,12 +96,18 @@ public class ProgressPane extends JPanel
 		{
 			if (work.mHeight > 0)
 			{
-				int p = (int)(work.mCurrent * w / (double)work.mSize);
+				int p = (int)(work.getProgress() * w / (double)work.getLimit());
 
 				aGraphics.setColor(Color.RED);
 				aGraphics.fillRect(x * s, y, p, work.mHeight);
 				aGraphics.setColor(Color.BLUE);
 				aGraphics.fillRect(x * s + p, y, w-p, work.mHeight);
+				aGraphics.setColor(Color.YELLOW);
+
+				Shape oldClip = aGraphics.getClip();
+				aGraphics.setClip(x * s, y, w, work.mHeight);
+				aGraphics.drawString((work.getProgress() * 100 / work.getLimit()) + "% " + work.getLabel(), w/2-50, y + work.mHeight-5);
+				aGraphics.setClip(oldClip);
 
 				y += work.mHeight + 2;
 			}
@@ -71,117 +119,5 @@ public class ProgressPane extends JPanel
 		}
 
 		return y;
-	}
-
-
-	public static class Work
-	{
-		Work mParent;
-		ArrayList<Work> mChildren;
-		int mSize;
-		int mCurrent;
-		int mHeight;
-
-
-		public Work(int aCurrent, int aSize)
-		{
-			mSize = aSize;
-			mCurrent = aCurrent;
-			mHeight = 20;
-		}
-	
-	
-		public void add(Work aWork)
-		{
-			if (mChildren == null)
-			{
-				mChildren = new ArrayList<>();
-			}
-
-			aWork.mParent = this;
-			mChildren.add(aWork);
-		}
-	}
-
-
-	public static void main(String... args)
-	{
-		try
-		{
-			ProgressPane pane = new ProgressPane();
-
-			JFrame frame = new JFrame();
-			frame.add(pane, BorderLayout.CENTER);
-			frame.setSize(1024, 768);
-			frame.setLocationRelativeTo(null);
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setVisible(true);
-
-			ArrayList<Work> allWork = new ArrayList<>();
-
-			Random r = new Random();
-
-			for (;;)
-			{
-				Work work = new Work(0, 10);
-
-				if (r.nextDouble() < 0.2 || allWork.isEmpty())
-				{
-					pane.add(work);
-				}
-				else
-				{
-					allWork.get(r.nextInt(allWork.size())).add(work);
-				}
-
-				allWork.add(work);
-
-				new Thread()
-				{
-					@Override
-					public void run()
-					{
-						try
-						{
-							int s = new Random().nextInt(1000);
-							while (work.mCurrent < work.mSize)
-							{
-								work.mCurrent++;
-								sleep(s);
-							}
-							allWork.remove(work);
-							if (work.mChildren != null)
-							{
-								while (!work.mChildren.isEmpty())
-								{
-									sleep(500);
-								}
-							}
-							while (work.mHeight > 0)
-							{
-								work.mHeight--;
-								sleep(100);
-							}
-							if (work.mParent != null)
-							{
-								work.mParent.mChildren.remove(work);
-							}
-						}
-						catch (Exception e)
-						{
-							e.printStackTrace();
-						}
-					}					
-				}.start();
-
-				pane.repaint();
-
-				Thread.sleep(500);
-			}
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
 	}
 }
