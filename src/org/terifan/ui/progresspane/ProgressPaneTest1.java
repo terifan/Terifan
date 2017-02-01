@@ -1,7 +1,6 @@
 package org.terifan.ui.progresspane;
 
 import java.awt.BorderLayout;
-import static java.lang.Thread.sleep;
 import javax.swing.JFrame;
 
 
@@ -33,26 +32,24 @@ public class ProgressPaneTest1
 			{
 				work1.incrementProgress();
 				work2.incrementProgress();
-				try{sleep(100);}catch(Exception e){}
+				try{Thread.sleep(100);}catch(Exception e){}
 			}
 			work2.finishUnblocked();
 			while (!work3.isLimitReached())
 			{
 				work1.incrementProgress();
 				work3.incrementProgress();
-				try{sleep(100);}catch(Exception e){}
+				try{Thread.sleep(100);}catch(Exception e){}
 			}
 			work3.finishUnblocked();
 			while (!work4.isLimitReached())
 			{
 				work1.incrementProgress();
 				work4.incrementProgress();
-				try{sleep(100);}catch(Exception e){}
+				try{Thread.sleep(100);}catch(Exception e){}
 			}
 			work4.finishUnblocked();
 			work1.finish();
-
-			pane.repaint();
 		}
 		catch (Throwable e)
 		{

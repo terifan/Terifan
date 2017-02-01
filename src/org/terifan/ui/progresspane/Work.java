@@ -1,8 +1,6 @@
 package org.terifan.ui.progresspane;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 public class Work
@@ -65,7 +63,7 @@ public class Work
 		aWork.mParent = this;
 		mChildren.add(aWork);
 
-		getPane().update();
+		getPane().repaint();
 	}
 
 
@@ -115,7 +113,7 @@ public class Work
 		while (mHeight > 0)
 		{
 			mHeight--;
-			pane.update();
+			pane.repaint();
 
 			try
 			{
@@ -133,7 +131,7 @@ public class Work
 				mParent.notify();
 			}
 			mParent.mChildren.remove(this);
-			pane.update();
+			pane.repaint();
 		}
 	}
 
@@ -141,7 +139,7 @@ public class Work
 	public void incrementProgress()
 	{
 		mProgress++;
-		getPane().update();
+		getPane().repaint();
 	}
 
 

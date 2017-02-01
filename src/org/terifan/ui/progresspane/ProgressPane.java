@@ -11,7 +11,6 @@ import javax.swing.JPanel;
 public class ProgressPane extends JPanel
 {
 	private ArrayList<Work> mWork;
-	private long mLastRepaint;
 	private int mCollapseAnimationDelay;
 	private int mRepaintFrequency;
 
@@ -55,18 +54,6 @@ public class ProgressPane extends JPanel
 	{
 		mRepaintFrequency = aRepaintFrequency;
 		return this;
-	}
-
-
-	public void update()
-	{
-		long t = System.currentTimeMillis();
-
-		if (t - mLastRepaint > mRepaintFrequency)
-		{
-			mLastRepaint = t;
-			repaint();
-		}
 	}
 
 
