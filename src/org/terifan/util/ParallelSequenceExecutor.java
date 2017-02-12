@@ -1,12 +1,27 @@
 package org.terifan.util;
 
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Random;
 
 
+/**
+ * This class executes a sequence of elements in parallel. The sequence is either a fixed number 
+ * of iterations, reading from an iterator or array. Each element is sent to the executing function 
+ * provided in the call.
+ * 
+ * Note: if the execution is cancelled and the same instance is to be reused in another execution 
+ *       then it's necessary to call the reset method before execute.
+ * 
+ * E.g.
+ *   ParallelSequenceExecutor executor = new ParallelSequenceExecutor(8);
+ * 
+ *   // call the sample method 100 times, the method must take a single Integer as argument:
+ *   executor.execute(100, sampleClass::sampleMethod);
+ * 
+ *   // call the sample method with a string, the method must take a single String as argument:
+ *   executor.execute(new String[]{"a","b"}, System.out::println);
+ */
 public class ParallelSequenceExecutor
 {
 	private final Worker[] mWorkers;
@@ -63,19 +78,31 @@ public class ParallelSequenceExecutor
 		mWorkers = new Worker[mMaxWorkers];
 	}
 	
-	
+
+	/**
+	 * Cancel any current and future execution of the sequence iterator.
+	 */
 	public void cancel()
 	{
 		mCancelled = true;
 	}
 	
-	
+
+	/**
+	 * After an execution has been cancelled call this method to allow more executions to run.
+	 */
 	public void restart()
 	{
 		mCancelled = false;
 	}
 	
 	
+	/**
+	 * Calls the function provided aJobCount times with the index as an Integer.
+	 * 
+	 * @return 
+	 *   number of elements processed
+	 */
 	public <E> int execute(int aJobCount, JobExecutor<Integer> aJobProvier)
 	{
 		Iterator<Integer> jobs = new Iterator<Integer>()
@@ -99,18 +126,36 @@ public class ParallelSequenceExecutor
 	}
 	
 	
+	/**
+	 * Calls the function provided for each item in the array provided.
+	 * 
+	 * @return 
+	 *   number of elements processed
+	 */
 	public <E> int execute(E[] aJobs, JobExecutor<E> aJobProvier)
 	{
 		return execute(Arrays.asList(aJobs), aJobProvier);
 	}
 
 	
+	/**
+	 * Calls the function provided for each item in the iterator provided.
+	 * 
+	 * @return 
+	 *   number of elements processed
+	 */
 	public <E> int execute(Iterable<E> aJobs, JobExecutor<E> aJobProvier)
 	{
 		return execute(aJobs.iterator(), aJobProvier);
 	}
 	
 	
+	/**
+	 * Calls the function provided for each item in the iterator provided.
+	 * 
+	 * @return 
+	 *   number of elements processed
+	 */
 	public synchronized <E> int execute(Iterator<E> aJobs, JobExecutor<E> aJobProvier)
 	{
 		if (mCancelled)
@@ -141,7 +186,7 @@ public class ParallelSequenceExecutor
 	}
 
 
-	private synchronized Object aquire()
+	protected synchronized Object aquire()
 	{
 		if (mCancelled || !mJobs.hasNext())
 		{
