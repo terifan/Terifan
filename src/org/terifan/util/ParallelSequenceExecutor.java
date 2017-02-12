@@ -27,10 +27,10 @@ public class ParallelSequenceExecutor
 	private final Worker[] mWorkers;
 	private final int mMaxWorkers;
 	private boolean mCancelled;
-	private Iterator mJobs;
 	private int mShutdownCount;
 	private int mJobCount;
 	private JobExecutor mJobExecutor;
+	protected Iterator mJobs;
 
 	
 	/**
@@ -98,7 +98,7 @@ public class ParallelSequenceExecutor
 	
 	
 	/**
-	 * Calls the function provided aJobCount times with the index as an Integer.
+	 * Calls the function provided aJobCount times with the index as an Integer. This method blocks until all elements have been processed.
 	 * 
 	 * @return 
 	 *   number of elements processed
@@ -127,7 +127,7 @@ public class ParallelSequenceExecutor
 	
 	
 	/**
-	 * Calls the function provided for each item in the array provided.
+	 * Calls the function provided for each item in the array provided. This method blocks until all elements have been processed.
 	 * 
 	 * @return 
 	 *   number of elements processed
@@ -139,7 +139,7 @@ public class ParallelSequenceExecutor
 
 	
 	/**
-	 * Calls the function provided for each item in the iterator provided.
+	 * Calls the function provided for each item in the iterator provided. This method blocks until all elements have been processed.
 	 * 
 	 * @return 
 	 *   number of elements processed
@@ -151,7 +151,7 @@ public class ParallelSequenceExecutor
 	
 	
 	/**
-	 * Calls the function provided for each item in the iterator provided.
+	 * Calls the function provided for each item in the iterator provided. This method blocks until all elements have been processed.
 	 * 
 	 * @return 
 	 *   number of elements processed
