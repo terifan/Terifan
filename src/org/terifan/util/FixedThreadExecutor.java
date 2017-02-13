@@ -22,23 +22,47 @@ public class FixedThreadExecutor implements AutoCloseable
 	private int mThreads;
 
 
-	public FixedThreadExecutor(int aThreads)
+	/**
+	 * Create a new executor
+	 *
+	 * @param aNumThreads 
+	 *   a positive number equals number of threads to use, a negative number results in total available processors minus aNumThreads threads.
+	 */
+	public FixedThreadExecutor(int aNumThreads)
 	{
-		mThreads = aThreads;
+		if (aNumThreads > 0)
+		{
+			mThreads = aNumThreads;
+		}
+		else if (aNumThreads < 0)
+		{
+			mThreads = Math.max(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors() + aNumThreads);
+		}
+		else
+		{
+			throw new IllegalArgumentException();
+		}
+
 		mBlockingQueue = new LinkedBlockingQueue<>();
 	}
 
 
 	/**
+	 * Create a new executor
 	 *
 	 * @param aThreads
 	 *   number of threads expressed as a number between 0 and 1 out of total available CPUs
 	 */
 	public FixedThreadExecutor(float aThreads)
 	{
+		if (aThreads < 0 || aThreads > 1)
+		{
+			throw new IllegalArgumentException();
+		}
+
 		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 
-		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * (aThreads - (int)(aThreads - 0.000001)))));
+		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
 		mBlockingQueue = new LinkedBlockingQueue<>();
 	}
 
