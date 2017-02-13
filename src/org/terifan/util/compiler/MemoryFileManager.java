@@ -37,7 +37,7 @@ public class MemoryFileManager extends ForwardingJavaFileManager<StandardJavaFil
 		//System.out.println("MemoryFileManager::getFileForOutput");
 		//return super.getFileForOutput(location, packageName, relativeName, sibling);
 
-		throw new RuntimeException();
+		throw new IllegalStateException();
 	}
 
 
@@ -62,7 +62,7 @@ public class MemoryFileManager extends ForwardingJavaFileManager<StandardJavaFil
 		}
 		else
 		{
-			throw new RuntimeException();
+			throw new IllegalStateException();
 		}
 
 		return file;

@@ -179,7 +179,7 @@ public class JavaSyntaxParser extends SyntaxParser
 	{
 		if (mTokenStyle == null)
 		{
-			throw new RuntimeException("Style is null. You must call the iterate method before calling this method.");
+			throw new IllegalStateException("Style is null. You must call the iterate method before calling this method.");
 		}
 
 		if (mCommentState == null) 

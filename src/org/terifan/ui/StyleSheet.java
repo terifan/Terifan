@@ -151,7 +151,7 @@ public class StyleSheet
 
 			if (in == null)
 			{
-				throw new RuntimeException("Failed to find stylesheet file: '" + mStyleSheetFileName + "' with root " + mRootClass+" at path '"+getStyleSheetFile()+"'");
+				throw new IllegalStateException("Failed to find stylesheet file: '" + mStyleSheetFileName + "' with root " + mRootClass+" at path '"+getStyleSheetFile()+"'");
 			}
 
 			try
@@ -279,11 +279,11 @@ public class StyleSheet
 					in = mRootClass.getResourceAsStream(mStyleSheetFileName);
 					if (in.read() == -1)
 					{
-						throw new RuntimeException("StyleSheet file not found.");
+						throw new IllegalStateException("StyleSheet file not found.");
 					}
 					else
 					{
-						throw new RuntimeException("When loading stylesheet: No matching component was found: \"" + mComponentID + "\", location: "+getStyleSheetFile());
+						throw new IllegalStateException("When loading stylesheet: No matching component was found: \"" + mComponentID + "\", location: "+getStyleSheetFile());
 					}
 				}
 			}
@@ -294,7 +294,7 @@ public class StyleSheet
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -517,7 +517,7 @@ public class StyleSheet
 
 		if (!mImages.containsKey(aKey))
 		{
-			throw new RuntimeException("Image not found: key: \""+aKey+"\" available: " + mImages.keySet());
+			throw new IllegalStateException("Image not found: key: \""+aKey+"\" available: " + mImages.keySet());
 		}
 
 		String path = mRelativeFilePath + mImages.get(aKey);
@@ -553,7 +553,7 @@ public class StyleSheet
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException("Failed to load: key: \""+aKey+"\", path: "+path, e);
+				throw new IllegalStateException("Failed to load: key: \""+aKey+"\", path: "+path, e);
 			}
 		}
 
@@ -568,7 +568,7 @@ public class StyleSheet
 		Color value = mColors.get(aKey);
 		if (value == null)
 		{
-			throw new RuntimeException("Color not found: key: \""+aKey+"\"");
+			throw new IllegalStateException("Color not found: key: \""+aKey+"\"");
 		}
 		return value;
 	}
@@ -594,7 +594,7 @@ public class StyleSheet
 		Font value = mFonts.get(aKey);
 		if (value == null)
 		{
-			throw new RuntimeException("Font not found: key: \""+aKey+"\"");
+			throw new IllegalStateException("Font not found: key: \""+aKey+"\"");
 		}
 		return value;
 	}
@@ -620,7 +620,7 @@ public class StyleSheet
 		Boolean value = mBooleans.get(aKey);
 		if (value == null)
 		{
-			throw new RuntimeException("Boolean not found: key: \""+aKey+"\"");
+			throw new IllegalStateException("Boolean not found: key: \""+aKey+"\"");
 		}
 		return value;
 	}
@@ -646,7 +646,7 @@ public class StyleSheet
 		Integer value = mIntegers.get(aKey);
 		if (value == null)
 		{
-			throw new RuntimeException("Integer '" + aKey + "' not found in stylesheet " + getStyleSheetFile());
+			throw new IllegalStateException("Integer '" + aKey + "' not found in stylesheet " + getStyleSheetFile());
 		}
 		return value;
 	}
@@ -672,7 +672,7 @@ public class StyleSheet
 		Double value = mDoubles.get(aKey);
 		if (value == null)
 		{
-			throw new RuntimeException("Double not found: key: \""+aKey+"\"");
+			throw new IllegalStateException("Double not found: key: \""+aKey+"\"");
 		}
 		return value;
 	}
@@ -698,7 +698,7 @@ public class StyleSheet
 		String value = mStrings.get(aKey);
 		if (value == null)
 		{
-			throw new RuntimeException("String not found: key: \""+aKey+"\"");
+			throw new IllegalStateException("String not found: key: \""+aKey+"\"");
 		}
 		return value;
 	}

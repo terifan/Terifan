@@ -83,7 +83,7 @@ public class Debug
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 }

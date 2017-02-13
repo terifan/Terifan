@@ -151,7 +151,7 @@ public class ConnectionPool extends Pool<PooledConnection>
 		{
 			if (mLog != null) mLog.println("ConnectionPool: Error: " + Log.getStackTraceStringFlatten(e));
 
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 

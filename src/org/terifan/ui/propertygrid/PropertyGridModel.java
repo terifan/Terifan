@@ -82,7 +82,7 @@ public class PropertyGridModel implements Iterable<Property>
 		}
 		else
 		{
-			throw new RuntimeException("Unsupported order.");
+			throw new IllegalStateException("Unsupported order.");
 		}
 	}
 

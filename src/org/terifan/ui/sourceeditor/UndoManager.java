@@ -32,19 +32,19 @@ public class UndoManager
 
 	public String getRedoPresentationName()
 	{
-		if (mRedoableEdits.size() == 0) throw new RuntimeException("no redo edits exists");
+		if (mRedoableEdits.size() == 0) throw new IllegalStateException("no redo edits exists");
 		return mRedoableEdits.peek().getPresentationName();
 	}
 
 	public String getUndoPresentationName()
 	{
-		if (mUndoableEdits.size() == 0) throw new RuntimeException("no undo edits exists");
+		if (mUndoableEdits.size() == 0) throw new IllegalStateException("no undo edits exists");
 		return mUndoableEdits.peek().getPresentationName();
 	}
 
 	public void undo()
 	{
-		if (mUndoableEdits.size() == 0) throw new RuntimeException("no undo edits exists");
+		if (mUndoableEdits.size() == 0) throw new IllegalStateException("no undo edits exists");
 		UndoableEdit edit = mUndoableEdits.pop();
 		edit.undo();
 		mRedoableEdits.push(edit);
@@ -52,7 +52,7 @@ public class UndoManager
 
 	public void redo()
 	{
-		if (mRedoableEdits.size() == 0) throw new RuntimeException("no redo edits exists");
+		if (mRedoableEdits.size() == 0) throw new IllegalStateException("no redo edits exists");
 		UndoableEdit edit = mRedoableEdits.pop();
 		edit.redo();
 		mUndoableEdits.push(edit);

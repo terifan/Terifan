@@ -145,7 +145,7 @@ public class MemoryFileObject implements JavaFileObject
 		}
 		catch (URISyntaxException e)
 		{
-			throw new RuntimeException();
+			throw new IllegalStateException();
 		}
 	}
 

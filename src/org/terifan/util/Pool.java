@@ -157,7 +157,7 @@ public abstract class Pool<E> implements AutoCloseable
 				E item = create();
 				if (!prepare(item))
 				{
-					throw new RuntimeException("Create method returned an instance that are not ready for use.");
+					throw new IllegalStateException("Create method returned an instance that are not ready for use.");
 				}
 				return item;
 			}
@@ -234,7 +234,7 @@ public abstract class Pool<E> implements AutoCloseable
 
 		if (ex != null)
 		{
-			throw new RuntimeException("An exception occured while clearing an item.", ex);
+			throw new IllegalStateException("An exception occured while clearing an item.", ex);
 		}
 	}
 

@@ -67,7 +67,7 @@ public class TimeLimitedExecutor
 //		{
 //			boolean result = TimeLimitedExecutor.run(()->
 //			{
-////				try{Thread.sleep(1000);}catch(Exception e){} throw new RuntimeException("xx");
+////				try{Thread.sleep(1000);}catch(Exception e){} throw new IllegalStateException("xx");
 ////				try{Thread.sleep(1000);}catch(Exception e){}Log.out.println("a");
 //				for(;;);
 //			}, 5);

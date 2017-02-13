@@ -38,6 +38,6 @@ public enum StrokeStyle
 			case LONG_DOT:
 				return new BasicStroke((float)aWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0f, new float[]{2f,2f}, 0f);
 		}
-		throw new RuntimeException();
+		throw new IllegalStateException();
 	}
 }

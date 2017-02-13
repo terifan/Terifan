@@ -66,11 +66,11 @@ public abstract class SyntaxParser
 		}
 		catch (IllegalAccessException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 		catch (InstantiationException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 }

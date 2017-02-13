@@ -79,7 +79,7 @@ public class Document implements Serializable
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 

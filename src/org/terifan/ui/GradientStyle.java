@@ -26,6 +26,6 @@ public enum GradientStyle
 			case BACKWARD_DIAGONAL:
 				return new GradientPaint(aBounds.x + aBounds.width, aBounds.y, aStartColor, aBounds.x, aBounds.y + aBounds.height, aEndColor);
 		}
-		throw new RuntimeException();
+		throw new IllegalStateException();
 	}
 }

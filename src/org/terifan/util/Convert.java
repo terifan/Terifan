@@ -373,7 +373,7 @@ public class Convert
 		}
 		else
 		{
-			throw new RuntimeException("Illegal character: " + c);
+			throw new IllegalStateException("Illegal character: " + c);
 		}
 	}
 
@@ -489,7 +489,7 @@ public class Convert
 			}
 			else
 			{
-				throw new RuntimeException("This decoder only handles 16-bit characters: c = " + c);
+				throw new IllegalStateException("This decoder only handles 16-bit characters: c = " + c);
 			}
 		}
 
@@ -544,7 +544,7 @@ public class Convert
 			}
 			else
 			{
-				throw new RuntimeException("This decoder only handles 16-bit characters: c = " + c);
+				throw new IllegalStateException("This decoder only handles 16-bit characters: c = " + c);
 			}
 		}
 

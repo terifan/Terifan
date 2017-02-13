@@ -167,7 +167,7 @@ public class SimpleHttpServer
 			}
 			catch (Throwable e)
 			{
-				throw new RuntimeException(e);
+				throw new IllegalStateException(e);
 			}
 		}
 	}

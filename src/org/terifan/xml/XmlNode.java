@@ -748,17 +748,17 @@ public class XmlNode
 			@Override
 			public void warning(TransformerException aException) throws TransformerException
 			{
-				throw new RuntimeException("XSLT warning while transforming document.", aException);
+				throw new IllegalStateException("XSLT warning while transforming document.", aException);
 			}
 			@Override
 			public void error(TransformerException aException) throws TransformerException
 			{
-				throw new RuntimeException("XSLT error while transforming document.", aException);
+				throw new IllegalStateException("XSLT error while transforming document.", aException);
 			}
 			@Override
 			public void fatalError(TransformerException aException) throws TransformerException
 			{
-				throw new RuntimeException("XSLT fatal error while transforming document.", aException);
+				throw new IllegalStateException("XSLT fatal error while transforming document.", aException);
 			}
 		});
 		return transformer;

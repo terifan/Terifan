@@ -52,7 +52,7 @@ public class MemoryCompiler
 
 		if (compiler == null)
 		{
-			throw new RuntimeException("A Java compiler is not installed in this Java Runtime Environment.");
+			throw new IllegalStateException("A Java compiler is not installed in this Java Runtime Environment.");
 		}
 
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();

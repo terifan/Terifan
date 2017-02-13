@@ -35,7 +35,7 @@ public class ImageIcon extends javax.swing.ImageIcon implements Icon
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class ImageIcon extends javax.swing.ImageIcon implements Icon
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -87,7 +87,7 @@ public class ImageIcon extends javax.swing.ImageIcon implements Icon
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -107,7 +107,7 @@ public class ImageIcon extends javax.swing.ImageIcon implements Icon
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -129,7 +129,7 @@ public class ImageIcon extends javax.swing.ImageIcon implements Icon
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 

@@ -1633,7 +1633,7 @@ public class SourceEditor extends JComponent implements Scrollable
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 
 		mDocument.commitUndoableEdit();
@@ -1996,15 +1996,15 @@ public class SourceEditor extends JComponent implements Scrollable
 		}
 		catch (IllegalStateException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 		catch (UnsupportedFlavorException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 		repaint();
 	}
