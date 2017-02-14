@@ -6,19 +6,19 @@ import java.util.Iterator;
 
 
 /**
- * This class executes a sequence of elements in parallel. The sequence is either a fixed number 
- * of iterations, reading from an iterator or array. Each element is sent to the executing function 
+ * This class executes a sequence of elements in parallel. The sequence is either a fixed number
+ * of iterations, reading from an iterator or array. Each element is sent to the executing function
  * provided in the call.
- * 
- * Note: if the execution is cancelled and the same instance is to be reused in another execution 
+ *
+ * Note: if the execution is cancelled and the same instance is to be reused in another execution
  *       then it's necessary to call the reset method before execute.
- * 
+ *
  * E.g.
  *   ParallelSequenceExecutor executor = new ParallelSequenceExecutor(8);
- * 
+ *
  *   // call the sample method 100 times, the method must take a single Integer as argument:
  *   executor.execute(100, sampleClass::sampleMethod);
- * 
+ *
  *   // call the sample method with a string, the method must take a single String as argument:
  *   executor.execute(new String[]{"a","b"}, System.out::println);
  */
@@ -32,12 +32,12 @@ public class ParallelSequenceExecutor
 	private JobExecutor mJobExecutor;
 	protected Iterator mJobs;
 
-	
+
 	/**
 	 * Create a new executor
 	 *
-	 * 
-	 * @param aNumThreads 
+	 *
+	 * @param aNumThreads
 	 *   a positive number equals number of threads to use, a negative number results in total available processors minus aNumThreads threads.
 	 */
 	public ParallelSequenceExecutor(int aThreads)
@@ -77,7 +77,7 @@ public class ParallelSequenceExecutor
 		mMaxWorkers = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
 		mWorkers = new Worker[mMaxWorkers];
 	}
-	
+
 
 	/**
 	 * Cancel any current and future execution of the sequence iterator.
@@ -86,7 +86,7 @@ public class ParallelSequenceExecutor
 	{
 		mCancelled = true;
 	}
-	
+
 
 	/**
 	 * After an execution has been cancelled call this method to allow more executions to run.
@@ -95,12 +95,12 @@ public class ParallelSequenceExecutor
 	{
 		mCancelled = false;
 	}
-	
-	
+
+
 	/**
 	 * Calls the function provided aJobCount times with the index as an Integer. This method blocks until all elements have been processed.
-	 * 
-	 * @return 
+	 *
+	 * @return
 	 *   number of elements processed
 	 */
 	public <E> int execute(int aJobCount, JobExecutor<Integer> aJobProvier)
@@ -124,12 +124,12 @@ public class ParallelSequenceExecutor
 
 		return execute(jobs, aJobProvier);
 	}
-	
-	
+
+
 	/**
 	 * Calls the function provided for each item in the array provided. This method blocks until all elements have been processed.
-	 * 
-	 * @return 
+	 *
+	 * @return
 	 *   number of elements processed
 	 */
 	public <E> int execute(E[] aJobs, JobExecutor<E> aJobProvier)
@@ -137,23 +137,23 @@ public class ParallelSequenceExecutor
 		return execute(Arrays.asList(aJobs), aJobProvier);
 	}
 
-	
+
 	/**
 	 * Calls the function provided for each item in the iterator provided. This method blocks until all elements have been processed.
-	 * 
-	 * @return 
+	 *
+	 * @return
 	 *   number of elements processed
 	 */
 	public <E> int execute(Iterable<E> aJobs, JobExecutor<E> aJobProvier)
 	{
 		return execute(aJobs.iterator(), aJobProvier);
 	}
-	
-	
+
+
 	/**
 	 * Calls the function provided for each item in the iterator provided. This method blocks until all elements have been processed.
-	 * 
-	 * @return 
+	 *
+	 * @return
 	 *   number of elements processed
 	 */
 	public synchronized <E> int execute(Iterator<E> aJobs, JobExecutor<E> aJobProvier)
@@ -199,7 +199,7 @@ public class ParallelSequenceExecutor
 
 			return null;
 		}
-		
+
 		mJobCount++;
 
 		return mJobs.next();
@@ -214,12 +214,12 @@ public class ParallelSequenceExecutor
 			for (;;)
 			{
 				E job = (E)aquire();
-				
+
 				if (job == null)
 				{
 					break;
 				}
-				
+
 				try
 				{
 					mJobExecutor.execute(job);
@@ -231,8 +231,8 @@ public class ParallelSequenceExecutor
 			}
 		}
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface JobExecutor<E>
 	{

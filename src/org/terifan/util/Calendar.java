@@ -66,6 +66,12 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	}
 
 
+	public Calendar(Date aDate)
+	{
+		set(aDate.getTime());
+	}
+
+
 	public Calendar(long aMillisecond)
 	{
 		set(aMillisecond);
