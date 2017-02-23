@@ -36,7 +36,6 @@ public class Cache<K,V> implements Iterable<K>
 
 	public class Entry<K,V>
 	{
-		private K key;
 		private V value;
 		private long time;
 		private long size;
@@ -95,7 +94,7 @@ public class Cache<K,V> implements Iterable<K>
 	 * @return
 	 *   the capacity of this Cache
 	 */
-	public long getCapacity()
+	public synchronized long getCapacity()
 	{
 		return mCapacity;
 	}
@@ -150,7 +149,6 @@ public class Cache<K,V> implements Iterable<K>
 			prevValue = null;
 
 			Entry entry = new Entry();
-			entry.key = aKey;
 			entry.value = aValue;
 			entry.size = aItemSize;
 			entry.time = System.currentTimeMillis();
@@ -236,7 +234,7 @@ public class Cache<K,V> implements Iterable<K>
 
 			return entry.value;
 		}
-		
+
 		if (aProvider != null)
 		{
 			try
@@ -258,7 +256,7 @@ public class Cache<K,V> implements Iterable<K>
 
 		return null;
 	}
-	
+
 
 	@FunctionalInterface
 	public interface Provider<K,V>

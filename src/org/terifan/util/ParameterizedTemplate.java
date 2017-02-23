@@ -13,9 +13,9 @@ import java.util.Map;
  */
 public class ParameterizedTemplate<V>
 {
-	protected final char START_SYMBOL = '$';
-	protected final char LEFT_BRACE = '{';
-	protected final char RIGHT_BRACE = '}';
+	private final char START_SYMBOL = '$';
+	private final char LEFT_BRACE = '{';
+	private final char RIGHT_BRACE = '}';
 
 	private Object[] mCommands;
 
