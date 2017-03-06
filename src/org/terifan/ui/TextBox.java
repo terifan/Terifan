@@ -69,13 +69,13 @@ public class TextBox implements Cloneable, Serializable
 	}
 
 
-	public String getText()
+	public synchronized String getText()
 	{
 		return mText;
 	}
 
 
-	public TextBox setText(String aText)
+	public synchronized TextBox setText(String aText)
 	{
 		if (aText == null)
 		{

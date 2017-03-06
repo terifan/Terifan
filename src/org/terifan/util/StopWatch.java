@@ -68,7 +68,7 @@ public final class StopWatch
 	}
 
 
-	public void start(String aStartLabel)
+	public synchronized void start(String aStartLabel)
 	{
 		mStartLabel = aStartLabel;
 		mStartTime = System.nanoTime();
@@ -239,7 +239,6 @@ public final class StopWatch
 		aTime /= 60;
 		if (aTime > 0)
 		{
-			aBuffer.insert(i, ":");
 			aBuffer.insert(i, aTime % 60);
 			aTime /= 60;
 			if (aTime > 0)
@@ -256,5 +255,32 @@ public final class StopWatch
 		}
 
 		return aBuffer;
+	}
+
+
+	public static void main(String... args)
+	{
+		try
+		{
+			StopWatch w = new StopWatch("first task");
+			Thread.sleep(200);
+			w.split("second task");
+			Thread.sleep(200);
+				w.suspend();
+				Thread.sleep(200);
+				w.resume();
+			Thread.sleep(100);
+			w.split();
+			Thread.sleep(200);
+			w.split("third task");
+			Thread.sleep(200);
+				w.suspend();
+				Thread.sleep(200);
+			Log.out.println(w);
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }

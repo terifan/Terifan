@@ -15,7 +15,6 @@ import org.terifan.util.log.Log;
 
 public class SimpleHttpServer
 {
-	private final static Object LISTENER_LOCK = new String("LOCK");
 	private ConnectionListener mConnectionListener;
 	private HttpServerHandler mRequestHandler;
 	private InetAddress mInetAddress;
@@ -49,7 +48,7 @@ public class SimpleHttpServer
 
 		if (mConnectionListener == null)
 		{
-			synchronized (LISTENER_LOCK)
+			synchronized (SimpleHttpServer.class)
 			{
 				mConnectionListener = new ConnectionListener();
 				mConnectionListener.start();
@@ -74,14 +73,17 @@ public class SimpleHttpServer
 
 		if (aBlock)
 		{
-			synchronized (LISTENER_LOCK)
+			while (mConnectionListener.mDisconnect)
 			{
-				try
+				synchronized (SimpleHttpServer.class)
 				{
-					LISTENER_LOCK.wait();
-				}
-				catch (InterruptedException e)
-				{
+					try
+					{
+						SimpleHttpServer.class.wait(1000);
+					}
+					catch (InterruptedException e)
+					{
+					}
 				}
 			}
 		}
@@ -105,7 +107,7 @@ public class SimpleHttpServer
 		{
 			super.setDaemon(mDaemon);
 			super.setName("SimpleHttpListener.ConnectionListener");
-			super.setUncaughtExceptionHandler(new UncaughtExceptionHandler()
+			super.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
 			{
 				@Override
 				public void uncaughtException(Thread t, Throwable e)
@@ -157,9 +159,10 @@ public class SimpleHttpServer
 					}
 
 					mDisconnect = false;
-					synchronized (LISTENER_LOCK)
+
+					synchronized (SimpleHttpServer.class)
 					{
-						LISTENER_LOCK.notify();
+						SimpleHttpServer.class.notify();
 					}
 
 					printLog("Shutdown completed");
