@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 
 
@@ -157,7 +158,10 @@ public final class Streams
 		}
 		if (aInput instanceof URL)
 		{
-			return ((URL)aInput).openStream();
+			URLConnection conn = ((URL)aInput).openConnection();
+			conn.setConnectTimeout(10_000);
+			conn.setReadTimeout(60_000);
+			return new BufferedInputStream(conn.getInputStream());
 		}
 		if (aInput instanceof File)
 		{
