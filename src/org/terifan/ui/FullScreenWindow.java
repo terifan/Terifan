@@ -6,24 +6,23 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 
 public class FullScreenWindow
@@ -34,80 +33,168 @@ public class FullScreenWindow
 	protected Color mButtonSymbolColor = new Color(255, 255, 255);
 	protected Color mButtonSymbolShadowColor = new Color(255, 255, 255, 64);
 
-	private boolean mMousePressed;
-	private int mMouseX;
-	private int mMouseY;
-
 	protected JFrame mFrame;
 	protected int mArmedButton;
 	protected Point mFramePosition;
-	protected JPanel mContentPanel;
-	protected JComponent mContentPane;
-	protected JComponent mBorderPanel;
+	protected JComponent mContentPanel;
+	protected JPanel mMainPanel;
+	protected JPanel mBorderPanel;
 	protected String mWindowTitle;
 	protected Dimension mInitialSize;
 	protected Rectangle[] mButtonRects;
-	protected int mBorderWidth;
+	protected int mBorderSize;
 	protected int mTitleBarHeight;
 	protected int mTitleBarButtonWidth;
 	protected int mLastKnownWidth;
+	protected Dimension mMinSize;
+	protected Dimension mMaxSize;
+	protected boolean mResizeHor;
+	protected boolean mResizeVer;
 	protected boolean mMouseDragged;
+	protected boolean mUndecorated;
+	protected boolean mBorderVisible;
 
 
 	public FullScreenWindow()
 	{
-		mInitialSize = new Dimension(1024, 768);
 		mWindowTitle = "New window";
-
+		mInitialSize = new Dimension(1024, 768);
+		mResizeVer = true;
+		mResizeHor = true;
+		mBorderVisible = true;
+		mBorderSize = 5;
 		mArmedButton = -1;
-		mBorderWidth = 30;
-		mTitleBarHeight = 32;
-		mLastKnownWidth = 0;
 		mTitleBarHeight = 43;
 		mTitleBarButtonWidth = 69;
 
-		mContentPanel = new JPanel(new BorderLayout());
-		mContentPanel.add(mTitleBar, BorderLayout.NORTH);
-
-		mBorderPanel = new JPanel(new BorderLayout());
-		mBorderPanel.add(mContentPanel, BorderLayout.CENTER);
+		mMinSize = new Dimension(2 * mBorderSize + 4 * mTitleBarButtonWidth, 2 * mBorderSize + mTitleBarHeight);
+		mMaxSize = new Dimension(32000, 32000);
 
 		mTitleBar.addMouseListener(mTitleBarMouseListener);
 		mTitleBar.addMouseMotionListener(mTitleBarMouseListener);
 		mTitleBar.setForeground(new Color(255, 255, 255));
 		mTitleBar.setBackground(new Color(18, 18, 18));
-		mTitleBar.setFont(mTitleBar.getFont().deriveFont(17f));
+//		mTitleBar.setFont(mTitleBar.getFont().deriveFont(17f));
+
+mTitleBar.setForeground(new Color(0x0));
+mTitleBar.setBackground(new Color(0x91CE11));
+mButtonArmedBackground = new Color(0x82B90F);
+mButtonSymbolColor = new Color(0,0,0);
+mButtonSymbolShadowColor = new Color(0,0,0,64);
+mBorderColor = new Color(0x91CE11);
+
+		mContentPanel = new JPanel(new BorderLayout());
+
+		mMainPanel = new JPanel(new BorderLayout());
+		mMainPanel.add(mTitleBar, BorderLayout.NORTH);
+		mMainPanel.add(mContentPanel, BorderLayout.CENTER);
+
+		mBorderPanel = new JPanel(new BorderLayout());
+		mBorderPanel.add(mMainPanel, BorderLayout.CENTER);
+		mBorderPanel.addMouseListener(mBorderMouseListener);
+		mBorderPanel.addMouseMotionListener(mBorderMouseListener);
 
 		mFrame = new JFrame(mWindowTitle);
 		mFrame.add(mBorderPanel);
 		mFrame.setSize(mInitialSize);
 		mFrame.addComponentListener(mComponentAdapter);
-		mFrame.addWindowListener(mWindowClosingListener);
+		mFrame.addWindowListener(mWindowStateListener);
+		mFrame.addWindowStateListener(mWindowStateListener);
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setUndecorated(true);
-		mFrame.addWindowStateListener(mWindowStateListener);
-//		mFrame.setExtendedState(aState);
-
-		mBorderPanel.addMouseListener(mBorderMouseListener);
-		mBorderPanel.addMouseMotionListener(mBorderMouseListener);
-		
-		mContentPanel.addMouseListener(new MouseAdapter()
-		{
-			@Override
-			public void mouseEntered(MouseEvent aEvent)
-			{
-				mFrame.setCursor(Cursor.getDefaultCursor());
-			}
-		});
 
 		updateBorder(JFrame.NORMAL);
 	}
 
 
+	public FullScreenWindow add(JComponent aComponent)
+	{
+		mContentPanel.add(aComponent);
+		return this;
+	}
+
+
+	public FullScreenWindow setLocation(int aX, int aY)
+	{
+		mFrame.setLocation(aX, aY);
+		return this;
+	}
+
+
+	public JComponent getContentPanel()
+	{
+		return mContentPanel;
+	}
+
+
+	public FullScreenWindow dispose()
+	{
+		mFrame.dispose();
+		return this;
+	}
+
+
+	public FullScreenWindow revalidate()
+	{
+		mMainPanel.invalidate();
+		mFrame.revalidate();
+		return this;
+	}
+
+
+	public FullScreenWindow setVisible(boolean aState)
+	{
+		mFrame.setVisible(aState);
+		return this;
+	}
+	
+	
+	public boolean isBorderVisible()
+	{
+		return mBorderVisible;
+	}
+	
+	
+	public FullScreenWindow setBorderVisible(boolean aBorderVisible)
+	{
+		mBorderVisible = aBorderVisible;
+		updateBorder(mFrame.getExtendedState());
+		return this;
+	}
+	
+	
+	public boolean isUndecorated()
+	{
+		return mUndecorated;
+	}
+
+	
+	public FullScreenWindow setUndecorated(boolean aUndecorated)
+	{
+		mUndecorated = aUndecorated;
+		mTitleBar.setVisible(!mUndecorated);
+		updateBorder(mFrame.getExtendedState());
+		return this;
+	}
+
+
+	private void updateSize()
+	{
+		int w = mMainPanel.getWidth();
+
+		mButtonRects = new Rectangle[]
+		{
+			new Rectangle(w - 3 * mTitleBarButtonWidth, 0, mTitleBarButtonWidth, mTitleBarHeight),
+			new Rectangle(w - 2 * mTitleBarButtonWidth, 0, mTitleBarButtonWidth, mTitleBarHeight),
+			new Rectangle(w - 1 * mTitleBarButtonWidth, 0, mTitleBarButtonWidth, mTitleBarHeight)
+		};
+	}
+
+
 	protected MouseAdapter mBorderMouseListener = new MouseAdapter()
 	{
-		private Point mClickPoint;
 		private Rectangle mStartBounds;
+		private Point mClickPoint;
 		private Integer mCursor;
 
 
@@ -116,82 +203,90 @@ public class FullScreenWindow
 		{
 			mStartBounds = mFrame.getBounds();
 			mClickPoint = aEvent.getPoint();
-			mCursor = getCursor(aEvent.getPoint());
+			mCursor = getCursor(mClickPoint);
 		}
 
 
 		@Override
 		public void mouseDragged(MouseEvent aEvent)
 		{
-			resizeBox(aEvent.getPoint());
+			mMouseDragged = true;
+			Point p = aEvent.getLocationOnScreen();
+			p.x -= mStartBounds.x;
+			p.y -= mStartBounds.y;
+			resizeBox(p);
 		}
 
 
 		@Override
-		public void mouseReleased(MouseEvent aE)
+		public void mouseReleased(MouseEvent aEvent)
 		{
+			mMouseDragged = false;
 			mCursor = null;
+
+			mFrame.setCursor(Cursor.getPredefinedCursor(getCursor(aEvent.getPoint())));
 		}
 
 
 		@Override
 		public void mouseMoved(MouseEvent aEvent)
 		{
-			mFrame.setCursor(Cursor.getPredefinedCursor(mCursor != null ? mCursor : getCursor(aEvent.getPoint())));
-		}
-
-
-		@Override
-		public void mouseEntered(MouseEvent aEvent)
-		{
-			mStartBounds = mFrame.getBounds();
-			mFrame.setCursor(Cursor.getPredefinedCursor(mCursor != null ? mCursor : getCursor(aEvent.getPoint())));
+			if (!mMouseDragged && mBorderVisible)
+			{
+				if (mStartBounds == null)
+				{
+					mStartBounds = mFrame.getBounds();
+				}
+				mFrame.setCursor(Cursor.getPredefinedCursor(getCursor(aEvent.getPoint())));
+			}
 		}
 
 
 		@Override
 		public void mouseExited(MouseEvent aEvent)
 		{
-			mFrame.setCursor(Cursor.getDefaultCursor());
+			if (!mMouseDragged)
+			{
+				mFrame.setCursor(Cursor.getDefaultCursor());
+			}
 		}
-	
-		
+
+
 		private void resizeBox(Point aPoint)
 		{
-//			Rectangle mStartBounds = mStartBounds;
-			Rectangle b = mFrame.getBounds();
+			Rectangle b = new Rectangle(mStartBounds);
 
-//			switch (mCursor)
-//			{
-//				case Cursor.W_RESIZE_CURSOR:
-//				case Cursor.NW_RESIZE_CURSOR:
-//				case Cursor.SW_RESIZE_CURSOR:
-//					int o = b.x;
-//					b.x = Math.min(mStartBounds.x - mClickPoint.x + aPoint.x, mStartBounds.x + mStartBounds.width/* - aNode.getMinSize().width*/);
-//					b.width += o - b.x;
-//					break;
-//			}
+			switch (mCursor)
+			{
+				case Cursor.W_RESIZE_CURSOR:
+				case Cursor.NW_RESIZE_CURSOR:
+				case Cursor.SW_RESIZE_CURSOR:
+					int o = b.x;
+					b.x = Math.max(mStartBounds.x + mStartBounds.width - mMaxSize.width, Math.min(mStartBounds.x - mClickPoint.x + aPoint.x, mStartBounds.x + mStartBounds.width - mMinSize.width));
+					b.width += o - b.x;
+					break;
+			}
 
-//			switch (mCursor)
-//			{
-//				case Cursor.N_RESIZE_CURSOR:
-//				case Cursor.NW_RESIZE_CURSOR:
-//				case Cursor.NE_RESIZE_CURSOR:
-//					int o = b.y;
-//					b.y = Math.min(mStartBounds.y - mClickPoint.y + aPoint.y, mStartBounds.y + mStartBounds.height/* - aNode.getMinSize().height*/);
-//					b.height += o - b.y;
-//					break;
-//			}
-//
-//			switch (mCursor)
-//			{
-//				case Cursor.SW_RESIZE_CURSOR:
-//				case Cursor.S_RESIZE_CURSOR:
-//				case Cursor.SE_RESIZE_CURSOR:
-//					b.height = mStartBounds.height - mClickPoint.y + aPoint.y;
-//					break;
-//			}
-//
+			switch (mCursor)
+			{
+				case Cursor.N_RESIZE_CURSOR:
+				case Cursor.NW_RESIZE_CURSOR:
+				case Cursor.NE_RESIZE_CURSOR:
+					int o = b.y;
+					b.y = Math.max(mStartBounds.y + mStartBounds.height - mMaxSize.height, Math.min(mStartBounds.y - mClickPoint.y + aPoint.y, mStartBounds.y + mStartBounds.height - mMinSize.height));
+					b.height += o - b.y;
+					break;
+			}
+
+			switch (mCursor)
+			{
+				case Cursor.SW_RESIZE_CURSOR:
+				case Cursor.S_RESIZE_CURSOR:
+				case Cursor.SE_RESIZE_CURSOR:
+					b.height = mStartBounds.height - mClickPoint.y + aPoint.y;
+					break;
+			}
+
 			switch (mCursor)
 			{
 				case Cursor.E_RESIZE_CURSOR:
@@ -201,62 +296,55 @@ public class FullScreenWindow
 					break;
 			}
 
-//			b.width = Math.min(aNode.getMaxSize().width, Math.max(aNode.getMinSize().width, b.width));
-//			b.height = Math.min(aNode.getMaxSize().height, Math.max(aNode.getMinSize().height, b.height));
+			b.width = Math.min(mMaxSize.width, Math.max(mMinSize.width, b.width));
+			b.height = Math.min(mMaxSize.height, Math.max(mMinSize.height, b.height));
 
 			mFrame.setBounds(b);
 		}
-		
-	
+
+
 		private int getCursor(Point aPoint)
 		{
-			boolean rx = true;
-			boolean ry = true;
-
-			if (!rx && !ry)
+			if (!mResizeHor && !mResizeVer)
 			{
 				return Cursor.DEFAULT_CURSOR;
 			}
 
-			int PX = 30;
-			int PY = 30;
-			Rectangle bounds = mStartBounds;
-
-			if (aPoint.y < PY)
+			if (aPoint.y < mBorderSize)
 			{
-				if (aPoint.x < PX)
+				if (aPoint.x < mBorderSize)
 				{
-					return rx ? ry ? Cursor.NW_RESIZE_CURSOR : Cursor.W_RESIZE_CURSOR : Cursor.N_RESIZE_CURSOR;
+					return mResizeHor ? mResizeVer ? Cursor.NW_RESIZE_CURSOR : Cursor.W_RESIZE_CURSOR : Cursor.N_RESIZE_CURSOR;
 				}
-				if (aPoint.x >= bounds.width - PX)
+				if (aPoint.x >= mStartBounds.width - mBorderSize)
 				{
-					return rx ? ry ? Cursor.NE_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR : Cursor.N_RESIZE_CURSOR;
+					return mResizeHor ? mResizeVer ? Cursor.NE_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR : Cursor.N_RESIZE_CURSOR;
 				}
-				if (ry)
+				if (mResizeVer)
 				{
 					return Cursor.N_RESIZE_CURSOR;
 				}
 			}
-			else if (aPoint.y >= bounds.height - PY)
+			else if (aPoint.y >= mStartBounds.height - mBorderSize)
 			{
-				if (aPoint.x < PX)
+				if (aPoint.x < mBorderSize)
 				{
-					return rx ? ry ? Cursor.SW_RESIZE_CURSOR : Cursor.W_RESIZE_CURSOR : Cursor.S_RESIZE_CURSOR;
+					return mResizeHor ? mResizeVer ? Cursor.SW_RESIZE_CURSOR : Cursor.W_RESIZE_CURSOR : Cursor.S_RESIZE_CURSOR;
 				}
-				if (aPoint.x >= bounds.width - PX)
+				if (aPoint.x >= mStartBounds.width - mBorderSize)
 				{
-					return rx ? ry ? Cursor.SE_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR : Cursor.S_RESIZE_CURSOR;
+					return mResizeHor ? mResizeVer ? Cursor.SE_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR : Cursor.S_RESIZE_CURSOR;
 				}
-				if (ry)
+				if (mResizeVer)
 				{
 					return Cursor.S_RESIZE_CURSOR;
 				}
 			}
-			else if (aPoint.x < PX && rx)
+			else if (aPoint.x < mBorderSize && mResizeHor)
 			{
 				return Cursor.W_RESIZE_CURSOR;
 			}
-			else if (aPoint.x >= bounds.width - PX && rx)
+			else if (aPoint.x >= mStartBounds.width - mBorderSize && mResizeHor)
 			{
 				return Cursor.E_RESIZE_CURSOR;
 			}
@@ -265,68 +353,21 @@ public class FullScreenWindow
 		}
 	};
 
-
-	public void updateSize()
-	{
-		int w = mContentPanel.getWidth();
-
-		mButtonRects = new Rectangle[3];
-
-		mButtonRects[0] = new Rectangle(w - 3 * mTitleBarButtonWidth, 0, mTitleBarButtonWidth, mTitleBarHeight);
-		mButtonRects[1] = new Rectangle(w - 2 * mTitleBarButtonWidth, 0, mTitleBarButtonWidth, mTitleBarHeight);
-		mButtonRects[2] = new Rectangle(w - 1 * mTitleBarButtonWidth, 0, mTitleBarButtonWidth, mTitleBarHeight);
-	}
-
-
-	public JPanel getContentPanel()
-	{
-		return mContentPanel;
-	}
-
-
-	void closeWindow()
-	{
-		SwingUtilities.invokeLater(() -> mFrame.dispose());
-	}
-
-
-	public void revalidate()
-	{
-		mContentPanel.invalidate();
-		mFrame.revalidate();
-	}
-
-	private WindowAdapter mWindowClosingListener = new WindowAdapter()
+	private WindowAdapter mWindowStateListener = new WindowAdapter()
 	{
 		@Override
 		public void windowClosing(WindowEvent e)
 		{
-			closeWindow();
+			dispose();
 		}
-	};
 
-	private WindowAdapter mWindowStateListener = new WindowAdapter()
-	{
+
 		@Override
 		public void windowStateChanged(WindowEvent aEvent)
 		{
 			updateBorder(aEvent.getNewState());
 		}
 	};
-
-
-	protected void updateBorder(int aState)
-	{
-		if (aState == JFrame.NORMAL)
-		{
-			mBorderPanel.setBorder(BorderFactory.createLineBorder(mBorderColor, mBorderWidth));
-		}
-		else
-		{
-			mBorderPanel.setBorder(null);
-		}
-	}
-
 
 	private ComponentAdapter mComponentAdapter = new ComponentAdapter()
 	{
@@ -341,7 +382,7 @@ public class FullScreenWindow
 		@Override
 		public void componentMoved(ComponentEvent aEvent)
 		{
-			if (mFrame.isVisible() && (mFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0)
+			if (mFrame.isVisible() && !isMaximized())
 			{
 				mLastKnownWidth = mFrame.getWidth();
 				mFramePosition = mFrame.getLocationOnScreen();
@@ -349,44 +390,19 @@ public class FullScreenWindow
 		}
 	};
 
-
-	protected void onClose()
-	{
-	}
-
-
-	boolean isMaximized()
-	{
-		return mFrame.getExtendedState() == JFrame.MAXIMIZED_BOTH;
-	}
-
-
-	void setLocation(int aX, int aY)
-	{
-		mFrame.setLocation(aX, aY);
-	}
-
 	private MouseAdapter mTitleBarMouseListener = new MouseAdapter()
 	{
-		@Override
-		public void mouseClicked(MouseEvent aEvent)
-		{
-		}
-
-
+		private Point mClickPoint;
+		
+		
 		@Override
 		public void mousePressed(MouseEvent aEvent)
 		{
 			mFrame.requestFocus();
+			mClickPoint = aEvent.getPoint();
 
-			update(aEvent);
+			updateArmedButton(aEvent);
 
-			if (aEvent.getButton() == MouseEvent.BUTTON1)
-			{
-				mMousePressed = true;
-				mMouseX = aEvent.getX();
-				mMouseY = aEvent.getY();
-			}
 		}
 
 
@@ -396,7 +412,7 @@ public class FullScreenWindow
 			if (mArmedButton != -1 && !mMouseDragged)
 			{
 				mArmedButton = -1;
-				mContentPanel.repaint();
+				mMainPanel.repaint();
 			}
 		}
 
@@ -404,17 +420,16 @@ public class FullScreenWindow
 		@Override
 		public void mouseEntered(MouseEvent aEvent)
 		{
-			update(aEvent);
+			updateArmedButton(aEvent);
 		}
 
 
 		@Override
 		public void mouseReleased(MouseEvent aEvent)
 		{
-			mMousePressed = false;
 			mMouseDragged = false;
 
-			update(aEvent);
+			updateArmedButton(aEvent);
 
 			switch (aEvent.getClickCount() > 1 ? 1 : mArmedButton)
 			{
@@ -422,7 +437,7 @@ public class FullScreenWindow
 					mFrame.setExtendedState(JFrame.ICONIFIED);
 					break;
 				case 1:
-					if (mFrame.getExtendedState() == JFrame.MAXIMIZED_BOTH)
+					if (isMaximized())
 					{
 						mFrame.setExtendedState(JFrame.NORMAL);
 					}
@@ -438,7 +453,6 @@ public class FullScreenWindow
 					break;
 			}
 
-			mMousePressed = false;
 			mArmedButton = -1;
 		}
 
@@ -453,20 +467,20 @@ public class FullScreenWindow
 				return;
 			}
 
-			update(aEvent);
+			updateArmedButton(aEvent);
 
-			if (mFrame.getExtendedState() == JFrame.MAXIMIZED_BOTH)
+			if (isMaximized())
 			{
 				int x = mLastKnownWidth / 2;
 
 				mFrame.setExtendedState(JFrame.NORMAL);
 				mFrame.setLocation(aEvent.getXOnScreen() - x, aEvent.getYOnScreen());
 
-				mMouseX = x;
+				mClickPoint.x = x;
 			}
 			else
 			{
-				mFrame.setLocation(aEvent.getXOnScreen() - mMouseX - mBorderWidth, aEvent.getYOnScreen() - mMouseY - mBorderWidth);
+				mFrame.setLocation(aEvent.getXOnScreen() - mClickPoint.x - mBorderSize, aEvent.getYOnScreen() - mClickPoint.y - mBorderSize);
 			}
 		}
 
@@ -474,50 +488,57 @@ public class FullScreenWindow
 		@Override
 		public void mouseMoved(MouseEvent aEvent)
 		{
-			update(aEvent);
+			updateArmedButton(aEvent);
 		}
-	};
 
-
-	private void update(MouseEvent aEvent)
-	{
-		int x = aEvent.getX();
-		int y = aEvent.getY();
-
-		int i = -1;
-		int newState = -1;
-		for (Rectangle r : mButtonRects)
+		
+		private void updateArmedButton(MouseEvent aEvent)
 		{
-			i++;
-			if (r.contains(x, y))
+			if (!mMouseDragged)
 			{
-				newState = i;
-				break;
+				mFrame.setCursor(Cursor.getDefaultCursor());
+
+				int x = aEvent.getX();
+				int y = aEvent.getY();
+
+				int i = -1;
+				int newState = -1;
+				for (Rectangle r : mButtonRects)
+				{
+					i++;
+					if (r.contains(x, y))
+					{
+						newState = i;
+						break;
+					}
+				}
+
+				if (mArmedButton != newState)
+				{
+					mArmedButton = newState;
+					mMainPanel.repaint();
+				}
 			}
 		}
-
-		if (mArmedButton != newState)
-		{
-			mArmedButton = newState;
-			mContentPanel.repaint();
-		}
-	}
+	};
 
 	private JComponent mTitleBar = new JComponent()
 	{
 		@Override
 		protected void paintComponent(Graphics aGraphics)
 		{
-			aGraphics.setColor(getBackground());
-			aGraphics.fillRect(0, 0, getWidth(), getHeight());
-
-			new TextBox(mFrame.getTitle()).setBounds(0, 0, mButtonRects[0].x, getHeight()).setAnchor(Anchor.WEST).setForeground(getForeground()).setMargins(0, 4, 0, 4).setFont(mTitleBar.getFont()).render(aGraphics);
-
 			Graphics2D g = (Graphics2D)aGraphics;
+			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+			g.setColor(getBackground());
+			g.fillRect(0, 0, getWidth(), getHeight());
+
+			new TextBox(mFrame.getTitle()).setBounds(0, 0, mButtonRects[0].x, getHeight()).setAnchor(Anchor.WEST).setForeground(getForeground()).setMargins(0, 4, 0, 4).setFont(mTitleBar.getFont()).setMaxLineCount(1).render(g);
+
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
 			paintMinimizeButton(g, mButtonRects[0], mArmedButton == 0);
-			if (mFrame.getExtendedState() == JFrame.MAXIMIZED_BOTH)
+			if (isMaximized())
 			{
 				paintRestoreButton(g, mButtonRects[1], mArmedButton == 1);
 			}
@@ -535,6 +556,19 @@ public class FullScreenWindow
 			return new Dimension(1, mTitleBarHeight);
 		}
 	};
+
+
+	protected void updateBorder(int aState)
+	{
+		if (mBorderVisible && !mUndecorated && aState == JFrame.NORMAL)
+		{
+			mBorderPanel.setBorder(BorderFactory.createLineBorder(mBorderColor, mBorderSize));
+		}
+		else
+		{
+			mBorderPanel.setBorder(null);
+		}
+	}
 
 
 	protected void paintCloseButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed)
@@ -599,10 +633,9 @@ public class FullScreenWindow
 	}
 
 
-	public FullScreenWindow setVisible(boolean aState)
+	private boolean isMaximized()
 	{
-		mFrame.setVisible(aState);
-		return this;
+		return (mFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0;
 	}
 
 
@@ -611,7 +644,23 @@ public class FullScreenWindow
 		try
 		{
 			FullScreenWindow wnd = new FullScreenWindow();
-			wnd.getContentPanel().add(new JLabel("test"));
+			wnd.getContentPanel().setLayout(new GridLayout(1, 2));
+			wnd.add(new JButton(new AbstractAction("undecorated")
+			{
+				@Override
+				public void actionPerformed(ActionEvent aE)
+				{
+					wnd.setUndecorated(!wnd.isUndecorated());
+				}
+			}));
+			wnd.add(new JButton(new AbstractAction("border")
+			{
+				@Override
+				public void actionPerformed(ActionEvent aE)
+				{
+					wnd.setBorderVisible(!wnd.isBorderVisible());
+				}
+			}));
 			wnd.setVisible(true);
 		}
 		catch (Throwable e)
