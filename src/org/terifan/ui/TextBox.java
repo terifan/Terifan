@@ -772,7 +772,7 @@ public class TextBox implements Cloneable, Serializable
 						str = "";
 					}
 
-					list.add(nextLine.trim());
+					list.add(trim(nextLine));
 
 					if (isLastLine)
 					{
@@ -789,6 +789,16 @@ public class TextBox implements Cloneable, Serializable
 		}
 
 		mTextLines = list;
+	}
+	
+	
+	private String trim(String aString)
+	{
+		int len = aString.length();
+		for (; len > 0 && Character.isWhitespace(aString.charAt(len - 1)); len--)
+		{
+		}
+		return len <= 0 ? "" : aString.substring(0, len);
 	}
 
 
