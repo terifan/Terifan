@@ -9,6 +9,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.LinearGradientPaint;
 import java.awt.MultipleGradientPaint;
@@ -23,6 +24,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -37,8 +40,7 @@ public class FullScreenWindow
 	protected ColorSet mBorderInner = new ColorSet();
 	protected ColorSet mBorderOuter = new ColorSet();
 	protected ColorSet mTitleBarBackground = new ColorSet();
-	protected ColorSet mTitleBarForeground = new ColorSet();
-	protected ColorSet mTitleBarForegroundExtra = new ColorSet();
+	protected ColorSet[] mTitleBarForeground = {new ColorSet(),new ColorSet(),new ColorSet()};
 	protected ColorSet mCloseButtonBackground = new ColorSet();
 	protected ColorSet mCloseButtonForeground = new ColorSet();
 	protected ColorSet mCloseButtonForegroundShadow = new ColorSet();
@@ -50,8 +52,7 @@ public class FullScreenWindow
 	protected Point mFramePosition;
 	protected JComponent mContentPanel;
 	protected JPanel mBorderPanel;
-	protected String mTitle;
-	protected String mTitleExtra;
+	protected String[] mTitle;
 	protected Dimension mInitialSize;
 	protected Rectangle[] mButtonRects;
 	protected int mBorderSize;
@@ -68,13 +69,15 @@ public class FullScreenWindow
 	protected boolean mBorderVisible;
 	protected int mLayoutSize;
 	protected boolean mFocused;
-	protected Font mTitleBarFont;
+	protected Font[] mTitleBarFont;
 
 
 	public FullScreenWindow()
 	{
-		mTitle = "New window";
-		mTitleExtra = "";
+		mTitle = new String[3];
+		mTitle[0] = "New window";
+		mTitle[1] = "";
+		mTitle[2] = "";
 		mInitialSize = new Dimension(1024, 768);
 		mResizeVer = true;
 		mResizeHor = true;
@@ -84,7 +87,10 @@ public class FullScreenWindow
 		mTitleBarHeight = 49;
 		mTitleBarButtonHeight = 40;
 		mTitleBarButtonWidth = 69;
-		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 17);
+		mTitleBarFont = new Font[3];
+		mTitleBarFont[0] = new Font("segoe ui", Font.BOLD, 17);
+		mTitleBarFont[1] = new Font("segoe ui", Font.BOLD, 17);
+		mTitleBarFont[2] = new Font("segoe ui", Font.PLAIN, 17);
 
 		mMinSize = new Dimension(2 * mBorderSize + 4 * mTitleBarButtonWidth, mBorderSize + mTitleBarHeight);
 		mMaxSize = new Dimension(32000, 32000);
@@ -100,7 +106,7 @@ public class FullScreenWindow
 		mBorderPanel.addMouseListener(mBorderMouseListener);
 		mBorderPanel.addMouseMotionListener(mBorderMouseListener);
 
-		mFrame = new JFrame(mTitle);
+		mFrame = new JFrame(mTitle[0]);
 		mFrame.add(mBorderPanel);
 		mFrame.setSize(mInitialSize);
 		mFrame.addComponentListener(mComponentAdapter);
@@ -110,6 +116,7 @@ public class FullScreenWindow
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setUndecorated(true);
 
+		updateButtonPositions(100);
 		updateBorder(JFrame.NORMAL, true);
 	}
 
@@ -118,10 +125,12 @@ public class FullScreenWindow
 	{
 		mTitleBarBackground.add(new Color(255, 255, 255), DEFAULT);
 		mTitleBarBackground.add(new Color(145, 206, 17), FOCUSED);
-		mTitleBarForeground.add(new Color(200, 200, 200), DEFAULT);
-		mTitleBarForeground.add(new Color(0, 0, 0), FOCUSED);
-		mTitleBarForegroundExtra.add(new Color(200, 200, 200), DEFAULT);
-		mTitleBarForegroundExtra.add(new Color(0, 0, 0), FOCUSED);
+		mTitleBarForeground[0].add(new Color(200, 200, 200), DEFAULT);
+		mTitleBarForeground[0].add(new Color(0, 0, 0), FOCUSED);
+		mTitleBarForeground[1].add(new Color(200, 200, 200), DEFAULT);
+		mTitleBarForeground[1].add(new Color(0, 0, 0), FOCUSED);
+		mTitleBarForeground[2].add(new Color(200, 200, 200), DEFAULT);
+		mTitleBarForeground[2].add(new Color(0, 0, 0), FOCUSED);
 
 		mBorderInner.add(new Color(255, 255, 255), DEFAULT);
 		mBorderInner.add(new Color(145, 206, 17), FOCUSED);
@@ -156,10 +165,12 @@ public class FullScreenWindow
 	{
 		mTitleBarBackground.add(new Color(255, 255, 255), DEFAULT);
 		mTitleBarBackground.add(new Color(145, 206, 17), FOCUSED);
-		mTitleBarForeground.add(new Color(200, 200, 200), DEFAULT);
-		mTitleBarForeground.add(new Color(0, 0, 0), FOCUSED);
-		mTitleBarForegroundExtra.add(new Color(200, 200, 200), DEFAULT);
-		mTitleBarForegroundExtra.add(new Color(0, 0, 0), FOCUSED);
+		mTitleBarForeground[0].add(new Color(200, 200, 200), DEFAULT);
+		mTitleBarForeground[0].add(new Color(0, 0, 0), FOCUSED);
+		mTitleBarForeground[1].add(new Color(200, 200, 200), DEFAULT);
+		mTitleBarForeground[1].add(new Color(0, 0, 0), FOCUSED);
+		mTitleBarForeground[2].add(new Color(200, 200, 200), DEFAULT);
+		mTitleBarForeground[2].add(new Color(0, 0, 0), FOCUSED);
 
 		mBorderInner.add(new Color(255, 255, 255), DEFAULT);
 		mBorderInner.add(new Color(145, 206, 17), FOCUSED);
@@ -194,8 +205,9 @@ public class FullScreenWindow
 	{
 		mTitleBarBackground.add(new Color(0, 0, 0), DEFAULT);
 		mTitleBarBackground.add(new Color(0, 0, 0), FOCUSED);
-		mTitleBarForeground.add(new Color(255, 255, 255), DEFAULT);
-		mTitleBarForegroundExtra.add(new Color(200,200,200), DEFAULT);
+		mTitleBarForeground[0].add(new Color(255, 255, 255), DEFAULT);
+		mTitleBarForeground[1].add(new Color(255,255,255), DEFAULT);
+		mTitleBarForeground[2].add(new Color(160,160,160), DEFAULT);
 
 		mBorderInner.add(new Color(0, 0, 0), DEFAULT);
 		mBorderInner.add(new Color(0, 0, 0), FOCUSED);
@@ -713,19 +725,9 @@ public class FullScreenWindow
 		@Override
 		public void paintBorder(Component aComponent, Graphics aGraphics, int aX, int aY, int aWidth, int aHeight)
 		{
+			updateButtonPositions(aWidth);
+
 			boolean maximized = isMaximized();
-
-			if (aWidth != mLayoutSize)
-			{
-				mLayoutSize = aWidth;
-
-				mButtonRects = new Rectangle[]
-				{
-					new Rectangle(mLayoutSize - 3 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight),
-					new Rectangle(mLayoutSize - 2 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight),
-					new Rectangle(mLayoutSize - 1 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight)
-				};
-			}
 
 			Graphics2D g = (Graphics2D)aGraphics;
 			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -775,10 +777,10 @@ public class FullScreenWindow
 			aGraphics.setColor(mTitleBarBackground.get(mFocused));
 			aGraphics.fillRect(mBorderSize, mBorderSize, aWidth - mBorderSize - mBorderSize, mTitleBarHeight - mBorderSize);
 
-			Rectangle rect = new TextBox(mTitle)
+			Rectangle rect = new TextBox(mTitle[0])
 				.setBounds(mBorderSize, 0, mButtonRects[0].x - mBorderSize, mTitleBarButtonHeight)
-				.setFont(mTitleBarFont)
-				.setForeground(mTitleBarForeground.get(mFocused))
+				.setFont(mTitleBarFont[0])
+				.setForeground(mTitleBarForeground[0].get(mFocused))
 				.setMargins(0, 4, 0, 0)
 				.setAnchor(Anchor.WEST)
 				.setMaxLineCount(1)
@@ -787,14 +789,30 @@ public class FullScreenWindow
 			
 			int x = rect.x + rect.width;
 
-			new TextBox(mTitleExtra)
-				.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
-				.setFont(mTitleBarFont)
-				.setForeground(mTitleBarForegroundExtra.get(mFocused))
-				.setMargins(0, 0, 0, 4)
-				.setAnchor(Anchor.WEST)
-				.setMaxLineCount(1)
-				.render(aGraphics);
+			if (!mTitle[1].isEmpty())
+			{
+				x += new TextBox(mTitle[1])
+					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
+					.setFont(mTitleBarFont[1])
+					.setForeground(mTitleBarForeground[1].get(mFocused))
+					.setMargins(0, 0, 0, 4)
+					.setAnchor(Anchor.WEST)
+					.setMaxLineCount(1)
+					.render(aGraphics)
+					.measure().width;
+			}
+
+			if (!mTitle[2].isEmpty())
+			{
+				new TextBox(mTitle[2])
+					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
+					.setFont(mTitleBarFont[2])
+					.setForeground(mTitleBarForeground[2].get(mFocused))
+					.setMargins(0, 0, 0, 4)
+					.setAnchor(Anchor.WEST)
+					.setMaxLineCount(1)
+					.render(aGraphics);
+			}
 		}
 		
 		
@@ -811,10 +829,10 @@ public class FullScreenWindow
 			aGraphics.fillRect(aWidth-mTitleBarHeight-bs, 1, mTitleBarHeight, mTitleBarHeight - 1);
 			aGraphics.setPaint(p);
 
-			Rectangle rect = new TextBox(mTitle)
+			Rectangle rect = new TextBox(mTitle[0])
 				.setBounds(mBorderSize, 0, aWidth - mBorderSize, mTitleBarButtonHeight)
-				.setFont(mTitleBarFont)
-				.setForeground(mTitleBarForeground.get(mFocused))
+				.setFont(mTitleBarFont[0])
+				.setForeground(mTitleBarForeground[0].get(mFocused))
 				.setMargins(0, 4, 0, 4)
 				.setAnchor(Anchor.CENTER)
 				.setMaxLineCount(1)
@@ -823,14 +841,30 @@ public class FullScreenWindow
 			
 			int x = rect.x + rect.width;
 
-			new TextBox(mTitleExtra)
-				.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
-				.setFont(mTitleBarFont)
-				.setForeground(mTitleBarForegroundExtra.get(mFocused))
-				.setMargins(0, 0, 0, 4)
-				.setAnchor(Anchor.WEST)
-				.setMaxLineCount(1)
-				.render(aGraphics);
+			if (!mTitle[1].isEmpty())
+			{
+				x += new TextBox(mTitle[1])
+					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
+					.setFont(mTitleBarFont[1])
+					.setForeground(mTitleBarForeground[1].get(mFocused))
+					.setMargins(0, 0, 0, 4)
+					.setAnchor(Anchor.WEST)
+					.setMaxLineCount(1)
+					.render(aGraphics)
+					.measure().width;
+			}
+
+			if (!mTitle[2].isEmpty())
+			{
+				new TextBox(mTitle[2])
+					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
+					.setFont(mTitleBarFont[2])
+					.setForeground(mTitleBarForeground[2].get(mFocused))
+					.setMargins(0, 0, 0, 4)
+					.setAnchor(Anchor.WEST)
+					.setMaxLineCount(1)
+					.render(aGraphics);
+			}
 		}
 
 
@@ -855,6 +889,18 @@ public class FullScreenWindow
 			return true;
 		}
 	};
+
+
+	protected void updateButtonPositions(int aWidth)
+	{
+		if (aWidth != mLayoutSize)
+		{
+			boolean maximized = isMaximized();
+
+			mLayoutSize = aWidth;
+			mButtonRects = new Rectangle[]{new Rectangle(mLayoutSize - 3 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), new Rectangle(mLayoutSize - 2 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), new Rectangle(mLayoutSize - 1 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight)};
+		}
+	}
 
 
 	protected void paintCloseButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed)
@@ -953,24 +999,67 @@ public class FullScreenWindow
 
 	public String getTitle()
 	{
-		return mTitle;
+		return mTitle[0];
 	}
 	
 	
 	public void setTitle(String aTitle)
 	{
-		setTitle(aTitle, mTitleExtra);
+		setTitle(aTitle, mTitle[1], mTitle[2]);
 	}
 	
 	
-	public void setTitle(String aTitle, String aTitleExtra)
+	public void setTitle(String aTitle, String aTitleExtra1, String aTitleExtra2)
 	{
-		mTitle = aTitle;
-		mTitleExtra = aTitleExtra;
+		mTitle[0] = aTitle;
+		mTitle[1] = aTitleExtra1;
+		mTitle[2] = aTitleExtra2;
 
-		mFrame.setTitle(mTitle);
+		mFrame.setTitle(mTitle[0]);
 
 		mBorderPanel.repaint(0, 0, mFrame.getWidth(), mTitleBarHeight);
+	}
+
+
+	public void setLocationByPlatform(boolean aState)
+	{
+		mFrame.setLocationByPlatform(aState);
+	}
+
+
+	public void setSize(int aWidth, int aHeight)
+	{
+		mFrame.setSize(aWidth, aHeight);
+	}
+
+
+	public void setExtendedState(int aState)
+	{
+		mFrame.setExtendedState(aState);
+	}
+
+
+	public void setDefaultCloseOperation(int aState)
+	{
+		mFrame.setDefaultCloseOperation(aState);
+	}
+
+
+	public void setIconImages(List<Image> aIcons)
+	{
+		mFrame.setIconImages(aIcons);
+	}
+
+
+	public void addWindowListener(WindowListener aWindowListener)
+	{
+		mFrame.addWindowListener(aWindowListener);
+	}
+
+
+	public void toFront()
+	{
+		mFrame.toFront();
 	}
 
 
