@@ -10,6 +10,7 @@ import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -774,5 +775,11 @@ public final class Utilities
 	{
 		aComponent.setBorder(null);
 		return (T)aComponent;
+	}
+	
+	
+	public static int getDPIScale()
+	{
+		return Toolkit.getDefaultToolkit().getScreenSize().width > 1920 ? 2 : 1;
 	}
 }

@@ -82,11 +82,7 @@ public class FullScreenWindow
 		mResizeVer = true;
 		mResizeHor = true;
 		mBorderVisible = true;
-		mBorderSize = 8;
 		mArmedButton = -1;
-		mTitleBarHeight = 49;
-		mTitleBarButtonHeight = 40;
-		mTitleBarButtonWidth = 69;
 		mTitleBarFont = new Font[3];
 		mTitleBarFont[0] = new Font("segoe ui", Font.BOLD, 17);
 		mTitleBarFont[1] = new Font("segoe ui", Font.BOLD, 17);
@@ -116,6 +112,7 @@ public class FullScreenWindow
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setUndecorated(true);
 
+		updateDimensions();
 		updateButtonPositions(100);
 		updateBorder(JFrame.NORMAL, true);
 	}
@@ -235,6 +232,17 @@ public class FullScreenWindow
 		mWindowButtonForeground.add(new Color(0, 0, 0), ARMED);
 		mWindowButtonForeground.add(new Color(255, 255, 255), FOCUSED);
 		mWindowButtonForeground.add(new Color(255, 255, 255), FOCUSED | ARMED);
+	}
+	
+	
+	protected void updateDimensions()
+	{
+		int scale = Utilities.getDPIScale();
+
+		mBorderSize = 4 * scale;
+		mTitleBarHeight = 25 * scale;
+		mTitleBarButtonHeight = 20 * scale;
+		mTitleBarButtonWidth = 34 * scale;
 	}
 
 
@@ -898,7 +906,11 @@ public class FullScreenWindow
 			boolean maximized = isMaximized();
 
 			mLayoutSize = aWidth;
-			mButtonRects = new Rectangle[]{new Rectangle(mLayoutSize - 3 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), new Rectangle(mLayoutSize - 2 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), new Rectangle(mLayoutSize - 1 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight)};
+			mButtonRects = new Rectangle[]{
+				new Rectangle(mLayoutSize - 3 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), 
+				new Rectangle(mLayoutSize - 2 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), 
+				new Rectangle(mLayoutSize - 1 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight)
+			};
 		}
 	}
 
@@ -1001,14 +1013,14 @@ public class FullScreenWindow
 	{
 		return mTitle[0];
 	}
-	
-	
+
+
 	public void setTitle(String aTitle)
 	{
 		setTitle(aTitle, mTitle[1], mTitle[2]);
 	}
-	
-	
+
+
 	public void setTitle(String aTitle, String aTitleExtra1, String aTitleExtra2)
 	{
 		mTitle[0] = aTitle;
