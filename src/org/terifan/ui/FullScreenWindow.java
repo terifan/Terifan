@@ -201,7 +201,6 @@ public class FullScreenWindow
 	protected void setupDarkStyle()
 	{
 		mTitleBarBackground.add(new Color(0, 0, 0), DEFAULT);
-		mTitleBarBackground.add(new Color(0, 0, 0), FOCUSED);
 		mTitleBarForeground[0].add(new Color(255, 255, 255), DEFAULT);
 		mTitleBarForeground[1].add(new Color(255,255,255), DEFAULT);
 		mTitleBarForeground[2].add(new Color(160,160,160), DEFAULT);
@@ -406,7 +405,7 @@ public class FullScreenWindow
 		@Override
 		public void mouseDragged(MouseEvent aEvent)
 		{
-			mMouseDragged = true;
+			mMouseDragged = aEvent.getX() < mButtonRects[0].x;
 
 			if (mResize)
 			{

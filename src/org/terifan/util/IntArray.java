@@ -2,6 +2,7 @@ package org.terifan.util;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
@@ -82,6 +83,19 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 			}
 		}
 		
+		return this;
+	}
+	
+	
+	public IntArray remove(int aIndex)
+	{
+		if (aIndex < mSize - 1)
+		{
+			System.arraycopy(mValues, aIndex + 1, mValues, aIndex, mSize - aIndex - 1);
+		}
+
+		mSize--;
+
 		return this;
 	}
 
@@ -321,5 +335,27 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 	public IntStream stream()
 	{
 		return Arrays.stream(mValues, 0, mSize);
+	}
+
+
+	public <T> T find(Visitor<T> aConsumer)
+	{
+		for (int i = 0; i < mSize; i++)
+		{
+			T value = aConsumer.visit(mValues[i]);
+			if (value != null)
+			{
+				return value;
+			}			
+		}
+
+		return null;
+	}
+	
+	
+	@FunctionalInterface
+	public interface Visitor<T>
+	{
+		T visit(int aValue);
 	}
 }
