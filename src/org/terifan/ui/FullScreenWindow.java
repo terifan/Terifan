@@ -200,7 +200,7 @@ public class FullScreenWindow
 
 	protected void setupDarkStyle()
 	{
-		mTitleBarBackground.add(new Color(0, 0, 0), DEFAULT);
+		mTitleBarBackground.add(new Color(17,17,17), DEFAULT);
 		mTitleBarForeground[0].add(new Color(255, 255, 255), DEFAULT);
 		mTitleBarForeground[1].add(new Color(255,255,255), DEFAULT);
 		mTitleBarForeground[2].add(new Color(160,160,160), DEFAULT);
