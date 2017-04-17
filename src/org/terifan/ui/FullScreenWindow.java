@@ -210,8 +210,7 @@ public class FullScreenWindow
 		mBorderOuter.add(new Color(240, 240, 240), DEFAULT);
 		mBorderOuter.add(new Color(38, 38, 38), FOCUSED);
 
-		mCloseButtonBackground.add(new Color(0, 0, 0), DEFAULT);
-		mCloseButtonBackground.add(new Color(0, 0, 0), FOCUSED);
+		mCloseButtonBackground.add(new Color(17,17,17), DEFAULT);
 		mCloseButtonBackground.add(new Color(232, 17, 35), ARMED);
 		mCloseButtonBackground.add(new Color(232, 17, 35), FOCUSED | ARMED);
 		mCloseButtonForeground.add(new Color(180, 180, 180), DEFAULT);
@@ -223,8 +222,7 @@ public class FullScreenWindow
 		mCloseButtonForegroundShadow.add(new Color(255, 255, 255, 64), FOCUSED);
 		mCloseButtonForegroundShadow.add(new Color(230, 230, 230, 64), FOCUSED | ARMED);
 
-		mWindowButtonBackground.add(new Color(0, 0, 0), DEFAULT);
-		mWindowButtonBackground.add(new Color(0, 0, 0), FOCUSED);
+		mWindowButtonBackground.add(new Color(17,17,17), DEFAULT);
 		mWindowButtonBackground.add(new Color(220, 220, 220), ARMED);
 		mWindowButtonBackground.add(new Color(64, 64, 64), FOCUSED | ARMED);
 		mWindowButtonForeground.add(new Color(180, 180, 180), DEFAULT);
