@@ -70,6 +70,7 @@ public class FullScreenWindow
 	protected int mLayoutSize;
 	protected boolean mFocused;
 	protected Font[] mTitleBarFont;
+	protected int mTitleBarButtonSymbolSize;
 
 
 	public FullScreenWindow()
@@ -87,6 +88,7 @@ public class FullScreenWindow
 		mTitleBarFont[0] = new Font("segoe ui", Font.BOLD, 17);
 		mTitleBarFont[1] = new Font("segoe ui", Font.BOLD, 17);
 		mTitleBarFont[2] = new Font("segoe ui", Font.PLAIN, 17);
+		mTitleBarButtonSymbolSize = 14;
 
 		mMinSize = new Dimension(2 * mBorderSize + 4 * mTitleBarButtonWidth, mBorderSize + mTitleBarHeight);
 		mMaxSize = new Dimension(32000, 32000);
@@ -230,8 +232,8 @@ public class FullScreenWindow
 		mWindowButtonForeground.add(new Color(255, 255, 255), FOCUSED);
 		mWindowButtonForeground.add(new Color(255, 255, 255), FOCUSED | ARMED);
 	}
-	
-	
+
+
 	protected void updateDimensions()
 	{
 		int scale = Utilities.getDPIScale();
@@ -240,6 +242,7 @@ public class FullScreenWindow
 		mTitleBarHeight = 25 * scale;
 		mTitleBarButtonHeight = 20 * scale;
 		mTitleBarButtonWidth = 34 * scale;
+		mTitleBarButtonSymbolSize = 10 * scale;
 	}
 
 
@@ -276,8 +279,8 @@ public class FullScreenWindow
 	{
 		return mFrame;
 	}
-	
-	
+
+
 	public boolean isFocused()
 	{
 		return mFocused;
@@ -340,19 +343,19 @@ public class FullScreenWindow
 		return this;
 	}
 
-	
+
 	public void repaint()
 	{
 		mFrame.repaint();
 	}
-	
-	
+
+
 	public void removeAll()
 	{
 		mContentPanel.removeAll();
 	}
-	
-	
+
+
 	protected MouseAdapter mBorderMouseListener = new MouseAdapter()
 	{
 		private Rectangle mStartBounds;
@@ -441,7 +444,7 @@ public class FullScreenWindow
 		public void mouseReleased(MouseEvent aEvent)
 		{
 			boolean wasDragged = mMouseDragged;
-			
+
 			Point p = aEvent.getPoint();
 			mMouseDragged = false;
 			mCursor = null;
@@ -539,7 +542,7 @@ public class FullScreenWindow
 						break;
 					}
 				}
-				
+
 				if (mArmedButton != newState)
 				{
 					mArmedButton = newState;
@@ -547,7 +550,7 @@ public class FullScreenWindow
 				}
 			}
 		}
-		
+
 
 		private void resizeBox(Point aPoint)
 		{
@@ -723,8 +726,8 @@ public class FullScreenWindow
 		mBorderPanel.validate();
 		mBorderPanel.repaint();
 	}
-	
-	
+
+
 	private Border mTitleBorder = new Border()
 	{
 		@Override
@@ -737,7 +740,7 @@ public class FullScreenWindow
 			Graphics2D g = (Graphics2D)aGraphics;
 			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-			
+
 			paintBorder(g, aWidth, aHeight, maximized);
 
 			paintTitleBar(g, aWidth);
@@ -791,7 +794,7 @@ public class FullScreenWindow
 				.setMaxLineCount(1)
 				.render(aGraphics)
 				.measure();
-			
+
 			int x = rect.x + rect.width;
 
 			if (!mTitle[1].isEmpty())
@@ -819,8 +822,8 @@ public class FullScreenWindow
 					.render(aGraphics);
 			}
 		}
-		
-		
+
+
 		protected void paintTitleBarGradient(Graphics2D aGraphics, int aWidth)
 		{
 			int bs = mBorderVisible ? mBorderSize : 0;
@@ -843,7 +846,7 @@ public class FullScreenWindow
 				.setMaxLineCount(1)
 				.render(aGraphics)
 				.measure();
-			
+
 			int x = rect.x + rect.width;
 
 			if (!mTitle[1].isEmpty())
@@ -904,8 +907,8 @@ public class FullScreenWindow
 
 			mLayoutSize = aWidth;
 			mButtonRects = new Rectangle[]{
-				new Rectangle(mLayoutSize - 3 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), 
-				new Rectangle(mLayoutSize - 2 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight), 
+				new Rectangle(mLayoutSize - 3 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight),
+				new Rectangle(mLayoutSize - 2 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight),
 				new Rectangle(mLayoutSize - 1 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight)
 			};
 		}
@@ -927,16 +930,17 @@ public class FullScreenWindow
 //			aGraphics.setPaint(p);
 //		}
 
+		int S = mTitleBarButtonSymbolSize / 2;
 		int cx = aBounds.x + aBounds.width / 2;
 		int cy = aBounds.y + aBounds.height / 2;
 		aGraphics.setColor(mCloseButtonForegroundShadow.get(mFocused, aArmed));
-		aGraphics.drawLine(cx - 7 + 1, cy - 7, cx + 7, cy + 7 - 1);
-		aGraphics.drawLine(cx - 7, cy - 7 + 1, cx + 7 - 1, cy + 7);
-		aGraphics.drawLine(cx + 7 - 1, cy - 7, cx - 7, cy + 7 - 1);
-		aGraphics.drawLine(cx + 7, cy - 7 + 1, cx - 7 + 1, cy + 7);
+		aGraphics.drawLine(cx - S + 1, cy - S, cx + S, cy + S - 1);
+		aGraphics.drawLine(cx - S, cy - S + 1, cx + S - 1, cy + S);
+		aGraphics.drawLine(cx + S - 1, cy - S, cx - S, cy + S - 1);
+		aGraphics.drawLine(cx + S, cy - S + 1, cx - S + 1, cy + S);
 		aGraphics.setColor(mCloseButtonForeground.get(mFocused, aArmed));
-		aGraphics.drawLine(cx - 7, cy - 7, cx + 7, cy + 7);
-		aGraphics.drawLine(cx + 7, cy - 7, cx - 7, cy + 7);
+		aGraphics.drawLine(cx - S, cy - S, cx + S, cy + S);
+		aGraphics.drawLine(cx + S, cy - S, cx - S, cy + S);
 	}
 
 
@@ -953,14 +957,16 @@ public class FullScreenWindow
 //			aGraphics.setPaint(p);
 //		}
 
-		int cx = aBounds.x + aBounds.width / 2;
-		int cy = aBounds.y + aBounds.height / 2;
+		int S = mTitleBarButtonSymbolSize / 2 - 1;
+		int L = 1 + S / 2;
+		int cx = aBounds.x + aBounds.width / 2 - L / 2 - 1;
+		int cy = aBounds.y + aBounds.height / 2 + L / 2;
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
-		aGraphics.drawRect(cx - 6 - 2, cy - 6 + 2, 12, 12);
-		aGraphics.drawLine(cx - 6 + 2, cy - 6, cx - 6 + 2, cy - 6 + 1);
-		aGraphics.drawLine(cx - 6 + 2, cy - 6 - 1, cx + 6 + 2, cy - 6 - 1);
-		aGraphics.drawLine(cx + 6 + 2, cy - 6, cx + 6 + 2, cy + 6 - 2);
-		aGraphics.drawLine(cx + 6 - 1, cy + 6 - 2, cx + 6 + 1, cy + 6 - 2);
+		aGraphics.drawRect(cx - S    , cy - S    , 2 * S, 2 * S);
+		aGraphics.drawLine(cx - S + L, cy - S - L, cx - S + L, cy - S    );
+		aGraphics.drawLine(cx - S + L, cy - S - L, cx + S + L, cy - S - L);
+		aGraphics.drawLine(cx + S + L, cy - S - L, cx + S + L, cy + S - L);
+		aGraphics.drawLine(cx + S    , cy + S - L, cx + S + L, cy + S - L);
 	}
 
 
@@ -995,8 +1001,10 @@ public class FullScreenWindow
 //			aGraphics.setPaint(p);
 //		}
 
+		int S = mTitleBarButtonSymbolSize / 2;
+
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
-		aGraphics.drawRect(aBounds.x + aBounds.width / 2 - 7, aBounds.y + aBounds.height / 2 - 7, 15, 15);
+		aGraphics.drawRect(aBounds.x + aBounds.width / 2 - S, aBounds.y + aBounds.height / 2 - S, 2 * S + 1, 2 * S + 1);
 	}
 
 
