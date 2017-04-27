@@ -7,7 +7,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class ImageDimensionUtil 
+public class ImageDimensionUtil
 {
 	public static Dimension getImageDimension(byte[] aBuffer)
 	{
@@ -29,6 +29,13 @@ public class ImageDimensionUtil
 					return getImageDimensionsPNG(buffer);
 				case 0x4749:
 					return getImageDimensionsGIF(buffer);
+				case 0x4241:
+				case 0x424d:
+				case 0x4349:
+				case 0x4350:
+				case 0x4943:
+				case 0x5054:
+					return getImageDimensionsBMP(buffer);
 			}
 		}
 		catch (Exception e)
@@ -103,6 +110,22 @@ public class ImageDimensionUtil
 
 		int w = 0xFFFF & Short.reverseBytes(aBuffer.readShort());
 		int h = 0xFFFF & Short.reverseBytes(aBuffer.readShort());
+
+		return new Dimension(w, h);
+	}
+
+
+	private static Dimension getImageDimensionsBMP(DataInput aBuffer) throws IOException
+	{
+		aBuffer.skipBytes(12);
+
+		if (Integer.reverseBytes(aBuffer.readInt()) != 40)
+		{
+			return null;
+		}
+
+		int w = Integer.reverseBytes(aBuffer.readInt());
+		int h = Integer.reverseBytes(aBuffer.readInt());
 
 		return new Dimension(w, h);
 	}
