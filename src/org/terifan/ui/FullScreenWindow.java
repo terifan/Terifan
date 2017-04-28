@@ -242,7 +242,7 @@ public class FullScreenWindow
 		mTitleBarHeight = 25 * scale;
 		mTitleBarButtonHeight = 20 * scale;
 		mTitleBarButtonWidth = 34 * scale;
-		mTitleBarButtonSymbolSize = 10 * scale;
+		mTitleBarButtonSymbolSize = 5 + 5 * scale;
 	}
 
 
