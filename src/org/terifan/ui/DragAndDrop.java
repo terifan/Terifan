@@ -208,14 +208,29 @@ public abstract class DragAndDrop
 		@Override
 		public boolean canImport(TransferSupport aSupport)
 		{
-			return aSupport.isDataFlavorSupported(DATA_FLAVOR) && aSupport.getTransferable() != null && canDrop(new DropEvent(aSupport));
+			try
+			{
+				return aSupport.isDataFlavorSupported(DATA_FLAVOR) && aSupport.getTransferable() != null && canDrop(new DropEvent(aSupport));
+			}
+			catch (Throwable e)
+			{
+				e.printStackTrace(System.err);
+			}
+			return false;
 		}
 
 
 		@Override
 		public boolean importData(TransferSupport aSupport)
 		{
-			drop(new DropEvent(aSupport));
+			try
+			{
+				drop(new DropEvent(aSupport));
+			}
+			catch (Throwable e)
+			{
+				e.printStackTrace(System.err);
+			}
 			return true;
 		}
 

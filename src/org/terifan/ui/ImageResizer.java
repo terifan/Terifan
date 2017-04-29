@@ -1,5 +1,6 @@
 package org.terifan.ui;
 
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -162,5 +163,29 @@ public class ImageResizer
 		g.dispose();
 
 		return image;
+	}
+
+
+	public static Dimension getScaledImageAspectSize(int aWidth, int aHeight, int aSize)
+	{
+		double aScale = Math.min(aSize / (double)aWidth, aSize / (double)aHeight);
+
+		int dw = (int)Math.round(aWidth * aScale);
+		int dh = (int)Math.round(aHeight * aScale);
+
+		// make sure one direction has specified dimension
+		if (dw != aWidth && dh != aHeight)
+		{
+			if (Math.abs(aWidth - dw) < Math.abs(aHeight - dh))
+			{
+				dw = aWidth;
+			}
+			else
+			{
+				dh = aHeight;
+			}
+		}
+
+		return new Dimension(dw, dh);
 	}
 }
