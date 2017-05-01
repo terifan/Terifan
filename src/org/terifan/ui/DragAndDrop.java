@@ -1,5 +1,6 @@
 package org.terifan.ui;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -10,9 +11,15 @@ import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
@@ -67,6 +74,48 @@ public abstract class DragAndDrop
 		}
 
 		mComponent.setTransferHandler(new MyTransferHandler());
+
+		aComponent.setDropTarget(new DropTarget(aComponent, new DropTargetListener()
+		{
+			@Override
+			public void dragEnter(DropTargetDragEvent aDtde)
+			{
+				DragAndDrop.this.dragEnter(aDtde);
+			}
+
+			@Override
+			public void dragOver(DropTargetDragEvent aDtde)
+			{
+				DragAndDrop.this.dragOver(aDtde);
+			}
+
+			@Override
+			public void dropActionChanged(DropTargetDragEvent aDtde)
+			{
+				DragAndDrop.this.dropActionChanged(aDtde);
+			}
+
+			@Override
+			public void dragExit(DropTargetEvent aDte)
+			{
+				DragAndDrop.this.dragExit(aDte);
+			}
+
+			@Override
+			public void drop(DropTargetDropEvent aDtde)
+			{
+				try
+				{
+					Object transferData = aDtde.getTransferable().getTransferData(aDtde.getTransferable().getTransferDataFlavors()[0]);
+
+					DragAndDrop.this.drop(new DropEvent(aDtde.getLocation(), aDtde.getDropAction(), transferData));
+				}
+				catch (Throwable e)
+				{
+					e.printStackTrace(System.err);
+				}
+			}
+		}));
 	}
 
 
@@ -164,6 +213,26 @@ public abstract class DragAndDrop
 	}
 
 
+	public void dragEnter(DropTargetDragEvent aDtde)
+	{
+	}
+
+
+	public void dragExit(DropTargetEvent aDtde)
+	{
+	}
+	
+	
+	public void dragOver(DropTargetDragEvent aDtde)
+	{
+	}
+
+
+	public void dropActionChanged(DropTargetDragEvent aDtde)
+	{
+	}
+
+	
 	/**
 	 * Return the type of data that can be dragged from the current location
 	 *
@@ -246,7 +315,6 @@ public abstract class DragAndDrop
 		protected Transferable createTransferable(JComponent aComponent)
 		{
 			throw new UnsupportedOperationException("Swing DND is enabled on component!");
-//			return new MyTransferable(null);
 		}
 	}
 

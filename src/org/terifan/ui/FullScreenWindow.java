@@ -743,7 +743,7 @@ public class FullScreenWindow
 
 			paintBorder(g, aWidth, aHeight, maximized);
 
-			paintTitleBar(g, aWidth);
+			paintTitleBar(g, aWidth, maximized);
 
 			paintMinimizeButton(g, mButtonRects[0], mArmedButton == 0);
 			if (maximized)
@@ -772,18 +772,20 @@ public class FullScreenWindow
 				aGraphics.setColor(mBorderOuter.get(mFocused));
 				aGraphics.drawRect(0, 0, aWidth - 1, aHeight - 1);
 			}
-			else
-			{
-				aGraphics.fillRect(0, mBorderSize, mBorderSize, mTitleBarHeight - mBorderSize);
-				aGraphics.fillRect(aWidth - mBorderSize, mBorderSize, mBorderSize, mTitleBarHeight - mBorderSize);
-			}
 		}
 
 
-		protected void paintTitleBar(Graphics2D aGraphics, int aWidth)
+		protected void paintTitleBar(Graphics2D aGraphics, int aWidth, boolean aMaximized)
 		{
 			aGraphics.setColor(mTitleBarBackground.get(mFocused));
-			aGraphics.fillRect(mBorderSize, mBorderSize, aWidth - mBorderSize - mBorderSize, mTitleBarHeight - mBorderSize);
+			if (mBorderVisible && !aMaximized)
+			{
+				aGraphics.fillRect(mBorderSize, mBorderSize, aWidth - mBorderSize - mBorderSize, mTitleBarHeight - mBorderSize);
+			}
+			else
+			{
+				aGraphics.fillRect(0, 0, aWidth, mTitleBarHeight);
+			}
 
 			Rectangle rect = new TextBox(mTitle[0])
 				.setBounds(mBorderSize, 0, mButtonRects[0].x - mBorderSize, mTitleBarButtonHeight)
