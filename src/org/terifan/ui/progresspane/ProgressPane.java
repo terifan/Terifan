@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 public class ProgressPane extends JPanel
 {
 	private ArrayList<Work> mWork;
+	private ArrayList<Work> mPendingWork;
 	private int mCollapseAnimationDelay;
 	private int mRepaintFrequency;
 
@@ -18,6 +19,7 @@ public class ProgressPane extends JPanel
 	public ProgressPane()
 	{
 		mWork = new ArrayList<>();
+		mPendingWork = new ArrayList<>();
 		mCollapseAnimationDelay = 25;
 		mRepaintFrequency = 50;
 	}
@@ -26,7 +28,10 @@ public class ProgressPane extends JPanel
 	public ProgressPane add(Work aWork)
 	{
 		aWork.mPane = this;
-		mWork.add(aWork);
+		synchronized (mPendingWork)
+		{
+			mPendingWork.add(aWork);
+		}
 		return this;
 	}
 
@@ -70,6 +75,12 @@ public class ProgressPane extends JPanel
 		aGraphics.setColor(Color.WHITE);
 		aGraphics.fillRect(0, 0, getWidth(), getHeight());
 
+		synchronized (mPendingWork)
+		{
+			mWork.addAll(mPendingWork);
+			mPendingWork.clear();
+		}
+		
 		paintImpl(aGraphics, 0, 0, mWork);
 	}
 
@@ -93,7 +104,7 @@ public class ProgressPane extends JPanel
 
 				Shape oldClip = aGraphics.getClip();
 				aGraphics.setClip(x * s, y, w, work.mHeight);
-				aGraphics.drawString((work.getProgress() * 100 / work.getLimit()) + "% " + work.getLabel(), w/2-50, y + work.mHeight-5);
+				aGraphics.drawString((work.getProgress() * 100 / (work.getLimit() == 0 ? 100 : work.getLimit())) + "% " + work.getLabel(), w/2-50, y + work.mHeight-5);
 				aGraphics.setClip(oldClip);
 
 				y += work.mHeight + 2;

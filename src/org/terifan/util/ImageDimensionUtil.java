@@ -7,6 +7,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+
 public class ImageDimensionUtil
 {
 	public static Dimension getImageDimension(byte[] aBuffer)
