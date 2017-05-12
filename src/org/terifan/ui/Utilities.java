@@ -776,10 +776,10 @@ public final class Utilities
 		aComponent.setBorder(null);
 		return (T)aComponent;
 	}
-	
-	
-	public static int getDPIScale()
+
+
+	public static float getDPIScale()
 	{
-		return Toolkit.getDefaultToolkit().getScreenSize().width > 1920 ? 2 : 1;
+		return Toolkit.getDefaultToolkit().getScreenSize().width / 1920f;
 	}
 }

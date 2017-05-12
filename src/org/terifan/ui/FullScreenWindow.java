@@ -236,13 +236,13 @@ public class FullScreenWindow
 
 	protected void updateDimensions()
 	{
-		int scale = Utilities.getDPIScale();
+		float scale = Utilities.getDPIScale();
 
-		mBorderSize = 4 * scale;
-		mTitleBarHeight = 25 * scale;
-		mTitleBarButtonHeight = 20 * scale;
-		mTitleBarButtonWidth = 34 * scale;
-		mTitleBarButtonSymbolSize = 5 + 5 * scale;
+		mBorderSize = (int)(4 * scale);
+		mTitleBarHeight = (int)(25 * scale);
+		mTitleBarButtonHeight = (int)(20 * scale);
+		mTitleBarButtonWidth = (int)(34 * scale);
+		mTitleBarButtonSymbolSize = (int)(5 + 5 * scale);
 	}
 
 
