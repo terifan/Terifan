@@ -53,6 +53,12 @@ public class Work
 	}
 
 
+	public void setLimit(int aLimit)
+	{
+		mLimit = aLimit;
+	}
+
+
 	public void add(Work aWork)
 	{
 		if (mChildren == null)
@@ -139,6 +145,13 @@ public class Work
 	public void incrementProgress()
 	{
 		mProgress++;
+		getPane().repaint();
+	}
+
+
+	public void addProgress(int aAmount)
+	{
+		mProgress += aAmount;
 		getPane().repaint();
 	}
 
