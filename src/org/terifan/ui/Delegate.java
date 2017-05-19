@@ -12,6 +12,7 @@ import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.Icon;
 
 
 /**
@@ -163,6 +164,20 @@ public class Delegate extends AbstractAction
 				Utilities.addGlobalKeyAction(params.keyStroke(), this);
 			}
 		}
+	}
+
+
+	public Delegate setSmallIcon(Icon aIcon)
+	{
+		putValue(Action.SMALL_ICON, aIcon);
+		return this;
+	}
+
+
+	public Delegate setLabel(String aLabel)
+	{
+		putValue(Action.NAME, aLabel);;
+		return this;
 	}
 
 

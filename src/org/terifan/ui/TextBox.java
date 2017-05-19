@@ -29,9 +29,9 @@ public class TextBox implements Cloneable, Serializable
 	protected final Insets mMargins;
 	protected final Insets mPadding;
 	protected final Rectangle mBounds;
-	protected ArrayList<String> mTextLines;
+	protected ArrayList<TextSegment> mTextLines;
 	protected ArrayList<Rectangle> mTextBounds;
-	protected String mText;
+	protected StringBuilder mText;
 	protected Font mFont;
 	protected Color mForeground;
 	protected Color mBackground;
@@ -47,6 +47,7 @@ public class TextBox implements Cloneable, Serializable
 	protected String mSuffix;
 	protected boolean mDirty;
 	protected Color mShadowColor;
+	protected TextRenderCallback mRenderCallback;
 
 
 	public TextBox()
@@ -57,7 +58,7 @@ public class TextBox implements Cloneable, Serializable
 
 	public TextBox(String aText)
 	{
-		mText = aText;
+		mText = new StringBuilder(aText);
 		mBounds = new Rectangle();
 		mMargins = new Insets(0, 0, 0, 0);
 		mPadding = new Insets(0, 0, 0, 0);
@@ -71,19 +72,53 @@ public class TextBox implements Cloneable, Serializable
 
 	public synchronized String getText()
 	{
-		return mText;
+		return mText.toString();
 	}
 
 
-	public synchronized TextBox setText(String aText)
+	public synchronized TextBox setText(Object aText)
 	{
-		if (aText == null)
+		if (aText != null)
 		{
-			throw new IllegalArgumentException("aText is null");
+			mText.setLength(0);
+			mText.append(aText);
+			mDirty = true;
 		}
+		return this;
+	}
 
-		mText = aText;
-		mDirty = true;
+
+	public synchronized TextBox append(Object aText)
+	{
+		if (aText != null)
+		{
+			mText.append(aText);
+			mDirty = true;
+		}
+		return this;
+	}
+
+
+	public synchronized TextBox appendLine(Object aText)
+	{
+		if (aText != null)
+		{
+			mText.append(aText).append("\n");
+			mDirty = true;
+		}
+		return this;
+	}
+
+
+	public TextRenderCallback getRenderCallback()
+	{
+		return mRenderCallback;
+	}
+
+
+	public TextBox setRenderCallback(TextRenderCallback aRenderCallback)
+	{
+		mRenderCallback = aRenderCallback;
 		return this;
 	}
 
@@ -677,10 +712,10 @@ public class TextBox implements Cloneable, Serializable
 
 		for (int i = 0; i < lineCount; i++)
 		{
-			String str = mTextLines.get(i);
+			TextSegment str = mTextLines.get(i);
 
 			int lineX = boxX;
-			int lineW = getStringLength(aFontRenderContext, str, mFont) + mPadding.left + mPadding.right;
+			int lineW = getStringLength(aFontRenderContext, str.mText, mFont) + mPadding.left + mPadding.right;
 
 			switch (mAnchor)
 			{
@@ -707,7 +742,7 @@ public class TextBox implements Cloneable, Serializable
 
 	private void layoutLines(FontRenderContext aFontRenderContext)
 	{
-		ArrayList<String> list = new ArrayList<>();
+		ArrayList<TextSegment> list = new ArrayList<>();
 
 		int boxW = mBounds.width - mMargins.left - mMargins.right;
 
@@ -725,7 +760,9 @@ public class TextBox implements Cloneable, Serializable
 
 		if (boxW > 0)
 		{
-			for (String str : mText.split("\n"))
+			int line = 0;
+
+			for (String str : mText.toString().split("\n"))
 			{
 				do
 				{
@@ -772,7 +809,7 @@ public class TextBox implements Cloneable, Serializable
 						str = "";
 					}
 
-					list.add(trim(nextLine));
+					list.add(new TextSegment(line, trim(nextLine)));
 
 					if (isLastLine)
 					{
@@ -785,13 +822,15 @@ public class TextBox implements Cloneable, Serializable
 				{
 					break;
 				}
+
+				line++;
 			}
 		}
 
 		mTextLines = list;
 	}
-	
-	
+
+
 	private String trim(String aString)
 	{
 		int len = aString.length();
@@ -833,7 +872,7 @@ public class TextBox implements Cloneable, Serializable
 	}
 
 
-	private void drawSingleLine(Graphics aGraphics, String aText, LineMetrics aLineMetrics, int aOffsetX, int aOffsetY, int aWidth, int aHeight, boolean aHasShadow, boolean aShadow)
+	private void drawSingleLine(Graphics aGraphics, TextSegment aText, LineMetrics aLineMetrics, int aOffsetX, int aOffsetY, int aWidth, int aHeight, boolean aHasShadow, boolean aShadow)
 	{
 		if (mHighlight != null && (aShadow || !aHasShadow))
 		{
@@ -848,7 +887,17 @@ public class TextBox implements Cloneable, Serializable
 
 		int adjust = (int)(aLineMetrics.getHeight() - aLineMetrics.getDescent());
 
-		aGraphics.drawString(aText, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
+		if (mRenderCallback != null)
+		{
+			mRenderCallback.beforeRender(aText, aOffsetX, aOffsetY, aWidth, aHeight, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
+		}
+
+		aGraphics.drawString(aText.mText, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
+
+		if (mRenderCallback != null)
+		{
+			mRenderCallback.afterRender(aText, aOffsetX, aOffsetY, aWidth, aHeight, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
+		}
 	}
 
 
@@ -904,5 +953,52 @@ public class TextBox implements Cloneable, Serializable
 		mSuffix = aPrefix;
 		mDirty = true;
 		return this;
+	}
+
+
+	public static class TextSegment
+	{
+		private int mLine;
+		private String mText;
+
+		public TextSegment(int aLine, String aText)
+		{
+			mLine = aLine;
+			mText = aText;
+		}
+
+
+		public int getLine()
+		{
+			return mLine;
+		}
+
+
+		public String getText()
+		{
+			return mText;
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return mText;
+		}
+	}
+
+
+	public static interface TextRenderCallback
+	{
+		public void beforeRender(TextSegment aText, int aOffsetX, int aOffsetY, int aWidth, int aHeight, int aTextX, int aTextY);
+
+		public void afterRender(TextSegment aText, int aOffsetX, int aOffsetY, int aWidth, int aHeight, int aTextX, int aTextY);
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return getText();
 	}
 }
