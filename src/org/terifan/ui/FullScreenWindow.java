@@ -81,6 +81,14 @@ public class FullScreenWindow
 	protected Font[] mTitleBarFont;
 	protected int mTitleBarButtonSymbolSize;
 	private final int mStyle;
+	private OnClosedAction mOnClosedAction;
+	private OnClosingAction mOnClosingAction;
+	private OnResizeAction mOnResizeAction;
+	private OnMaximizeAction mOnMaximizeAction;
+	private OnMinimizeAction mOnMinimizeAction;
+	private OnRestoreAction mOnRestoreAction;
+	private OnGainedFocusAction mOnGainedFocusAction;
+	private OnLostFocusAction mOnLostFocusAction;
 
 
 	public FullScreenWindow(String aTitle)
@@ -157,6 +165,8 @@ public class FullScreenWindow
 			mFrame.setLocationRelativeTo(null);
 			mFrame.setUndecorated(true);
 			mWindow = mFrame;
+
+			mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		}
 
 
@@ -553,7 +563,7 @@ public class FullScreenWindow
 
 			if (mFrame != null)
 			{
-				switch (aEvent.getClickCount() > 1 && p.x > mBorderSize && p.y < mTitleBarHeight && p.x < mLayoutSize - mBorderSize ? 1 : mArmedButton)
+				switch (aEvent.getClickCount() > 1 && p.x > mBorderSize && p.y < mTitleBarHeight && p.x < mButtonRects[0].x ? 1 : mArmedButton)
 				{
 					case 0:
 						mFrame.setExtendedState(JFrame.ICONIFIED);
@@ -766,6 +776,11 @@ public class FullScreenWindow
 			{
 				updateBorder(JFrame.NORMAL, true);
 			}
+			
+			if (mOnGainedFocusAction != null)
+			{
+				mOnGainedFocusAction.onWindowGainedFocus();
+			}
 		}
 
 
@@ -780,13 +795,28 @@ public class FullScreenWindow
 			{
 				updateBorder(JFrame.NORMAL, true);
 			}
+			
+			if (mOnLostFocusAction != null)
+			{
+				mOnLostFocusAction.onWindowLostFocus();
+			}
 		}
 
 
 		@Override
 		public void windowClosing(WindowEvent e)
 		{
+			if (mOnClosingAction != null && !mOnClosingAction.onWindowClosing())
+			{
+				return;
+			}
+
 			dispose();
+
+			if (mOnClosedAction != null)
+			{
+				mOnClosedAction.onWindowClosed();
+			}
 		}
 
 
@@ -794,6 +824,19 @@ public class FullScreenWindow
 		public void windowStateChanged(WindowEvent aEvent)
 		{
 			updateBorder(aEvent.getNewState(), mWindow.isFocused());
+			
+			if (aEvent.getNewState() == JFrame.MAXIMIZED_BOTH && mOnMaximizeAction != null)
+			{
+				mOnMaximizeAction.onWindowMaximize();
+			}
+			else if (aEvent.getNewState() == JFrame.NORMAL && mOnRestoreAction != null)
+			{
+				mOnRestoreAction.onWindowRestore();
+			}
+			else if (aEvent.getNewState() == JFrame.ICONIFIED && mOnMinimizeAction != null)
+			{
+				mOnMinimizeAction.onWindowMinimize();
+			}
 		}
 	};
 
@@ -803,6 +846,11 @@ public class FullScreenWindow
 		public void componentResized(ComponentEvent aEvent)
 		{
 			revalidate();
+
+			if (mOnResizeAction != null)
+			{
+				mOnResizeAction.onWindowResize();
+			}
 		}
 
 
@@ -1205,15 +1253,6 @@ public class FullScreenWindow
 	}
 
 
-	public void setDefaultCloseOperation(int aState)
-	{
-		if (mFrame != null)
-		{
-			mFrame.setDefaultCloseOperation(aState);
-		}
-	}
-
-
 	public void setIconImages(List<Image> aIcons)
 	{
 		mWindow.setIconImages(aIcons);
@@ -1229,6 +1268,110 @@ public class FullScreenWindow
 	public void toFront()
 	{
 		mWindow.toFront();
+	}
+	
+	
+	public void setOnClosed(OnClosedAction aAction)
+	{
+		mOnClosedAction = aAction;
+	}
+	
+	
+	public void setOnClosing(OnClosingAction aAction)
+	{
+		mOnClosingAction = aAction;
+	}
+	
+	
+	public void setOnResize(OnResizeAction aAction)
+	{
+		mOnResizeAction = aAction;
+	}
+	
+	
+	public void setOnMinizmie(OnMinimizeAction aAction)
+	{
+		mOnMinimizeAction = aAction;
+	}
+	
+	
+	public void setOnMaximize(OnMaximizeAction aAction)
+	{
+		mOnMaximizeAction = aAction;
+	}
+	
+	
+	public void setOnRestore(OnRestoreAction aAction)
+	{
+		mOnRestoreAction = aAction;
+	}
+	
+	
+	public void setOnGainedFocus(OnGainedFocusAction aAction)
+	{
+		mOnGainedFocusAction = aAction;
+	}
+	
+	
+	public void setOnLostFocus(OnLostFocusAction aAction)
+	{
+		mOnLostFocusAction = aAction;
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnClosedAction
+	{
+		void onWindowClosed();
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnClosingAction
+	{
+		boolean onWindowClosing();
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnResizeAction
+	{
+		void onWindowResize();
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnMinimizeAction
+	{
+		void onWindowMinimize();
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnMaximizeAction
+	{
+		void onWindowMaximize();
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnRestoreAction
+	{
+		void onWindowRestore();
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnGainedFocusAction
+	{
+		void onWindowGainedFocus();
+	}
+	
+	
+	@FunctionalInterface
+	public interface OnLostFocusAction
+	{
+		void onWindowLostFocus();
 	}
 
 
@@ -1254,6 +1397,14 @@ public class FullScreenWindow
 					wnd.setBorderVisible(!wnd.isBorderVisible());
 				}
 			}));
+			wnd.setOnClosing(()->{System.out.println("closing");return true;});
+			wnd.setOnClosed(()->System.out.println("closed"));
+			wnd.setOnResize(()->System.out.println("resize"));
+			wnd.setOnMinizmie(()->System.out.println("minimize"));
+			wnd.setOnMaximize(()->System.out.println("maximize"));
+			wnd.setOnRestore(()->System.out.println("restore"));
+			wnd.setOnGainedFocus(()->System.out.println("focused"));
+			wnd.setOnLostFocus(()->System.out.println("unfocused"));
 			wnd.setVisible(true);
 		}
 		catch (Throwable e)
