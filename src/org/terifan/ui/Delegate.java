@@ -184,7 +184,8 @@ public class Delegate extends AbstractAction
 	@Override
 	public void actionPerformed(ActionEvent aEvent)
 	{
-		SwingUtilities.invokeLater(() ->
+//		SwingUtilities.invokeLater(() ->
+		new Thread(() ->
 		{
 			try
 			{
@@ -201,7 +202,7 @@ public class Delegate extends AbstractAction
 			{
 				throw new IllegalStateException(e);
 			}
-		});
+		}).start();
 	}
 
 
