@@ -305,15 +305,14 @@ public class FullScreenWindow
 		float scale = Utilities.getDPIScale();
 
 		mBorderSize = (int)(4 * scale);
-		mTitleBarHeight = (int)(25 * scale);
+		mTitleBarHeight = (int)(21 * scale);
 		mTitleBarButtonHeight = (int)(20 * scale);
 		mTitleBarButtonWidth = (int)(34 * scale);
 		mTitleBarButtonSymbolSize = (int)(5 + 5 * scale);
-		
-		if (mDialog != null)
-		{
-			mTitleBarButtonWidth = 0;
-		}
+
+		mTitleBarFont[0] = new Font("segoe ui", Font.BOLD, (int)(9 * scale));
+		mTitleBarFont[1] = new Font("segoe ui", Font.BOLD, (int)(9 * scale));
+		mTitleBarFont[2] = new Font("segoe ui", Font.PLAIN, (int)(9 * scale));
 	}
 
 
@@ -525,11 +524,8 @@ public class FullScreenWindow
 				{
 					int x = mLastKnownWidth / 2;
 
-					if (mFrame != null)
-					{
-						mFrame.setExtendedState(JFrame.NORMAL);
-					}
-					
+					setExtendedState(JFrame.NORMAL);
+
 					mWindow.setLocation(aEvent.getXOnScreen() - x, aEvent.getYOnScreen());
 
 					mClickPoint.x = x;
@@ -555,35 +551,32 @@ public class FullScreenWindow
 
 			if (wasDragged && aEvent.getLocationOnScreen().y == 0 && mFrame != null)
 			{
-				mFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+				setExtendedState(JFrame.MAXIMIZED_BOTH);
 				return;
 			}
 
 			updateButtons(aEvent);
 
-			if (mFrame != null)
+			switch (aEvent.getClickCount() > 1 && p.x > mBorderSize && p.y < mTitleBarHeight && p.x < mButtonRects[0].x ? 1 : mArmedButton)
 			{
-				switch (aEvent.getClickCount() > 1 && p.x > mBorderSize && p.y < mTitleBarHeight && p.x < mButtonRects[0].x ? 1 : mArmedButton)
-				{
-					case 0:
-						mFrame.setExtendedState(JFrame.ICONIFIED);
-						break;
-					case 1:
-						if (isMaximized())
-						{
-							mFrame.setExtendedState(JFrame.NORMAL);
-						}
-						else
-						{
-							mFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-						}
-						break;
-					case 2:
-						mFrame.dispatchEvent(new WindowEvent(mFrame, WindowEvent.WINDOW_CLOSING));
-						break;
-					default:
-						break;
-				}
+				case 0:
+					setExtendedState(JFrame.ICONIFIED);
+					break;
+				case 1:
+					if (isMaximized())
+					{
+						setExtendedState(JFrame.NORMAL);
+					}
+					else
+					{
+						setExtendedState(JFrame.MAXIMIZED_BOTH);
+					}
+					break;
+				case 2:
+					mWindow.dispatchEvent(new WindowEvent(mWindow, WindowEvent.WINDOW_CLOSING));
+					break;
+				default:
+					break;
 			}
 
 			mArmedButton = -1;
@@ -763,6 +756,7 @@ public class FullScreenWindow
 		}
 	};
 
+
 	private WindowAdapter mWindowStateListener = new WindowAdapter()
 	{
 		@Override
@@ -776,7 +770,7 @@ public class FullScreenWindow
 			{
 				updateBorder(JFrame.NORMAL, true);
 			}
-			
+
 			if (mOnGainedFocusAction != null)
 			{
 				mOnGainedFocusAction.onWindowGainedFocus();
@@ -795,7 +789,7 @@ public class FullScreenWindow
 			{
 				updateBorder(JFrame.NORMAL, true);
 			}
-			
+
 			if (mOnLostFocusAction != null)
 			{
 				mOnLostFocusAction.onWindowLostFocus();
@@ -824,7 +818,7 @@ public class FullScreenWindow
 		public void windowStateChanged(WindowEvent aEvent)
 		{
 			updateBorder(aEvent.getNewState(), mWindow.isFocused());
-			
+
 			if (aEvent.getNewState() == JFrame.MAXIMIZED_BOTH && mOnMaximizeAction != null)
 			{
 				mOnMaximizeAction.onWindowMaximize();
@@ -898,7 +892,7 @@ public class FullScreenWindow
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
 			paintBorder(g, aWidth, aHeight, maximized);
-			
+
 			if (mStyle == 2)
 			{
 				paintTitleBarGradient(g, aWidth);
@@ -921,6 +915,10 @@ public class FullScreenWindow
 				{
 					paintMaximizeButton(g, mButtonRects[1], mArmedButton == 1);
 				}
+			}
+			else
+			{
+				paintCloseButton(g, mButtonRects[2], mArmedButton == 2);
 			}
 		}
 
@@ -958,7 +956,7 @@ public class FullScreenWindow
 				.setBounds(mBorderSize, 0, mButtonRects[0].x - mBorderSize, mTitleBarButtonHeight)
 				.setFont(mTitleBarFont[0])
 				.setForeground(mTitleBarForeground[0].get(mFocused))
-				.setMargins(0, 4, 0, 0)
+				.setMargins(aMaximized ? 0 : mBorderSize, 4, 0, 0)
 				.setAnchor(Anchor.WEST)
 				.setMaxLineCount(1)
 				.render(aGraphics)
@@ -972,7 +970,7 @@ public class FullScreenWindow
 					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
 					.setFont(mTitleBarFont[1])
 					.setForeground(mTitleBarForeground[1].get(mFocused))
-					.setMargins(0, 0, 0, 4)
+					.setMargins(aMaximized ? 0 : mBorderSize, 0, 0, 4)
 					.setAnchor(Anchor.WEST)
 					.setMaxLineCount(1)
 					.render(aGraphics)
@@ -985,7 +983,7 @@ public class FullScreenWindow
 					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
 					.setFont(mTitleBarFont[2])
 					.setForeground(mTitleBarForeground[2].get(mFocused))
-					.setMargins(0, 0, 0, 4)
+					.setMargins(aMaximized ? 0 : mBorderSize, 0, 0, 4)
 					.setAnchor(Anchor.WEST)
 					.setMaxLineCount(1)
 					.render(aGraphics);
@@ -1269,105 +1267,105 @@ public class FullScreenWindow
 	{
 		mWindow.toFront();
 	}
-	
-	
+
+
 	public void setOnClosed(OnClosedAction aAction)
 	{
 		mOnClosedAction = aAction;
 	}
-	
-	
+
+
 	public void setOnClosing(OnClosingAction aAction)
 	{
 		mOnClosingAction = aAction;
 	}
-	
-	
+
+
 	public void setOnResize(OnResizeAction aAction)
 	{
 		mOnResizeAction = aAction;
 	}
-	
-	
+
+
 	public void setOnMinizmie(OnMinimizeAction aAction)
 	{
 		mOnMinimizeAction = aAction;
 	}
-	
-	
+
+
 	public void setOnMaximize(OnMaximizeAction aAction)
 	{
 		mOnMaximizeAction = aAction;
 	}
-	
-	
+
+
 	public void setOnRestore(OnRestoreAction aAction)
 	{
 		mOnRestoreAction = aAction;
 	}
-	
-	
+
+
 	public void setOnGainedFocus(OnGainedFocusAction aAction)
 	{
 		mOnGainedFocusAction = aAction;
 	}
-	
-	
+
+
 	public void setOnLostFocus(OnLostFocusAction aAction)
 	{
 		mOnLostFocusAction = aAction;
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnClosedAction
 	{
 		void onWindowClosed();
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnClosingAction
 	{
 		boolean onWindowClosing();
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnResizeAction
 	{
 		void onWindowResize();
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnMinimizeAction
 	{
 		void onWindowMinimize();
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnMaximizeAction
 	{
 		void onWindowMaximize();
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnRestoreAction
 	{
 		void onWindowRestore();
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnGainedFocusAction
 	{
 		void onWindowGainedFocus();
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface OnLostFocusAction
 	{
@@ -1379,7 +1377,7 @@ public class FullScreenWindow
 	{
 		try
 		{
-			FullScreenWindow wnd = new FullScreenWindow("New window");
+			FullScreenWindow wnd = new FullScreenWindow(null, "New window", true, true, 1);
 			wnd.getContentPanel().setLayout(new GridLayout(1, 2));
 			wnd.add(new JButton(new AbstractAction("undecorated")
 			{
