@@ -3,6 +3,7 @@ package org.terifan.util;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -15,18 +16,20 @@ import java.util.concurrent.TimeUnit;
 /**
  * Helper class replacing Executors.newFixedThreadPool()
  */
-public class FixedThreadExecutor implements AutoCloseable
+public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 {
-	private LinkedBlockingQueue<Runnable> mBlockingQueue;
+	private LinkedBlockingQueue<T> mBlockingQueue;
 	private ExecutorService mExecutorService;
 	private int mThreads;
+	private int mQueueSizeLimit;
+	private OnCompletion<T> mOnCompletion;
 
 
 	/**
 	 * Create a new executor
 	 *
-	 * @param aNumThreads 
-	 *   a positive number equals number of threads to use, a negative number results in total available processors minus aNumThreads threads.
+	 * @param aNumThreads a positive number equals number of threads to use, zero or a negative number results in total available processors
+	 * minus provided number.
 	 */
 	public FixedThreadExecutor(int aNumThreads)
 	{
@@ -34,24 +37,20 @@ public class FixedThreadExecutor implements AutoCloseable
 		{
 			mThreads = aNumThreads;
 		}
-		else if (aNumThreads < 0)
+		else
 		{
 			mThreads = Math.max(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors() + aNumThreads);
 		}
-		else
-		{
-			throw new IllegalArgumentException();
-		}
 
 		mBlockingQueue = new LinkedBlockingQueue<>();
+		mQueueSizeLimit = Integer.MAX_VALUE;
 	}
 
 
 	/**
 	 * Create a new executor
 	 *
-	 * @param aThreads
-	 *   number of threads expressed as a number between 0 and 1 out of total available CPUs
+	 * @param aThreads number of threads expressed as a number between 0 and 1 out of total available CPUs
 	 */
 	public FixedThreadExecutor(float aThreads)
 	{
@@ -64,6 +63,7 @@ public class FixedThreadExecutor implements AutoCloseable
 
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
 		mBlockingQueue = new LinkedBlockingQueue<>();
+		mQueueSizeLimit = Integer.MAX_VALUE;
 	}
 
 
@@ -94,38 +94,64 @@ public class FixedThreadExecutor implements AutoCloseable
 
 
 	/**
+	 * Submit a task, this method may block if the queue size exceeds the limit.
+	 *
 	 * @see java.util.concurrent.ExecutorService#submit
 	 */
-	public void submit(Runnable aRunnable)
+	public void submit(T aRunnable)
 	{
-		init().submit(aRunnable);
+		doSubmit(init(), aRunnable);
 	}
 
 
 	/**
+	 * Submit a task, this method may block if the queue size exceeds the limit.
+	 *
 	 * @see java.util.concurrent.ExecutorService#submit
 	 */
-	public void submit(Runnable... aRunnables)
+	public void submit(T... aRunnables)
 	{
 		ExecutorService service = init();
 
-		for (Runnable r : aRunnables)
+		for (T r : aRunnables)
 		{
-			service.submit(r);
+			doSubmit(service, r);
 		}
 	}
 
 
 	/**
+	 * Submit a task, this method may block if the queue size exceeds the limit.
+	 *
 	 * @see java.util.concurrent.ExecutorService#submit
 	 */
-	public void submit(Iterable<? extends Runnable> aRunnables)
+	public void submit(Iterable<? extends T> aRunnables)
 	{
 		ExecutorService service = init();
 
-		for (Runnable r : aRunnables)
+		for (T r : aRunnables)
 		{
-			service.submit(r);
+			doSubmit(service, r);
+		}
+	}
+
+
+	private void doSubmit(ExecutorService aService, T aRunnable)
+	{
+		try
+		{
+			synchronized (FixedThreadExecutor.class)
+			{
+				while (mBlockingQueue.size() >= mQueueSizeLimit)
+				{
+					FixedThreadExecutor.class.wait();
+				}
+
+				aService.submit(aRunnable);
+			}
+		}
+		catch (InterruptedException e)
+		{
 		}
 	}
 
@@ -167,12 +193,22 @@ public class FixedThreadExecutor implements AutoCloseable
 	{
 		if (mExecutorService == null)
 		{
-			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, mBlockingQueue)
+			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)mBlockingQueue)
 			{
 				@Override
 				protected void afterExecute(Runnable aRunnable, Throwable aThrowable)
 				{
 					super.afterExecute(aRunnable, aThrowable);
+
+					synchronized (FixedThreadExecutor.class)
+					{
+						FixedThreadExecutor.class.notify();
+					}
+
+					if (mOnCompletion != null)
+					{
+						mOnCompletion.onCompletion((T)aRunnable);
+					}
 
 					if (aThrowable == null && aRunnable instanceof Future<?>)
 					{
@@ -206,8 +242,35 @@ public class FixedThreadExecutor implements AutoCloseable
 	}
 
 
-	public LinkedBlockingQueue<Runnable> getBlockingQueue()
+	public LinkedBlockingQueue<T> getBlockingQueue()
 	{
 		return mBlockingQueue;
+	}
+
+
+	public int getQueueSizeLimit()
+	{
+		return mQueueSizeLimit;
+	}
+
+
+	/**
+	 * Sets how many items the blocking queue will contain before the submit methods start blocking.
+	 */
+	public void setQueueSizeLimit(int aQueueSizeLimit)
+	{
+		mQueueSizeLimit = aQueueSizeLimit;
+	}
+
+
+	public OnCompletion<T> getOnCompletion()
+	{
+		return mOnCompletion;
+	}
+
+
+	public void setOnCompletion(OnCompletion<T> aOnCompletion)
+	{
+		mOnCompletion = aOnCompletion;
 	}
 }
