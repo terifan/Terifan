@@ -904,21 +904,21 @@ public class FullScreenWindow
 
 			if (mFrame != null)
 			{
-				paintMinimizeButton(g, mButtonRects[0], mArmedButton == 0);
-				paintCloseButton(g, mButtonRects[2], mArmedButton == 2);
+				paintMinimizeButton(g, mButtonRects[0], mArmedButton == 0, maximized);
+				paintCloseButton(g, mButtonRects[2], mArmedButton == 2, maximized);
 
 				if (maximized)
 				{
-					paintRestoreButton(g, mButtonRects[1], mArmedButton == 1);
+					paintRestoreButton(g, mButtonRects[1], mArmedButton == 1, maximized);
 				}
 				else
 				{
-					paintMaximizeButton(g, mButtonRects[1], mArmedButton == 1);
+					paintMaximizeButton(g, mButtonRects[1], mArmedButton == 1, maximized);
 				}
 			}
 			else
 			{
-				paintCloseButton(g, mButtonRects[2], mArmedButton == 2);
+				paintCloseButton(g, mButtonRects[2], mArmedButton == 2, maximized);
 			}
 		}
 
@@ -1089,18 +1089,25 @@ public class FullScreenWindow
 			mLayoutSize = aWidth;
 			mButtonRects = new Rectangle[]
 			{
-				new Rectangle(mLayoutSize - 3 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight),
-				new Rectangle(mLayoutSize - 2 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight),
+				new Rectangle(mLayoutSize - (mDialog!=null?1:3) * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, (mDialog!=null?0:1)*mTitleBarButtonWidth, mTitleBarButtonHeight),
+				new Rectangle(mLayoutSize - (mDialog!=null?1:2) * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, (mDialog!=null?0:1)*mTitleBarButtonWidth, mTitleBarButtonHeight),
 				new Rectangle(mLayoutSize - 1 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight)
 			};
 		}
 	}
 
 
-	protected void paintCloseButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed)
+	protected void paintCloseButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed, boolean aMaximized)
 	{
 		aGraphics.setColor(mCloseButtonBackground.get(mFocused, aArmed));
-		aGraphics.fill(aBounds);
+		if (aMaximized || aArmed)
+		{
+			aGraphics.fill(aBounds);
+		}
+		else
+		{
+			aGraphics.fillRect(aBounds.x, aBounds.y + mBorderSize, aBounds.width, aBounds.height - mBorderSize);
+		}
 
 //		if (aArmed)
 //		{
@@ -1113,7 +1120,7 @@ public class FullScreenWindow
 //		}
 		int S = mTitleBarButtonSymbolSize / 2;
 		int cx = aBounds.x + aBounds.width / 2;
-		int cy = aBounds.y + aBounds.height / 2;
+		int cy = aBounds.y + aBounds.height / 2 + (aMaximized || aArmed ? 0 : mBorderSize/2);
 		aGraphics.setColor(mCloseButtonForegroundShadow.get(mFocused, aArmed));
 		aGraphics.drawLine(cx - S + 1, cy - S, cx + S, cy + S - 1);
 		aGraphics.drawLine(cx - S, cy - S + 1, cx + S - 1, cy + S);
@@ -1125,10 +1132,17 @@ public class FullScreenWindow
 	}
 
 
-	protected void paintRestoreButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed)
+	protected void paintRestoreButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed, boolean aMaximized)
 	{
 		aGraphics.setColor(mWindowButtonBackground.get(mFocused, aArmed));
-		aGraphics.fill(aBounds);
+		if (aMaximized || aArmed)
+		{
+			aGraphics.fill(aBounds);
+		}
+		else
+		{
+			aGraphics.fillRect(aBounds.x, aBounds.y + mBorderSize, aBounds.width, aBounds.height - mBorderSize);
+		}
 
 //		if (aArmed)
 //		{
@@ -1140,7 +1154,7 @@ public class FullScreenWindow
 		int S = mTitleBarButtonSymbolSize / 2 - 1;
 		int L = 1 + S / 2;
 		int cx = aBounds.x + aBounds.width / 2 - L / 2 - 1;
-		int cy = aBounds.y + aBounds.height / 2 + L / 2;
+		int cy = aBounds.y + aBounds.height / 2 + L / 2 + (aMaximized || aArmed ? 0 : mBorderSize/2);
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
 		aGraphics.drawRect(cx - S, cy - S, 2 * S, 2 * S);
 		aGraphics.drawLine(cx - S + L, cy - S - L, cx - S + L, cy - S);
@@ -1150,10 +1164,17 @@ public class FullScreenWindow
 	}
 
 
-	protected void paintMinimizeButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed)
+	protected void paintMinimizeButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed, boolean aMaximized)
 	{
 		aGraphics.setColor(mWindowButtonBackground.get(mFocused, aArmed));
-		aGraphics.fill(aBounds);
+		if (aMaximized || aArmed)
+		{
+			aGraphics.fill(aBounds);
+		}
+		else
+		{
+			aGraphics.fillRect(aBounds.x, aBounds.y + mBorderSize, aBounds.width, aBounds.height - mBorderSize);
+		}
 
 //		if (aArmed)
 //		{
@@ -1162,15 +1183,24 @@ public class FullScreenWindow
 //			aGraphics.fill(aBounds);
 //			aGraphics.setPaint(p);
 //		}
+		int cx = aBounds.x + aBounds.width / 2;
+		int cy = aBounds.y + aBounds.height / 2 + (aMaximized || aArmed ? 0 : mBorderSize/2);
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
-		aGraphics.drawLine(aBounds.x + aBounds.width / 2 - 7, aBounds.y + aBounds.height / 2, aBounds.x + aBounds.width / 2 + 7, aBounds.y + aBounds.height / 2);
+		aGraphics.drawLine(cx - 7, cy, cx + 7, cy);
 	}
 
 
-	protected void paintMaximizeButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed)
+	protected void paintMaximizeButton(Graphics2D aGraphics, Rectangle aBounds, boolean aArmed, boolean aMaximized)
 	{
 		aGraphics.setColor(mWindowButtonBackground.get(mFocused, aArmed));
-		aGraphics.fill(aBounds);
+		if (aMaximized || aArmed)
+		{
+			aGraphics.fill(aBounds);
+		}
+		else
+		{
+			aGraphics.fillRect(aBounds.x, aBounds.y + mBorderSize, aBounds.width, aBounds.height - mBorderSize);
+		}
 
 //		if (aArmed)
 //		{
@@ -1179,10 +1209,12 @@ public class FullScreenWindow
 //			aGraphics.fill(aBounds);
 //			aGraphics.setPaint(p);
 //		}
-		int S = mTitleBarButtonSymbolSize / 2;
 
+		int S = mTitleBarButtonSymbolSize / 2;
+		int cx = aBounds.x + aBounds.width / 2 - S;
+		int cy = aBounds.y + aBounds.height / 2 - S + (aMaximized || aArmed ? 0 : mBorderSize/2);
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
-		aGraphics.drawRect(aBounds.x + aBounds.width / 2 - S, aBounds.y + aBounds.height / 2 - S, 2 * S + 1, 2 * S + 1);
+		aGraphics.drawRect(cx, cy, 2 * S + 1, 2 * S + 1);
 	}
 
 
