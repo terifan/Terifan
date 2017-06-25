@@ -1,6 +1,7 @@
 package org.terifan.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -117,42 +118,6 @@ public class PasswordDialog
 	}
 
 
-	/* *
-	 * Constructs an instance of PasswordDialog.
-	 *
-	 * @param aParent
-	 *   the parent frame or null if this dialog has no parent. The dialog will
-	 *   center it self on top the parent window.
-	 * @param aTitle
-	 *   dialog title displayed in the window frame.
-	 * @param aDescription
-	 *   dialog description displayed above the input fields.
-	 * @param aShowUserName
-	 *   true if the user should enter a user name.
-	 * @param aShowConfirmPassword
-	 *   true if the user should enter a password confirmation. The password and
-	 *   password verification must match.
-	 * @param aShowRememberMyPassword
-	 *   true if a checkbox should be displayed with allows the system to
-	 *   remeber the user name and password. This dialog does not save the
-	 *   information.
-	 * @param aPasswordMinimumLength
-	 *   the minimum length of the password supplied.
-	 *
-	 * @ deprecated use constructor with flags instead
-	 */
-//	public PasswordDialog(JFrame aParent, String aTitle, String aDescription, boolean aShowUserName, boolean aShowConfirmPassword, boolean aShowRememberMyPassword, int aPasswordMinimumLength)
-//	{
-//		mParent = aParent;
-//		mPasswordMinimumLength = aPasswordMinimumLength;
-//		mTitle = aTitle;
-//		mDescription = aDescription;
-//		mShowUserName = aShowUserName;
-//		mShowConfirmPassword = aShowConfirmPassword;
-//		mShowRememberMyPassword = aShowRememberMyPassword;
-//	}
-
-
 	/**
 	 * Constructs the dialog gadgets.
 	 */
@@ -198,20 +163,37 @@ public class PasswordDialog
 		gridBag.setConstraints(o, c);
 		formPanel.add(o);
 
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.gridheight = 1;
-		c.weightx = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.insets.left = 10;
-		c.insets.right = 10;
-		c.insets.top = 0;
-		c.insets.bottom = 0;
-		o = new JLabel(mDescription);
-		o.setFont(mLabelFont);
-		gridBag.setConstraints(o, c);
-		formPanel.add(o);
+		boolean firstLine = true;
+		for (String s : mDescription.split("\n"))
+		{
+			c.gridwidth = GridBagConstraints.REMAINDER;
+			c.gridheight = 1;
+			c.weightx = 1;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.anchor = GridBagConstraints.NORTHWEST;
+			c.insets.left = 10;
+			c.insets.right = 10;
+			c.insets.top = firstLine ? 0 : 10;
+			c.insets.bottom = 0;
+			if (s.startsWith("#"))
+			{
+				o = new JLabel(s.substring(1));
+				o.setOpaque(true);
+				o.setBackground(new Color(255,231,231));
+				o.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(223,152,152), 1, true), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+			}
+			else
+			{
+				o = new JLabel(s);
+			}
+			o.setFont(mLabelFont);
+			gridBag.setConstraints(o, c);
+			formPanel.add(o);
 
+			firstLine = false;
+		}		
+
+		c.insets.bottom = 0;
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.gridheight = 1;
 		c.weightx = 1;

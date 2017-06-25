@@ -578,6 +578,9 @@ public class TextBox implements Cloneable, Serializable
 			layout(aGraphics.getFontMetrics().getFontRenderContext());
 		}
 
+		Font oldFont = aGraphics.getFont();
+		Color oldColor = aGraphics.getColor();
+
 		aGraphics.translate(aTranslateX, aTranslateY);
 
 		int boxX = mBounds.x;
@@ -621,7 +624,9 @@ public class TextBox implements Cloneable, Serializable
 		}
 
 		aGraphics.translate(-aTranslateX, -aTranslateY);
-
+		aGraphics.setFont(oldFont);
+		aGraphics.setColor(oldColor);
+		
 		return this;
 	}
 

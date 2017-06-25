@@ -39,7 +39,7 @@ public class ErrorReportWindow
 
 	public ErrorReportWindow(Throwable aThrowable, boolean aShowContinue)
 	{
-		this(aThrowable, "Unhandled exception", "An unhandled exception has occured", null, aShowContinue);
+		this(aThrowable, null, null, null, aShowContinue);
 	}
 
 
@@ -85,8 +85,10 @@ public class ErrorReportWindow
 		{
 			String labelClose = "Stop application";
 			String labelContinue = "Continue running";
+			String title = aTitle == null ? "Unhandled exception" : aTitle;
+			String description = aDescription == null ? aShowContinueButton ? "An unhandled exception has occured" : "An unhandled exception has occured and application will be closed." : aDescription;
 
-			mDialog = new JDialog((JFrame)null, aTitle, true);
+			mDialog = new JDialog((JFrame)null, title, true);
 
 			mTextArea = new JTextArea(20, 100);
 			mTextArea.setFont(new Font("courier", Font.PLAIN, 11));
@@ -138,11 +140,11 @@ public class ErrorReportWindow
 
 			if (continueButton != null)
 			{
-				panel = new DialogPanel(aTitle, aDescription, null, textPanel, closeButton, continueButton);
+				panel = new DialogPanel(aTitle, description, null, textPanel, closeButton, continueButton);
 			}
 			else
 			{
-				panel = new DialogPanel(aTitle, aDescription, null, textPanel, closeButton);
+				panel = new DialogPanel(aTitle, description, null, textPanel, closeButton);
 			}
 
 			mDialog.add(panel, BorderLayout.CENTER);
@@ -178,6 +180,12 @@ public class ErrorReportWindow
 	public static void show(Throwable aThrowable)
 	{
 		new ErrorReportWindow(aThrowable, null, null, null, true).show();
+	}
+
+
+	public static void show(Throwable aThrowable, boolean aContinueButton)
+	{
+		new ErrorReportWindow(aThrowable, null, null, null, aContinueButton).show();
 	}
 
 
