@@ -69,31 +69,39 @@ public final class Streams
 	 * @return
 	 *   number of bytes transfered
 	 */
-	public static long transfer(Object aInput, Object aOutput) throws IOException
+	public static long transfer(Object aInput, Object aOutput)
 	{
 		try (InputStream inputStream = createInputStream(aInput); OutputStream outputStream = createOutputStream(aOutput))
 		{
 			return transfer(inputStream, outputStream, false, Long.MAX_VALUE);
 		}
+		catch (IOException e)
+		{
+			throw new RuntimeIOException(e);
+		}
 	}
 
 
-	public static long transfer(Object aInput, Object aOutput, long aLimitLength) throws IOException
+	public static long transfer(Object aInput, Object aOutput, long aLimitLength)
 	{
 		try (InputStream inputStream = createInputStream(aInput); OutputStream outputStream = createOutputStream(aOutput))
 		{
 			return transfer(inputStream, outputStream, false, aLimitLength);
 		}
+		catch (IOException e)
+		{
+			throw new RuntimeIOException(e);
+		}
 	}
 
 
-	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams) throws IOException
+	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams)
 	{
 		return transfer(aInput, aOutput, aCloseStreams, Long.MAX_VALUE);
 	}
 
 
-	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams, long aLimitLength) throws IOException
+	public static long transfer(InputStream aInput, OutputStream aOutput, boolean aCloseStreams, long aLimitLength)
 	{
 		try
 		{
@@ -116,6 +124,10 @@ public final class Streams
 			}
 
 			return total;
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeIOException(e);
 		}
 		finally
 		{
