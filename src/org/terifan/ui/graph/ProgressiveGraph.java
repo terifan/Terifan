@@ -15,7 +15,7 @@ import org.terifan.ui.Anchor;
 import org.terifan.ui.TextBox;
 
 
-public class Graph extends JComponent
+public class ProgressiveGraph extends JComponent
 {
 	private final static SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
 
@@ -40,7 +40,7 @@ public class Graph extends JComponent
 	private boolean mDrawAverage;
 
 
-	public Graph(String aTitle, String aUnit, int aSequenceLength)
+	public ProgressiveGraph(String aTitle, String aUnit, int aSequenceLength)
 	{
 		mTitle = aTitle;
 		mUnit = aUnit;
@@ -70,7 +70,7 @@ public class Graph extends JComponent
 	}
 
 
-	public Graph setConstantMaxValue(long aConstantMaxValue)
+	public ProgressiveGraph setConstantMaxValue(long aConstantMaxValue)
 	{
 		mConstantMaxValue = aConstantMaxValue;
 		mMaxValue = aConstantMaxValue;
@@ -243,7 +243,7 @@ public class Graph extends JComponent
 	{
 		try
 		{
-			Graph graph = new Graph("test", "rpm", 1000);
+			ProgressiveGraph graph = new ProgressiveGraph("test", "rpm", 1000);
 			graph.setBackground(new Color(240, 240, 240));
 			graph.setGridColor(new Color(221, 226, 230));
 
