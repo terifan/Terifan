@@ -38,6 +38,14 @@ public class HttpPost extends HttpRequest<HttpPost>
 	}
 
 
+	HttpPost(HttpClient aClient)
+	{
+		this();
+
+		mClient = aClient;
+	}
+
+
 	public HttpPost setInput(byte[] aInput)
 	{
 		mInput = new ByteArrayInputStream(aInput);

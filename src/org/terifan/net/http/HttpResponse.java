@@ -2,6 +2,8 @@ package org.terifan.net.http;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.List;
+import java.util.Map;
 
 
 public class HttpResponse
@@ -12,6 +14,8 @@ public class HttpResponse
 	protected String mContentEncoding;
 	protected String mContentType;
 	protected byte[] mContent;
+	protected HttpClient mClient;
+	protected Map<String, List<String>> mHeaders;
 
 
 	HttpResponse(HttpURLConnection aConnection) throws IOException
@@ -21,6 +25,7 @@ public class HttpResponse
 		mContentLength = aConnection.getContentLength();
 		mContentEncoding = aConnection.getContentEncoding();
 		mContentType = aConnection.getContentType();
+		mHeaders = aConnection.getHeaderFields();
 	}
 
 
@@ -66,9 +71,22 @@ public class HttpResponse
 	}
 
 
+	public Map<String, List<String>> getHeaders()
+	{
+		return mHeaders;
+	}
+
+
 	@Override
 	public String toString()
 	{
 		return mResponseCode + " " + mResponseMessage;
+	}
+
+
+	HttpResponse setClient(HttpClient aClient)
+	{
+		mClient = aClient;
+		return this;
 	}
 }
