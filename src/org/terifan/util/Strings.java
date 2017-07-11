@@ -446,6 +446,28 @@ public class Strings
 	}
 
 
+	public static String removeStart(String aString, String aPrefix)
+	{
+		while (aString.startsWith(aPrefix))
+		{
+			aString = aString.substring(aPrefix.length());
+		}
+
+		return aString;
+	}
+
+
+	public static String removeEnd(String aString, String aSuffix)
+	{
+		while (aString.endsWith(aSuffix))
+		{
+			aString = aString.substring(0, aString.length() - aSuffix.length());
+		}
+
+		return aString;
+	}
+
+
 	@FunctionalInterface
 	public interface StringLookup
 	{
