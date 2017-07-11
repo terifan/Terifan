@@ -6,9 +6,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.Map.Entry;
 import org.terifan.io.Streams;
 
 
@@ -25,6 +27,8 @@ public abstract class HttpRequest<E extends HttpRequest>
 	protected Long mContentLength;
 	protected int mConnectTimeOut;
 	protected int mReadTimeOut;
+	protected HttpClient mClient;
+	protected ArrayList<AfterExecuteAction> mActions;
 
 
 	public HttpRequest()
@@ -33,6 +37,7 @@ public abstract class HttpRequest<E extends HttpRequest>
 		mCharSet = "utf-8";
 		mConnectTimeOut = 1 * 60 * 1000;
 		mReadTimeOut = 5 * 60 * 1000;
+		mActions = new ArrayList<>();
 	}
 
 
@@ -64,7 +69,10 @@ public abstract class HttpRequest<E extends HttpRequest>
 
 	public E setHeader(String aKey, String aValue)
 	{
-		mHeaders.put(aKey, aValue);
+		if (aValue != null)
+		{
+			mHeaders.put(aKey, aValue);
+		}
 		return (E)this;
 	}
 
@@ -211,7 +219,12 @@ public abstract class HttpRequest<E extends HttpRequest>
 		conn.setReadTimeout(mReadTimeOut);
 		conn.setConnectTimeout(mConnectTimeOut);
 
-		for (Map.Entry<String, String> entry : mHeaders.entrySet())
+		if (mClient != null)
+		{
+			addCookies(conn);
+		}
+		
+		for (Entry<String, String> entry : mHeaders.entrySet())
 		{
 			conn.addRequestProperty(entry.getKey(), entry.getValue());
 		}
@@ -282,6 +295,68 @@ public abstract class HttpRequest<E extends HttpRequest>
 			}
 		}
 
+		for (AfterExecuteAction action : mActions)
+		{
+			action.execute(this, response);
+		}
+		
 		return response;
+	}
+	
+	
+	public E addAction(AfterExecuteAction aAction)
+	{
+		mActions.add(aAction);
+		return (E)this;
+	}
+
+
+	private void addCookies(HttpURLConnection aConnection)
+	{
+		StringBuilder cookieString = new StringBuilder();
+
+		for (Entry<String, String> entry : mClient.getCookies(mURL).entrySet())
+		{
+			if (cookieString.length() > 0)
+			{
+				cookieString.append("; ");
+			}
+			
+			String[] values = entry.getValue().split(";");
+			boolean skip = false;
+
+			for (int i = 1; i < values.length; i++)
+			{
+				String key = values[i].split("=")[0].trim();
+				String param = values[i].split("=")[1].trim();
+
+				if (key.equals("domain"))
+				{
+					if(!mURL.getHost().endsWith(param))
+					{
+						System.out.println("host missmatch: url: " + mURL.getHost() + ", param: " + param);
+						skip = true;
+					}
+				}
+				if (key.equalsIgnoreCase("path"))
+				{
+					if (!mURL.getFile().startsWith(param))
+					{
+						System.out.println("path missmatch: url: " + mURL.getPath() + ", param: " + param);
+						skip = true;
+					}
+				}
+			}
+			
+			if (!skip)
+			{
+				cookieString.append(entry.getKey() + "=" + values[0]);
+			}
+		}
+
+		if (cookieString.length() > 0)
+		{
+			aConnection.addRequestProperty("Cookie", cookieString.toString());
+		}
 	}
 }

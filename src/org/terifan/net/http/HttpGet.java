@@ -30,6 +30,14 @@ public class HttpGet extends HttpRequest<HttpRequest>
 	}
 
 
+	HttpGet(HttpClient aClient)
+	{
+		this();
+		
+		mClient = aClient;
+	}
+
+
 	@Override
 	public HttpResponse execute() throws IOException
 	{
