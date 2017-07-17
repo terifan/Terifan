@@ -2,6 +2,7 @@ package org.terifan.ui;
 
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 
 
@@ -53,5 +54,27 @@ public class ImageRotator
 		g.dispose();
 
 		return dest;
+	}
+
+
+	public static BufferedImage flip(BufferedImage aImage)
+	{
+		AffineTransform tx = AffineTransform.getScaleInstance(1, -1);
+		tx.translate(0, -aImage.getHeight(null));
+		AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+		aImage = op.filter(aImage, null);
+
+		return aImage;
+	}
+
+
+	public static BufferedImage mirror(BufferedImage aImage)
+	{
+		AffineTransform tx = AffineTransform.getScaleInstance(-1, 1);
+		tx.translate(-aImage.getWidth(null), 0);
+		AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+		aImage = op.filter(aImage, null);
+
+		return aImage;
 	}
 }
