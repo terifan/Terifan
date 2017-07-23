@@ -106,7 +106,7 @@ public final class Streams
 		try
 		{
 			long total = 0;
-			byte[] buffer = new byte[4096];
+			byte[] buffer = new byte[8192];
 
 			for (;;)
 			{
