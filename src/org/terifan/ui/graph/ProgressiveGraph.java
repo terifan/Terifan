@@ -9,6 +9,8 @@ import java.awt.RenderingHints;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -20,6 +22,7 @@ public class ProgressiveGraph extends JComponent
 {
 	private final static SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
 
+	private final long[] mWindow;
 	private final long[] mValues;
 	private final long[] mTimes;
 	private long mConstantMaxValue;
@@ -28,6 +31,9 @@ public class ProgressiveGraph extends JComponent
 	private int mCounter;
 	private String mTitle;
 	private String mUnit;
+	private int mCurrentCount;
+	private long mCurrentSum;
+	private Timer mTimer;
 
 	private Font mFont;
 	private Color mLineColor;
@@ -48,6 +54,7 @@ public class ProgressiveGraph extends JComponent
 		mTitle = aTitle;
 		mUnit = aUnit;
 
+		mWindow = new long[5];
 		mValues = new long[aSequenceLength];
 		mTimes = new long[aSequenceLength];
 
@@ -65,8 +72,76 @@ public class ProgressiveGraph extends JComponent
 
 		setGridColor(new Color(221, 226, 230));
 		setBackground(new Color(240, 240, 240));
+
+		mMaxValue = 1;
+	}
+
+
+	private TimerTask mTask = new TimerTask()
+	{
+		@Override
+		public void run()
+		{
+			synchronized (ProgressiveGraph.class)
+			{
+				mCounter++;
+
+				System.arraycopy(mWindow, 0, mWindow, 1, mWindow.length - 1);
+				mWindow[0] = mCurrentCount == 0 ? 0 : mCurrentSum / mCurrentCount;
+
+				int t = 0;
+				int n = Math.min(mWindow.length, mCounter);
+				for (int i = 0; i < n; i++)
+				{
+					t += mWindow[i];
+				}
+
+				System.arraycopy(mValues, 0, mValues, 1, mValues.length - 1);
+				System.arraycopy(mTimes, 0, mTimes, 1, mTimes.length - 1);
+				mValues[0] = t / n;
+				mTimes[0] = System.currentTimeMillis();
+
+				mCurrentCount = 0;
+				mCurrentSum = 0;
+
+				mMaxValue = 1;
+				for (int i = 0; i < mValues.length; i++)
+				{
+					mMaxValue = Math.max(mMaxValue, mValues[i]);
+				}
+
+				SwingUtilities.invokeLater(() -> repaint());
+			}
+		}
+	};
+
+
+	public synchronized void start()
+	{
+		if (mTimer == null)
+		{
+			mTimer = new Timer(true);
+			mTimer.schedule(mTask, 1000, 1000);
+		}
 	}
 	
+	
+	public synchronized void stop()
+	{
+		mTimer.cancel();
+		mTimer = null;
+	}
+	
+
+	public void add(long aValue)
+	{
+		synchronized (ProgressiveGraph.class)
+		{
+			mCurrentSum += aValue;
+			mCurrentCount++;
+		}
+	}
+
 	
 	public void scaleUI(double aScale)
 	{
@@ -100,18 +175,6 @@ public class ProgressiveGraph extends JComponent
 	public void setCumulativeSum(long aCumulativeSum)
 	{
 		mCumulativeSum = aCumulativeSum;
-	}
-
-
-	public long getMaxValue()
-	{
-		return mMaxValue;
-	}
-
-
-	public void setMaxValue(long aMaxValue)
-	{
-		mMaxValue = aMaxValue;
 	}
 
 
@@ -268,53 +331,7 @@ public class ProgressiveGraph extends JComponent
 	public ProgressiveGraph setConstantMaxValue(long aConstantMaxValue)
 	{
 		mConstantMaxValue = aConstantMaxValue;
-		mMaxValue = aConstantMaxValue;
 		return this;
-	}
-
-	private int mCounter2;
-	private long mTemp;
-
-	public synchronized void add(long aValue)
-	{
-		if (mCounter2 == 0)
-		{
-			mCounter2++;
-			mTemp = aValue;
-			mValues[0] = aValue;
-		}
-		else if (mCounter2 < 9)
-		{
-			mCounter2++;
-			mTemp += aValue;
-			mValues[0] = mTemp / mCounter2;
-		}
-		else
-		{
-			mValues[0] = (mTemp + aValue) / mCounter2;
-			mCounter2 = 0;
-
-			mCumulativeSum -= mValues[mValues.length - 1];
-			mCumulativeSum += aValue;
-
-			System.arraycopy(mValues, 0, mValues, 1, mValues.length - 1);
-			System.arraycopy(mTimes, 0, mTimes, 1, mTimes.length - 1);
-			mValues[0] = aValue;
-			mTimes[0] = System.currentTimeMillis();
-
-			mCounter++;
-		}
-
-		if (mConstantMaxValue == 0)
-		{
-			mMaxValue = 0;
-			for (int i = 0; i < mValues.length - 1; i++)
-			{
-				mMaxValue = Math.max(mMaxValue, mValues[i]);
-			}
-		}
-
-		SwingUtilities.invokeLater(() -> repaint());
 	}
 
 
@@ -373,12 +390,12 @@ public class ProgressiveGraph extends JComponent
 			}
 		}
 
-		if (mDrawAverage)
-		{
-			int y = aHeight - (int)(aHeight * mCumulativeSum / Math.min(mCounter, mValues.length) / (double)mMaxValue);
-			g.setColor(mAverageLineColor);
-			g.drawLine(0, y, aWidth, y);
-		}
+//		if (mDrawAverage)
+//		{
+//			int y = aHeight - (int)(aHeight * mCumulativeSum / Math.min(mCounter, mValues.length));
+//			g.setColor(mAverageLineColor);
+//			g.drawLine(0, y, aWidth, y);
+//		}
 	}
 
 
@@ -417,7 +434,7 @@ public class ProgressiveGraph extends JComponent
 
 		for (int i = 0; i < mValues.length; i++)
 		{
-			int v = (int)(aHeight * mValues[i] / (double)mMaxValue);
+			int v = (int)(aHeight * mValues[i] / mMaxValue);
 			xp[i] = (int)(aWidth - i * stepSize);
 			yp[i] = aHeight - v;
 		}
@@ -466,6 +483,7 @@ public class ProgressiveGraph extends JComponent
 			graph.setFillColor(new Color(17, 187, 55, 200));
 			graph.setLineColor(new Color(17, 187, 55));
 			graph.scaleUI(2);
+			graph.start();
 
 			JFrame frame = new JFrame();
 			frame.add(graph);
@@ -480,7 +498,7 @@ public class ProgressiveGraph extends JComponent
 			{
 				graph.add(r.nextInt(1 << (2 + r.nextInt(10))));
 
-				Thread.sleep(100);
+				Thread.sleep(10);
 			}
 		}
 		catch (Throwable e)
