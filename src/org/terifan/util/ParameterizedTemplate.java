@@ -3,12 +3,19 @@ package org.terifan.util;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 
 /**
  * A ParameterizedTemplate is used to insert parameter values into a String, e.g "hello ${name}". The template is "compiled" making the
  * process of formatting very efficient when reused.
+ *
+ *  Map<String,Object> map = new HashMap<>();
+ *  map.put("name", "Stig");
+ *  map.put("size", 7);
+ *  System.out.println(new ParameterizedTemplate("${name}${size}").format(map::get));
  */
 public class ParameterizedTemplate<V>
 {
@@ -167,20 +174,48 @@ public class ParameterizedTemplate<V>
 	}
 
 
-//	public static void main(String ... args)
-//	{
-//		try
-//		{
-//			Map<String,Object> map = new HashMap<>();
-//			map.put("name", "Stig");
-//			map.put("size", 7);
-//
-//			System.out.println(new ParameterizedTemplate("${name}${size}").format(map::get));
-//			System.out.println(new ParameterizedTemplate(">${name}:${size}<").format(map::get));
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
+	public static String replace(String aTemplate, Function<String,Object> aParameters)
+	{
+		StringBuilder buffer = new StringBuilder(aTemplate);
+
+		for (int i; (i = buffer.indexOf("${")) != -1;)
+		{
+			int j = buffer.indexOf("}", i);
+
+			if (j == -1) // abort, something is wrong
+			{
+				break;
+			}
+
+			Object value = aParameters.apply(buffer.substring(i + 2, j));
+
+			buffer.replace(i, j + 1, value == null ? "" : value.toString());
+		}
+
+		return buffer.toString();
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			Map<String,Object> map = new HashMap<>();
+			map.put("name", "Stig");
+			map.put("size", 7);
+
+			System.out.println(new ParameterizedTemplate("${name}${size}").format(map::get));
+			System.out.println(new ParameterizedTemplate("{${name}:${size}}").format(map::get));
+
+			System.out.println("-----");
+
+			System.out.println(ParameterizedTemplate.replace("${name}${size}", map::get));
+			System.out.println(ParameterizedTemplate.replace("{${name}:${size}}", map::get));
+			System.out.println(ParameterizedTemplate.replace("xxxxxx ${name yyyyy", map::get));
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
+	}
 }
