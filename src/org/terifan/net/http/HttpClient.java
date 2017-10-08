@@ -96,7 +96,7 @@ public class HttpClient
 		List<String> newCookies = aResponse.getHeaders().get("Set-Cookie");
 		if (newCookies != null && !newCookies.isEmpty())
 		{
-			System.out.println("SetCookie: " + newCookies);
+//			System.out.println("SetCookie: " + newCookies);
 
 			for (String value : newCookies)
 			{

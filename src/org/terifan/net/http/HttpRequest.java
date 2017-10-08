@@ -184,9 +184,9 @@ public abstract class HttpRequest<E extends HttpRequest>
 	}
 
 
-	public E setConnectTimeOut(int aConnectTimeOut)
+	public E setConnectTimeOut(int aConnectTimeOutMillis)
 	{
-		mConnectTimeOut = aConnectTimeOut;
+		mConnectTimeOut = aConnectTimeOutMillis;
 		return (E)this;
 	}
 
@@ -197,9 +197,9 @@ public abstract class HttpRequest<E extends HttpRequest>
 	}
 
 
-	public E setReadTimeOut(int aReadTimeOut)
+	public E setReadTimeOut(int aReadTimeOutMillis)
 	{
-		mReadTimeOut = aReadTimeOut;
+		mReadTimeOut = aReadTimeOutMillis;
 		return (E)this;
 	}
 
@@ -327,23 +327,28 @@ public abstract class HttpRequest<E extends HttpRequest>
 
 			for (int i = 1; i < values.length; i++)
 			{
-				String key = values[i].split("=")[0].trim();
-				String param = values[i].split("=")[1].trim();
+				String[] parts = values[i].split("=");
+				
+				if (parts.length == 2)
+				{
+					String key = parts[0].trim();
+					String param = parts[1].trim();
 
-				if (key.equals("domain"))
-				{
-					if(!mURL.getHost().endsWith(param))
+					if (key.equals("domain"))
 					{
-						System.out.println("host missmatch: url: " + mURL.getHost() + ", param: " + param);
-						skip = true;
+						if (!("."+mURL.getHost()).endsWith(param))
+						{
+//							System.out.println("host missmatch: url: " + mURL.getHost() + ", param: " + param);
+							skip = true;
+						}
 					}
-				}
-				if (key.equalsIgnoreCase("path"))
-				{
-					if (!mURL.getFile().startsWith(param))
+					if (key.equalsIgnoreCase("path"))
 					{
-						System.out.println("path missmatch: url: " + mURL.getPath() + ", param: " + param);
-						skip = true;
+						if (!mURL.getFile().startsWith(param))
+						{
+//							System.out.println("path missmatch: url: " + mURL.getPath() + ", param: " + param);
+							skip = true;
+						}
 					}
 				}
 			}
