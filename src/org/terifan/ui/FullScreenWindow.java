@@ -53,9 +53,9 @@ public class FullScreenWindow
 	protected ColorSet mWindowButtonBackground = new ColorSet();
 	protected ColorSet mWindowButtonForeground = new ColorSet();
 
-	protected JFrame mFrame;
-	protected JDialog mDialog;
-	protected Window mWindow;
+	protected final JFrame mFrame;
+	protected final JDialog mDialog;
+	protected final Window mWindow;
 
 	protected int mArmedButton;
 	protected Point mWindowPosition;
@@ -151,7 +151,9 @@ public class FullScreenWindow
 			mDialog.addWindowFocusListener(mWindowStateListener);
 			mDialog.setLocationRelativeTo(null);
 			mDialog.setUndecorated(true);
+
 			mWindow = mDialog;
+			mFrame = null;
 		}
 		else
 		{
@@ -164,9 +166,10 @@ public class FullScreenWindow
 			mFrame.addWindowFocusListener(mWindowStateListener);
 			mFrame.setLocationRelativeTo(null);
 			mFrame.setUndecorated(true);
-			mWindow = mFrame;
-
 			mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+			mWindow = mFrame;
+			mDialog = null;
 		}
 
 
@@ -434,7 +437,7 @@ public class FullScreenWindow
 		}
 		else
 		{
-			updateBorder(JFrame.NORMAL, mFrame.isFocused());
+			updateBorder(JFrame.NORMAL, mDialog.isFocused());
 		}
 		return this;
 	}
@@ -549,7 +552,7 @@ public class FullScreenWindow
 
 			mWindow.setCursor(Cursor.getPredefinedCursor(getCursor(p)));
 
-			if (wasDragged && aEvent.getLocationOnScreen().y == 0 && mFrame != null)
+			if (mFrame != null && wasDragged && aEvent.getLocationOnScreen().y == 0)
 			{
 				setExtendedState(JFrame.MAXIMIZED_BOTH);
 				return;
@@ -1224,10 +1227,8 @@ public class FullScreenWindow
 		{
 			return (mFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0;
 		}
-		else
-		{
-			return false;
-		}
+
+		return false;
 	}
 
 
