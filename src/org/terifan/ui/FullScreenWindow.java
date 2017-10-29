@@ -143,33 +143,33 @@ public class FullScreenWindow
 		if (aDialog)
 		{
 			mDialog = new JDialog(aParent, mTitle[0], aModal);
+			mWindow = mDialog;
+			mFrame = null;
+
 			mDialog.add(mBorderPanel);
 			mDialog.setSize(mInitialSize);
+			mDialog.setLocationRelativeTo(null);
+			mDialog.setUndecorated(true);
 			mDialog.addComponentListener(mComponentAdapter);
 			mDialog.addWindowListener(mWindowStateListener);
 			mDialog.addWindowStateListener(mWindowStateListener);
 			mDialog.addWindowFocusListener(mWindowStateListener);
-			mDialog.setLocationRelativeTo(null);
-			mDialog.setUndecorated(true);
-
-			mWindow = mDialog;
-			mFrame = null;
 		}
 		else
 		{
 			mFrame = new JFrame(mTitle[0]);
+			mWindow = mFrame;
+			mDialog = null;
+
 			mFrame.add(mBorderPanel);
 			mFrame.setSize(mInitialSize);
+			mFrame.setLocationRelativeTo(null);
+			mFrame.setUndecorated(true);
+			mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 			mFrame.addComponentListener(mComponentAdapter);
 			mFrame.addWindowListener(mWindowStateListener);
 			mFrame.addWindowStateListener(mWindowStateListener);
 			mFrame.addWindowFocusListener(mWindowStateListener);
-			mFrame.setLocationRelativeTo(null);
-			mFrame.setUndecorated(true);
-			mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-
-			mWindow = mFrame;
-			mDialog = null;
 		}
 
 
