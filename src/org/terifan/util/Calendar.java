@@ -676,6 +676,18 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 
 
 	/**
+	 * Returns the current date and time using format yyyy-MM-dd HH:mm:ss.SSS
+	 *
+	 * @return
+	 *   the current date and time as a String.
+	 */
+	public static synchronized String exact()
+	{
+		return format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss.SSS");
+	}
+
+
+	/**
 	 * Returns the current date using format yyyy-MM-dd
 	 *
 	 * @return
