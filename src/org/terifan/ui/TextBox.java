@@ -626,7 +626,7 @@ public class TextBox implements Cloneable, Serializable
 		aGraphics.translate(-aTranslateX, -aTranslateY);
 		aGraphics.setFont(oldFont);
 		aGraphics.setColor(oldColor);
-		
+
 		return this;
 	}
 
@@ -961,8 +961,10 @@ public class TextBox implements Cloneable, Serializable
 	}
 
 
-	public static class TextSegment
+	public static class TextSegment implements Serializable
 	{
+		private static final long serialVersionUID = 1L;
+
 		private int mLine;
 		private String mText;
 
