@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.UUID;
 import org.terifan.util.log.Log;
 
 
@@ -343,6 +344,12 @@ public class ObjectStringifier
 
 	private void printArray(Object aValue, Class aType, PrintStream aPrintStream, String aIndent, int aLevel, HashMap<Object,Integer> aVisitedObjects, boolean aLast)
 	{
+		if (aValue == null)
+		{
+			aPrintStream.println("null");
+			return;
+		}
+
 		if (Number.class.isAssignableFrom(aType.getComponentType()) || aType.getComponentType().isPrimitive())
 		{
 			aPrintStream.println("{");
@@ -430,6 +437,10 @@ public class ObjectStringifier
 				else if (Calendar.class.isAssignableFrom(aType))
 				{
 					aPrintStream.print(aIndent + (mSimpleClassNames ? "Calendar":"org.terifan.util.Calendar") + "(\"" + ((Calendar)aValue).format("yyyy-MM-dd HH:mm:ss.SSS")+"\")");
+				}
+				else if (UUID.class.isAssignableFrom(aType))
+				{
+					aPrintStream.print(aIndent + (mSimpleClassNames ? "UUID":"java.util.UUID") + "(\"" + aValue + "\")");
 				}
 				else
 				{
