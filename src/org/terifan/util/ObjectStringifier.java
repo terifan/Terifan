@@ -327,7 +327,7 @@ public class ObjectStringifier
 				Integer ref = mVisitedObjects.get(value);
 				if (ref != null)
 				{
-					aPrintStream.print("#ref" + ref);
+					aPrintStream.print("#ref" + ref + " ("+value.getClass()+")");
 				}
 				else
 				{
@@ -409,7 +409,7 @@ public class ObjectStringifier
 
 	private boolean printValue(Object aValue, Class aType, PrintStream aPrintStream, HashMap<Object,Integer> aVisitedObjects, String aIndent)
 	{
-		if (aValue == null || aType.isPrimitive() || Number.class.isAssignableFrom(aType) || Enum.class.isAssignableFrom(aType))
+		if (aValue == null || aType.isPrimitive() || Number.class.isAssignableFrom(aType) || Enum.class.isAssignableFrom(aType) || aType == Boolean.class || aType == Character.class)
 		{
 			aPrintStream.print(aIndent + aValue);
 		}
@@ -422,7 +422,7 @@ public class ObjectStringifier
 			Integer ref = aVisitedObjects.get(aValue);
 			if (ref != null)
 			{
-				aPrintStream.print(aIndent + "#ref" + ref);
+				aPrintStream.print("#ref" + ref + " ("+aValue.getClass()+")");
 			}
 			else if (mShortKnownTypes)
 			{
