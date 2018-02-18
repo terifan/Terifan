@@ -468,6 +468,24 @@ public class Strings
 	}
 
 
+	public static int indexOf(String aString, String... aTokens)
+	{
+		int i = -1;
+
+		for (String s : aTokens)
+		{
+			int j = aString.indexOf(s);
+
+			if (j != -1 && (j < i || i == -1))
+			{
+				i = j;
+			}
+		}
+
+		return i;
+	}
+
+
 	@FunctionalInterface
 	public interface StringLookup
 	{
