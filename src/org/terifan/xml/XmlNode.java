@@ -676,15 +676,34 @@ public class XmlNode
 				node = new XmlNode(n);
 			}
 
-			if (aVisitor.match(node))
+			if (node instanceof XmlElement)
 			{
-				if (node instanceof XmlElement)
+				XmlElement el = (XmlElement)node;
+
+				if (aVisitor.match(el))
 				{
-					Object o = aVisitor.entering((XmlElement)node);
+					Object o = aVisitor.entering(el);
 
 					if (o != null)
 					{
 						return o;
+					}
+
+					o = aVisitor.process(el);
+
+					if (o != null)
+					{
+						return o;
+					}
+
+					for (String attr : el.getAttributes())
+					{
+						o = aVisitor.attribute(el, attr, el.getAttribute(attr));
+
+						if (o != null)
+						{
+							return o;
+						}
 					}
 
 					o = node.visit(aVisitor);
@@ -694,21 +713,21 @@ public class XmlNode
 						return o;
 					}
 
-					o = aVisitor.leaving((XmlElement)node);
+					o = aVisitor.leaving(el);
 
 					if (o != null)
 					{
 						return o;
 					}
 				}
-				else
-				{
-					Object o = node.visit(aVisitor);
+			}
+			else
+			{
+				Object o = aVisitor.process(node);
 
-					if (o != null)
-					{
-						return o;
-					}
+				if (o != null)
+				{
+					return o;
 				}
 			}
 		}
