@@ -17,13 +17,13 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import org.terifan.util.log.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
+import org.w3c.dom.Text;
 
 
 public class XmlNode
@@ -657,31 +657,58 @@ public class XmlNode
 	public Object visit(XmlNodeVisitor aVisitor)
 	{
 		NodeList list = mNode.getChildNodes();
+
 		for (int i = 0; i < list.getLength(); i++)
 		{
-			XmlNode node = new XmlNode(list.item(i));
+			XmlNode node;
+			Node n = list.item(i);
+
+			if (n instanceof Element)
+			{
+				node = new XmlElement(n);
+			}
+			else if (n instanceof Text)
+			{
+				node = new XmlText(n);
+			}
+			else
+			{
+				node = new XmlNode(n);
+			}
 
 			if (aVisitor.match(node))
 			{
-				Object o = aVisitor.entering(node);
-
-				if (o != null)
+				if (node instanceof XmlElement)
 				{
-					return o;
+					Object o = aVisitor.entering((XmlElement)node);
+
+					if (o != null)
+					{
+						return o;
+					}
+
+					o = node.visit(aVisitor);
+
+					if (o != null)
+					{
+						return o;
+					}
+
+					o = aVisitor.leaving((XmlElement)node);
+
+					if (o != null)
+					{
+						return o;
+					}
 				}
-
-				o = node.visit(aVisitor);
-
-				if (o != null)
+				else
 				{
-					return o;
-				}
+					Object o = node.visit(aVisitor);
 
-				o = aVisitor.leaving(node);
-
-				if (o != null)
-				{
-					return o;
+					if (o != null)
+					{
+						return o;
+					}
 				}
 			}
 		}

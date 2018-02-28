@@ -5,7 +5,7 @@ public interface XmlNodeVisitor
 {
 	public boolean match(XmlNode aNode);
 
-	public Object entering(XmlNode aNode);
+	public Object entering(XmlElement aNode);
 
-	public Object leaving(XmlNode aNode);
+	public Object leaving(XmlElement aNode);
 }
