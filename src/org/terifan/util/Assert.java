@@ -59,7 +59,7 @@ public class Assert
 	 */
 	public static void assertEquals(Object aValue0, Object aValue1, String aErrorMessage, Object... aArguments)
 	{
-		if ((aValue0 == null ^ aValue1 == null) || aValue0 != null && !aValue0.equals(aValue1))
+		if ((aValue0 == null && aValue1 != null) || aValue0 != null && !aValue0.equals(aValue1))
 		{
 			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
 		}
