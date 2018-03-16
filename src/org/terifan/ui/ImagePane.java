@@ -40,6 +40,7 @@ public class ImagePane extends JPanel
 	private final static double MAX_SCALE = 10.0;
 	private final static double MIN_SCALE = 0.01;
 	private final static int SCROLL_STEP = 20;
+	private Object mFilter;
 
 
 	public enum Action
@@ -155,6 +156,21 @@ public class ImagePane extends JPanel
 		super.requestFocusInWindow();
 
 		setImage(aImage);
+
+		mFilter = RenderingHints.VALUE_INTERPOLATION_BILINEAR;
+	}
+
+
+	/**
+	 *
+	 * @param aFilter
+	 *  RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR, RenderingHints.VALUE_INTERPOLATION_BILINEAR, RenderingHints.VALUE_INTERPOLATION_BICUBIC
+	 * @return
+	 */
+	public ImagePane setFilter(Object aFilter)
+	{
+		mFilter = aFilter;
+		return this;
 	}
 
 
@@ -397,7 +413,7 @@ public class ImagePane extends JPanel
 			aGraphics.fillRect(0, 0, w, h);
 		}
 
-		aGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		aGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, mFilter);
 
 		if (mImage != null)
 		{
@@ -472,7 +488,7 @@ public class ImagePane extends JPanel
 		{
 			aGraphics.drawImage(mPlaceholder, mPlaceholderX, mPlaceholderY, mPlaceholderWidth, mPlaceholderHeight, this);
 		}
-		
+
 		if (mOverlay != null)
 		{
 			mOverlay.drawOverlay(aGraphics);
@@ -731,8 +747,8 @@ public class ImagePane extends JPanel
 
 		setScale(scale);
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface Overlay
 	{

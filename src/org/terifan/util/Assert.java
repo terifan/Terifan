@@ -46,16 +46,16 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value is false.
+	 * Throws exception if values aren't equal.
 	 */
 	public static void assertEquals(Object aValue0, Object aValue1)
 	{
-		assertEquals(aValue0, aValue1, "Values aren't equal");
+		assertEquals(aValue0, aValue1, "Values not equal");
 	}
 
 
 	/**
-	 * Throws exception if value is false.
+	 * Throws exception if values aren't equal.
 	 */
 	public static void assertEquals(Object aValue0, Object aValue1, String aErrorMessage, Object... aArguments)
 	{
