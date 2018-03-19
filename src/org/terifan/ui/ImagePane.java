@@ -41,6 +41,7 @@ public class ImagePane extends JPanel
 	private final static double MIN_SCALE = 0.01;
 	private final static int SCROLL_STEP = 20;
 	private Object mFilter;
+	private boolean mVisibleCursor;
 
 
 	public enum Action
@@ -170,6 +171,14 @@ public class ImagePane extends JPanel
 	public ImagePane setFilter(Object aFilter)
 	{
 		mFilter = aFilter;
+		return this;
+	}
+	
+	
+	public ImagePane setCursorVisible(boolean aVisible)
+	{
+		mVisibleCursor = aVisible;
+		super.setCursor(mVisibleCursor ? Cursor.getDefaultCursor() : HIDDEN_CURSOR);
 		return this;
 	}
 
@@ -304,7 +313,7 @@ public class ImagePane extends JPanel
 		// Warning!! Java 7 bug can cause Swing to dead-lock. Set cursor must be executed in swing thread!!
 		SwingUtilities.invokeLater(() ->
 		{
-			setCursor(HIDDEN_CURSOR);
+			setCursor(mVisibleCursor ? Cursor.getDefaultCursor() : HIDDEN_CURSOR);
 		});
 	}
 
@@ -352,7 +361,7 @@ public class ImagePane extends JPanel
 			}
 			else
 			{
-				setCursor(HIDDEN_CURSOR);
+				setCursor(mVisibleCursor ? Cursor.getDefaultCursor() : HIDDEN_CURSOR);
 			}
 		});
 	}
