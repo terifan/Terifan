@@ -207,7 +207,8 @@ public abstract class HttpRequest<E extends HttpRequest>
 	public abstract HttpResponse execute() throws IOException;
 
 
-	protected HttpURLConnection openConnection() throws IOException
+//	protected HttpURLConnection openConnection() throws IOException
+	public HttpURLConnection openConnection() throws IOException
 	{
 		if (mURL == null)
 		{
@@ -218,12 +219,13 @@ public abstract class HttpRequest<E extends HttpRequest>
 		conn.setRequestMethod(mMethod);
 		conn.setReadTimeout(mReadTimeOut);
 		conn.setConnectTimeout(mConnectTimeOut);
+		conn.setUseCaches(false);
 
 		if (mClient != null)
 		{
 			addCookies(conn);
 		}
-		
+
 		for (Entry<String, String> entry : mHeaders.entrySet())
 		{
 			conn.addRequestProperty(entry.getKey(), entry.getValue());
@@ -299,11 +301,11 @@ public abstract class HttpRequest<E extends HttpRequest>
 		{
 			action.execute(this, response);
 		}
-		
+
 		return response;
 	}
-	
-	
+
+
 	public E addAction(AfterExecuteAction aAction)
 	{
 		mActions.add(aAction);
@@ -321,14 +323,14 @@ public abstract class HttpRequest<E extends HttpRequest>
 			{
 				cookieString.append("; ");
 			}
-			
+
 			String[] values = entry.getValue().split(";");
 			boolean skip = false;
 
 			for (int i = 1; i < values.length; i++)
 			{
 				String[] parts = values[i].split("=");
-				
+
 				if (parts.length == 2)
 				{
 					String key = parts[0].trim();
@@ -352,7 +354,7 @@ public abstract class HttpRequest<E extends HttpRequest>
 					}
 				}
 			}
-			
+
 			if (!skip)
 			{
 				cookieString.append(entry.getKey() + "=" + values[0]);
