@@ -2,7 +2,7 @@ package org.terifan.util.log;
 
 import java.util.Date;
 import java.util.Properties;
-import javax.activation.DataHandler;
+//import javax.activation.DataHandler;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Session;
@@ -14,7 +14,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 import org.terifan.util.Calendar;
 
- 
+
 public class MailTarget implements LogTarget
 {
 	private String mLocalHost;
@@ -106,7 +106,8 @@ public class MailTarget implements LogTarget
 			p.put("mail.smtp.localhost", mLocalHost);
 
 			MimeBodyPart bodyPart = new MimeBodyPart();
-			bodyPart.setDataHandler(new DataHandler(new ByteArrayDataSource(body, "text/html")));
+//			bodyPart.setDataHandler(new DataHandler(new ByteArrayDataSource(body, "text/html")));
+			bodyPart.setContent(body, "text/html");
 
 			Multipart multiPart = new MimeMultipart();
 			multiPart.addBodyPart(bodyPart);
