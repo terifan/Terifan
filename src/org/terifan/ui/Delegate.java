@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -31,6 +32,7 @@ public class Delegate extends AbstractAction
 	private Supplier mSupplier;
 	private Object [] mParameters;
 	private String mMethodName;
+	private Consumer<Delegate> mRunAfter;
 
 
 	/**
@@ -75,10 +77,22 @@ public class Delegate extends AbstractAction
 	}
 
 
+	public Icon getSmallIcon()
+	{
+		return (Icon)getValue(Action.SMALL_ICON);
+	}
+
+
 	public Delegate setSmallIcon(Icon aIcon)
 	{
 		putValue(Action.SMALL_ICON, aIcon);
 		return this;
+	}
+
+
+	public String getName()
+	{
+		return (String)getValue(Action.NAME);
 	}
 
 
@@ -89,10 +103,22 @@ public class Delegate extends AbstractAction
 	}
 
 
+	public String getShortDescription()
+	{
+		return (String)getValue(Action.SHORT_DESCRIPTION);
+	}
+
+
 	public Delegate setShortDescription(String aShortDescription)
 	{
 		putValue(Action.SHORT_DESCRIPTION, aShortDescription);
 		return this;
+	}
+
+
+	public String getLongDescription()
+	{
+		return (String)getValue(Action.LONG_DESCRIPTION);
 	}
 
 
@@ -103,10 +129,22 @@ public class Delegate extends AbstractAction
 	}
 
 
+	public String getActionCommandKey()
+	{
+		return (String )getValue(Action.ACTION_COMMAND_KEY);
+	}
+
+
 	public Delegate setActionCommandKey(String aActionCommandKey)
 	{
 		putValue(Action.ACTION_COMMAND_KEY, aActionCommandKey);
 		return this;
+	}
+
+
+	public KeyStroke getAcceleratorKey()
+	{
+		return (KeyStroke)getValue(Action.ACCELERATOR_KEY);
 	}
 
 
@@ -123,10 +161,22 @@ public class Delegate extends AbstractAction
 	}
 
 
+	public Integer getMnemonicKey()
+	{
+		return (Integer)getValue(Action.SMALL_ICON);
+	}
+
+
 	public Delegate setMnemonicKey(int aMnemonicKey)
 	{
 		putValue(Action.MNEMONIC_KEY, aMnemonicKey);
 		return this;
+	}
+
+
+	public boolean isSelected()
+	{
+		return (Boolean)getValue(Action.SELECTED_KEY);
 	}
 
 
@@ -137,10 +187,22 @@ public class Delegate extends AbstractAction
 	}
 
 
+	public Integer getDisplayedMnemonicKey()
+	{
+		return (Integer)getValue(Action.DISPLAYED_MNEMONIC_INDEX_KEY);
+	}
+
+
 	public Delegate setDisplayedMnemonicKey(int aDisplayedMnemonicKey)
 	{
 		putValue(Action.DISPLAYED_MNEMONIC_INDEX_KEY, aDisplayedMnemonicKey);
 		return this;
+	}
+
+
+	public Icon getLargeIcon()
+	{
+		return (Icon)getValue(Action.LARGE_ICON_KEY);
 	}
 
 
@@ -171,6 +233,20 @@ public class Delegate extends AbstractAction
 		return this;
 	}
 
+
+	public Delegate runAfter(Consumer<Delegate> aConsumer)
+	{
+		mRunAfter = aConsumer;
+		return this;
+	}
+
+	
+	@FunctionalInterface
+	public static interface MethodCall
+	{
+		void run(Object aParameters);
+	}
+	
 
 	@Override
 	public void actionPerformed(ActionEvent aEvent)
@@ -217,6 +293,11 @@ public class Delegate extends AbstractAction
 					{
 						method.invoke(o, mParameters);
 					}
+				}
+				
+				if (mRunAfter != null)
+				{
+					mRunAfter.accept(this);
 				}
 			}
 			catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
