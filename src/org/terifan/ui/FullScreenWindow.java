@@ -109,9 +109,6 @@ public class FullScreenWindow
 		mBorderVisible = true;
 		mArmedButton = -1;
 		mTitleBarFont = new Font[3];
-		mTitleBarFont[0] = new Font("segoe ui", Font.BOLD, 17);
-		mTitleBarFont[1] = new Font("segoe ui", Font.BOLD, 17);
-		mTitleBarFont[2] = new Font("segoe ui", Font.PLAIN, 17);
 		mTitleBarButtonSymbolSize = 14;
 
 		mMinSize = new Dimension(2 * mBorderSize + 4 * mTitleBarButtonWidth, mBorderSize + mTitleBarHeight);
@@ -314,7 +311,7 @@ public class FullScreenWindow
 		mTitleBarButtonSymbolSize = (int)(5 + 5 * scale);
 
 		mTitleBarFont[0] = new Font("segoe ui", Font.BOLD, (int)(9 * scale));
-		mTitleBarFont[1] = new Font("segoe ui", Font.BOLD, (int)(9 * scale));
+		mTitleBarFont[1] = new Font("segoe ui", Font.PLAIN, (int)(9 * scale));
 		mTitleBarFont[2] = new Font("segoe ui", Font.PLAIN, (int)(9 * scale));
 	}
 
@@ -955,40 +952,38 @@ public class FullScreenWindow
 				aGraphics.fillRect(0, 0, aWidth, mTitleBarHeight);
 			}
 
-			Rectangle rect = new TextBox(mTitle[0])
+			TextBox tb = new TextBox(mTitle[0])
 				.setBounds(mBorderSize, 0, mButtonRects[0].x - mBorderSize, mTitleBarButtonHeight)
 				.setFont(mTitleBarFont[0])
 				.setForeground(mTitleBarForeground[0].get(mFocused))
 				.setMargins(aMaximized ? 0 : mBorderSize, 4, 0, 0)
 				.setAnchor(Anchor.WEST)
-				.setMaxLineCount(1)
+				.setMaxLineCount(1);
+
+			Rectangle rect = tb
 				.render(aGraphics)
 				.measure();
 
-			int x = rect.x + rect.width;
+			int x = mBorderSize + rect.width + 10;
 
 			if (!mTitle[1].isEmpty())
 			{
-				x += new TextBox(mTitle[1])
+				x += tb.setText(mTitle[1])
 					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
 					.setFont(mTitleBarFont[1])
 					.setForeground(mTitleBarForeground[1].get(mFocused))
-					.setMargins(aMaximized ? 0 : mBorderSize, 0, 0, 4)
-					.setAnchor(Anchor.WEST)
-					.setMaxLineCount(1)
 					.render(aGraphics)
 					.measure().width;
+
+				x += 10;
 			}
 
 			if (!mTitle[2].isEmpty())
 			{
-				new TextBox(mTitle[2])
+				tb.setText(mTitle[2])
 					.setBounds(x, 0, mButtonRects[0].x - x, mTitleBarButtonHeight)
 					.setFont(mTitleBarFont[2])
 					.setForeground(mTitleBarForeground[2].get(mFocused))
-					.setMargins(aMaximized ? 0 : mBorderSize, 0, 0, 4)
-					.setAnchor(Anchor.WEST)
-					.setMaxLineCount(1)
 					.render(aGraphics);
 			}
 		}
