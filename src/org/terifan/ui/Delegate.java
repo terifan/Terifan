@@ -32,7 +32,7 @@ public class Delegate extends AbstractAction
 	private Supplier mSupplier;
 	private Object [] mParameters;
 	private String mMethodName;
-	private Consumer<Delegate> mRunAfter;
+	private ArrayList<Object> mRunAfter;
 
 
 	/**
@@ -236,15 +236,23 @@ public class Delegate extends AbstractAction
 
 	public Delegate runAfter(Consumer<Delegate> aConsumer)
 	{
-		mRunAfter = aConsumer;
+		if (mRunAfter == null)
+		{
+			mRunAfter = new ArrayList<>();
+		}
+		mRunAfter.add(aConsumer);
 		return this;
 	}
 
-	
-	@FunctionalInterface
-	public static interface MethodCall
+
+	public Delegate runAfter(Runnable aRunnable)
 	{
-		void run(Object aParameters);
+		if (mRunAfter == null)
+		{
+			mRunAfter = new ArrayList<>();
+		}
+		mRunAfter.add(aRunnable);
+		return this;
 	}
 	
 
@@ -294,10 +302,20 @@ public class Delegate extends AbstractAction
 						method.invoke(o, mParameters);
 					}
 				}
-				
+
 				if (mRunAfter != null)
 				{
-					mRunAfter.accept(this);
+					for (Object o : mRunAfter)
+					{
+						if (o instanceof Consumer)
+						{
+							((Consumer)o).accept(this);
+						}
+						else if (o instanceof Runnable)
+						{
+							((Runnable)o).run();
+						}
+					}
 				}
 			}
 			catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
