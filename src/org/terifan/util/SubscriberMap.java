@@ -1,14 +1,16 @@
 package org.terifan.util;
 
+import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 
 public class SubscriberMap<K, V, S> implements Iterable<K>
@@ -26,17 +28,17 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 	}
 
 
-	public synchronized SubscriberMap<K, V, S> add(K aKey, V aValue, S aSubscriber)
+	public synchronized SubscriberMap<K, V, S> add(K aKey, Function<K,V> aSupplier, S aSubscriber)
 	{
-		Entry entry = mMap.computeIfAbsent(aKey, k->new Entry(aValue));
+		Entry entry = mMap.computeIfAbsent(aKey, k->new Entry(aSupplier.apply(k)));
 		
-		boolean first = entry.getSecond().isEmpty();
+		boolean first = entry.mSet.isEmpty();
 		
 		entry.add(aSubscriber);
 
 		if (first && mEntryAddedListener != null)
 		{
-			mEntryAddedListener.accept(aKey, aValue);
+			mEntryAddedListener.accept(aKey, entry.mValue);
 		}
 		if (mSubscriberAddedListener != null)
 		{
@@ -46,6 +48,19 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 		return this;
 	}
 
+	
+	public synchronized V get(K aKey)
+	{
+		Entry entry = mMap.get(aKey);
+
+		if (entry != null)
+		{
+			return entry.mValue;
+		}
+
+		return null;
+	}
+	
 
 	public synchronized SubscriberMap<K, V, S> subscribe(K aKey, S aSubscriber)
 	{
@@ -84,7 +99,7 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 
 				if (mEntryRemovedListener != null)
 				{
-					mEntryRemovedListener.accept(aKey, entry.getFirst());
+					mEntryRemovedListener.accept(aKey, entry.mValue);
 				}
 			}
 		}
@@ -101,7 +116,7 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 		{
 			if (mSubscriberRemovedListener != null)
 			{
-				for (S subscriber : entry.getSecond())
+				for (S subscriber : entry.mSet)
 				{
 					mSubscriberRemovedListener.accept(aKey, subscriber);
 				}
@@ -109,7 +124,7 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 
 			if (mEntryRemovedListener != null)
 			{
-				mEntryRemovedListener.accept(aKey, entry.getFirst());
+				mEntryRemovedListener.accept(aKey, entry.mValue);
 			}
 		}
 		
@@ -141,19 +156,25 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 	}
 
 
+	/**
+	 * Returns a Set of subscribers of the key specified.
+	 */
 	public synchronized Set<S> subscribersOf(K aKey)
 	{
-		return Collections.unmodifiableSet(mMap.get(aKey).getSecond());
+		return Collections.unmodifiableSet(mMap.get(aKey).mSet);
 	}
 
 
+	/**
+	 * Returns a List of keys the subscriber specified is linked to.
+	 */
 	public synchronized List<K> subscribedBy(S aSubscriber)
 	{
 		ArrayList<K> keys = new ArrayList<>();
 		
 		for (K key : this)
 		{
-			if (mMap.get(key).getSecond().contains(aSubscriber))
+			if (mMap.get(key).mSet.contains(aSubscriber))
 			{
 				keys.add(key);
 			}
@@ -168,6 +189,18 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 		return mMap.containsKey(aKey);
 	}
 
+	
+	public int size()
+	{
+		return mMap.size();
+	}
+
+	
+	public boolean isEmpty()
+	{
+		return mMap.isEmpty();
+	}
+	
 
 	@Override
 	public String toString()
@@ -203,36 +236,91 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 		return this;
 	}
 
-
-	private class Entry extends Tuple<V, HashSet<S>>
+	
+	public synchronized Lease<K,V> lease(K aKey, Function<K,V> aSupplier, S aSubscriber)
 	{
+		Entry entry = mMap.get(aKey);
+		
+		if (entry == null)
+		{
+			add(aKey, aSupplier, aSubscriber);
+		}
+		else
+		{
+			subscribe(aKey, aSubscriber);
+		}
+
+		return new Lease<>(this, aKey, aSubscriber);
+	}
+	
+	
+	public static class Lease<K,V> implements Closeable
+	{
+		private K mKey;
+		private Object mSubscriber;
+		private SubscriberMap mMap;
+
+
+		public Lease(SubscriberMap aMap, K aKey, Object aSubscriber)
+		{
+			mMap = aMap;
+			mKey = aKey;
+			mSubscriber = aSubscriber;
+		}
+
+
+		public K getKey()
+		{
+			return mKey;
+		}
+
+
+		public V getValue()
+		{
+			return (V)mMap.get(mKey);
+		}
+
+
+		@Override
+		public void close()
+		{
+			mMap.unsubscribe(mKey, mSubscriber);
+		}
+	}
+	
+
+	public class Entry
+	{
+		V mValue;
+		HashSet<S> mSet;
+		
 		public Entry(V aValue)
 		{
-			super(aValue, new HashSet<S>());
+			mValue = aValue;
+			mSet = new HashSet<>();
 		}
 		
 		synchronized void add(S aSubscriber)
 		{
-			getSecond().add(aSubscriber);
+			mSet.add(aSubscriber);
 		}
 		
 		synchronized boolean remove(S aSubscriber)
 		{
-			HashSet<S> set = getSecond();
-			set.remove(aSubscriber);
-			return set.isEmpty();
+			mSet.remove(aSubscriber);
+			return mSet.isEmpty();
 		}
 
 
 		@Override
 		public String toString()
 		{
-			return "{" + getFirst() + ", " + getSecond() + '}';
+			return "{" + mValue + ", " + mSet + '}';
 		}
 	}
 	
 	
-	public static void main(String... args)
+	public static void xmain(String... args)
 	{
 		try
 		{
@@ -241,9 +329,9 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 			map.setOnSubscriberRemoved((t,u)->System.out.println("release " + u));
 			map.setOnEntryRemoved((t,u)->System.out.println("remove resource " + u));
 			
-			map.add("one", 1, "dog");
-			map.add("two", 2, "dog");
-			map.add("three", 3, "pig");
+			map.add("one", t->1, "dog");
+			map.add("two", t->2, "dog");
+			map.add("three", t->3, "pig");
 			map.subscribe("one", "cat");
 			map.subscribe("two", "cat");
 			map.subscribe("two", "pig");
@@ -252,7 +340,7 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 			
 			System.out.println(map.subscribersOf("one"));
 			System.out.println(map.subscribedBy("cat"));
-			
+
 			map.unsubscribe("one", "dog");
 			System.out.println(map);
 			
@@ -264,6 +352,68 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 			
 			map.clear();
 			System.out.println(map);
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
+	}
+	
+	
+	public static void main(String... args)
+	{
+		try
+		{
+			final Function<String,byte[]> supplier = s->{
+				System.out.println("created resource " + s);
+				return ("\"resource " + s + "\"").getBytes();
+			};
+
+			final SubscriberMap<String,byte[],Thread> map = new SubscriberMap<>();
+
+			map.setOnEntryRemoved((t,u)->System.out.println(("removed " + new String(u)) + (map.isEmpty()?"    empty!":"")));
+
+			String[] words = {"dog","cat","cow","pig"};
+
+			for (int i = 0; i < 20; i++)
+			{
+				new Thread()
+				{
+					@Override
+					public void run()
+					{
+						try
+						{
+							Random rnd = new Random();
+
+							Thread.sleep(rnd.nextInt(1000));
+
+//							{
+//							String word = words[rnd.nextInt(words.length)];
+//
+//							map.add(word, supplier, this);
+//
+//							Thread.sleep(rnd.nextInt(1000));
+//
+//							map.unsubscribe(word, this);
+//							}
+
+							String word = words[rnd.nextInt(words.length)];
+
+							try (Lease<String,byte[]> x = map.lease(word, supplier, this))
+							{
+								System.out.println("using " + new String(x.getValue()));
+								
+								Thread.sleep(rnd.nextInt(1000));
+							}
+						}
+						catch (Throwable e)
+						{
+							e.printStackTrace(System.err);
+						}
+					}
+				}.start();
+			}
 		}
 		catch (Throwable e)
 		{
