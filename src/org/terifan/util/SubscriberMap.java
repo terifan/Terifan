@@ -20,11 +20,20 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 	private BiConsumer<K,V> mEntryRemovedListener;
 	private BiConsumer<K,S> mSubscriberAddedListener;
 	private BiConsumer<K,S> mSubscriberRemovedListener;
+	private Function<K,V> mSupplier;
 
 
 	public SubscriberMap()
 	{
 		mMap = new HashMap<>();
+	}
+
+
+	public SubscriberMap(Function<K,V> aSupplier)
+	{
+		this();
+		
+		mSupplier = aSupplier;
 	}
 
 
@@ -252,7 +261,13 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 
 		return new Lease<>(this, aKey, aSubscriber);
 	}
+
 	
+	public synchronized Lease<K, V> lease(K aKey, S aSubscriber)
+	{
+		return lease(aKey, mSupplier, aSubscriber);
+	}
+
 	
 	public static class Lease<K,V> implements Closeable
 	{
@@ -369,11 +384,11 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 				return ("\"resource " + s + "\"").getBytes();
 			};
 
-			final SubscriberMap<String,byte[],Thread> map = new SubscriberMap<>();
+			final SubscriberMap<String,byte[],Thread> map = new SubscriberMap<>(supplier);
 
 			map.setOnEntryRemoved((t,u)->System.out.println(("removed " + new String(u)) + (map.isEmpty()?"    empty!":"")));
 
-			String[] words = {"dog","cat","cow","pig"};
+			String[] keys = {"dog","cat","cow","pig"};
 
 			for (int i = 0; i < 20; i++)
 			{
@@ -389,18 +404,18 @@ public class SubscriberMap<K, V, S> implements Iterable<K>
 							Thread.sleep(rnd.nextInt(1000));
 
 //							{
-//							String word = words[rnd.nextInt(words.length)];
+//							String key = keys[rnd.nextInt(keys.length)];
 //
-//							map.add(word, supplier, this);
+//							map.add(key, supplier, this);
 //
 //							Thread.sleep(rnd.nextInt(1000));
 //
-//							map.unsubscribe(word, this);
+//							map.unsubscribe(key, this);
 //							}
 
-							String word = words[rnd.nextInt(words.length)];
+							String key = keys[rnd.nextInt(keys.length)];
 
-							try (Lease<String,byte[]> x = map.lease(word, supplier, this))
+							try (Lease<String,byte[]> x = map.lease(key, this))
 							{
 								System.out.println("using " + new String(x.getValue()));
 								
