@@ -1,6 +1,7 @@
 package org.terifan.sql;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -73,6 +74,8 @@ public class EntityManager implements AutoCloseable
 				((AbstractEntity)instance).bind(this);
 			}
 
+			initInstance(instance);
+
 			return instance;
 		}
 		catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
@@ -87,17 +90,41 @@ public class EntityManager implements AutoCloseable
 		try
 		{
 			E entity = load(aType, aPrimaryKey);
+			initInstance(entity);
 
 			if (entity != null)
 			{
 				return entity;
 			}
 
-			return aType.getConstructor(EntityManager.class).newInstance(this);
+			E instance = aType.getConstructor(EntityManager.class).newInstance(this);
+			initInstance(instance);
+
+			return instance;
 		}
 		catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e)
 		{
 			throw new IllegalStateException(e);
+		}
+	}
+
+
+	private void initInstance(Object aInstance)
+	{
+		if (aInstance != null)
+		{
+			try
+			{
+				Field f = aInstance.getClass().getDeclaredField("__em");
+				if (f != null && f.getType() == getClass())
+				{
+					f.setAccessible(true);
+					f.set(aInstance, this);
+				}
+			}
+			catch (Exception e)
+			{
+			}
 		}
 	}
 

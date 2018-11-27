@@ -115,7 +115,7 @@ public class EntityTools
 		}
 		else if (Boolean.class.isAssignableFrom(aType) || Boolean.TYPE.isAssignableFrom(aType))
 		{
-			if (aValue instanceof Boolean)
+			if (aValue instanceof Boolean || aValue == null)
 			{
 			}
 			else if (aValue instanceof Integer)
