@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.WeakHashMap;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -176,8 +177,10 @@ public final class Utilities
 			aAction.putValue(Action.NAME, aAction.toString());
 		}
 
-		aComponent.getInputMap().put(aKeyStroke, aAction.getValue(Action.NAME));
-		aComponent.getActionMap().put(aAction.getValue(Action.NAME), aAction);
+		String id = UUID.randomUUID().toString();
+
+		aComponent.getInputMap().put(aKeyStroke, id);
+		aComponent.getActionMap().put(id, aAction);
 
 		return aAction;
 	}
