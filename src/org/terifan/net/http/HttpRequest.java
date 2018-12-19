@@ -6,10 +6,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map.Entry;
 import org.terifan.io.Streams;
 
@@ -18,7 +18,9 @@ public abstract class HttpRequest<E extends HttpRequest>
 {
 	protected URL mURL;
 	protected OutputStream mTarget;
+	protected ArrayList<AfterExecuteAction> mActions;
 	protected LinkedHashMap<String, String> mHeaders;
+	protected LinkedHashMap<String, String> mParameters;
 	protected String mMethod;
 	protected String mContentType;
 	protected String mCharSet;
@@ -28,12 +30,12 @@ public abstract class HttpRequest<E extends HttpRequest>
 	protected int mConnectTimeOut;
 	protected int mReadTimeOut;
 	protected HttpClient mClient;
-	protected ArrayList<AfterExecuteAction> mActions;
 
 
 	public HttpRequest()
 	{
 		mHeaders = new LinkedHashMap<>();
+		mParameters = new LinkedHashMap<>();
 		mCharSet = "utf-8";
 		mConnectTimeOut = 1 * 60 * 1000;
 		mReadTimeOut = 5 * 60 * 1000;
@@ -87,6 +89,36 @@ public abstract class HttpRequest<E extends HttpRequest>
 	public E addHeaders(LinkedHashMap<String, String> aHeaders)
 	{
 		mHeaders.putAll(aHeaders);
+		return (E)this;
+	}
+
+
+	public LinkedHashMap<String, String> getParameters()
+	{
+		return mParameters;
+	}
+
+
+	public E setParameter(String aKey, String aValue)
+	{
+		if (aValue != null)
+		{
+			mParameters.put(aKey, aValue);
+		}
+		return (E)this;
+	}
+
+
+	public E setParameters(LinkedHashMap<String, String> aParameters)
+	{
+		mParameters = aParameters;
+		return (E)this;
+	}
+
+
+	public E addParameters(LinkedHashMap<String, String> aParameters)
+	{
+		mParameters.putAll(aParameters);
 		return (E)this;
 	}
 
@@ -215,11 +247,41 @@ public abstract class HttpRequest<E extends HttpRequest>
 			throw new IllegalArgumentException("URL is not set.");
 		}
 
-		HttpURLConnection conn = (HttpURLConnection)mURL.openConnection();
+		URL url = mURL;
+
+		if (!mParameters.isEmpty())
+		{
+			if ("GET".equals(mMethod))
+			{
+				StringBuilder link = new StringBuilder(mURL.toString());
+
+				boolean first = false;
+				if (link.indexOf("?") == -1)
+				{
+					link.append("?");
+					first = true;
+				}
+
+				for (Entry<String,String> param : mParameters.entrySet())
+				{
+					if (!first)
+					{
+						link.append("&");
+					}
+					link.append(URLEncoder.encode(param.getKey(), "iso-8859-1") + "=" + URLEncoder.encode(param.getValue(), "iso-8859-1"));
+					first = false;
+				}
+
+				url = new URL(link.toString());
+			}
+		}
+
+		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 		conn.setRequestMethod(mMethod);
 		conn.setReadTimeout(mReadTimeOut);
 		conn.setConnectTimeout(mConnectTimeOut);
 		conn.setUseCaches(false);
+		conn.setInstanceFollowRedirects(false);
 
 		if (mClient != null)
 		{
@@ -295,6 +357,15 @@ public abstract class HttpRequest<E extends HttpRequest>
 			{
 				response.setContent(Streams.readAll(in));
 			}
+		}
+
+		switch (response.getResponseCode())
+		{
+			case HttpURLConnection.HTTP_MOVED_TEMP:
+			case HttpURLConnection.HTTP_MOVED_PERM:
+			case HttpURLConnection.HTTP_SEE_OTHER:
+				response.setRedirect(aConnection.getHeaderField("Location"));
+				break;
 		}
 
 		for (AfterExecuteAction action : mActions)

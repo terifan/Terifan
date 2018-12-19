@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 
-public class HttpClient 
+public class HttpClient
 {
 	private String mReferer;
 	private String mAgent;
-	private HashMap<String,Map<String,String>> mCookies;
+	private HashMap<String, Map<String, String>> mCookies;
 
 
 	public HttpClient()
@@ -21,36 +21,55 @@ public class HttpClient
 	}
 
 
-	public HttpRequest get(String aUrl) throws MalformedURLException
+	public HttpGet get(String aUrl) throws MalformedURLException
 	{
 		return get(new URL(aUrl), false);
 	}
 
 
-	public HttpRequest get(String aUrl, boolean aSetReferer) throws MalformedURLException
+	public HttpGet get(String aUrl, boolean aSetReferer) throws MalformedURLException
 	{
 		return get(new URL(aUrl), aSetReferer);
 	}
 
 
-	public HttpRequest get(URL aUrl) throws MalformedURLException
+	public HttpGet get(URL aUrl) throws MalformedURLException
 	{
 		return get(aUrl, false);
 	}
 
 
-	public HttpRequest get(URL aUrl, boolean aSetReferer) throws MalformedURLException
+	public HttpGet get(URL aUrl, boolean aSetReferer) throws MalformedURLException
 	{
 		return new HttpGet(this)
 			.setURL(aUrl)
 			.setHeader("User-Agent", mAgent)
 			.setHeader("Referer", mReferer)
-			.addAction((request,response)->{
+			.addAction((request, response) ->
+			{
 				if (aSetReferer)
 				{
 					mReferer = aUrl.toExternalForm();
 				}
-				
+
+				copyCookies(request, response);
+			});
+	}
+
+
+	public HttpPost post(URL aUrl, boolean aSetReferer) throws MalformedURLException
+	{
+		return new HttpPost(this)
+			.setURL(aUrl)
+			.setHeader("User-Agent", mAgent)
+			.setHeader("Referer", mReferer)
+			.addAction((request, response) ->
+			{
+				if (aSetReferer)
+				{
+					mReferer = aUrl.toExternalForm();
+				}
+
 				copyCookies(request, response);
 			});
 	}
@@ -80,8 +99,14 @@ public class HttpClient
 		mAgent = aAgent;
 		return this;
 	}
-	
-	
+
+
+	public HashMap<String, Map<String, String>> getCookies()
+	{
+		return mCookies;
+	}
+
+
 	protected void copyCookies(HttpRequest aRequest, HttpResponse aResponse)
 	{
 		String host = aRequest.getURL().getHost();
@@ -112,11 +137,11 @@ public class HttpClient
 	}
 
 
-	Map<String,String> getCookies(URL aURL)
+	Map<String, String> getCookies(URL aURL)
 	{
 //		System.out.println("******"+mCookies.computeIfAbsent(aURL.getHost(), e->new HashMap<>()));
-		
-		return mCookies.computeIfAbsent(aURL.getHost(), e->new HashMap<>());
+
+		return mCookies.computeIfAbsent(aURL.getHost(), e -> new HashMap<>());
 	}
 
 
@@ -129,7 +154,7 @@ public class HttpClient
 			cookies = new HashMap<>();
 			mCookies.put(aUrl.getHost(), cookies);
 		}
-		
+
 		int i = aCookieString.indexOf("=");
 		String key = aCookieString.substring(0, i);
 		String value = aCookieString.substring(i + 1);
@@ -149,13 +174,13 @@ public class HttpClient
 			HttpResponse response = client
 				.get("http://dips.surikat.net/Login")
 				.execute();
-			
+
 			System.out.println(response.getHeaders());
 
 			response = client
 				.get("http://dips.surikat.net/Login")
 				.execute();
-			
+
 			System.out.println(response.getHeaders());
 		}
 		catch (Throwable e)

@@ -6,7 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 
-public class HttpGet extends HttpRequest<HttpRequest>
+public class HttpGet extends HttpRequest<HttpGet>
 {
 	public HttpGet()
 	{
@@ -33,7 +33,7 @@ public class HttpGet extends HttpRequest<HttpRequest>
 	HttpGet(HttpClient aClient)
 	{
 		this();
-		
+
 		mClient = aClient;
 	}
 
