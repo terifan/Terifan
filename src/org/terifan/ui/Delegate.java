@@ -266,7 +266,7 @@ public class Delegate extends AbstractAction
 		{
 			return;
 		}
-		
+
 		if (object.getClass().isArray())
 		{
 			objects = (Object[])object;
