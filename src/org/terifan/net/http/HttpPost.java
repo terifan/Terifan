@@ -8,6 +8,8 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Map.Entry;
 import org.terifan.io.Streams;
 
 
@@ -76,6 +78,27 @@ public class HttpPost extends HttpRequest<HttpPost>
 	@Override
 	public HttpResponse execute() throws IOException
 	{
+		if (mInput == null && !mParameters.isEmpty())
+		{
+			super.setContentType("application/x-www-form-urlencoded");
+			super.setHeader("charset", "utf-8");
+
+			StringBuilder link = new StringBuilder();
+
+			boolean first = true;
+			for (Entry<String,String> param : mParameters.entrySet())
+			{
+				if (!first)
+				{
+					link.append("&");
+				}
+				link.append(URLEncoder.encode(param.getKey(), "iso-8859-1") + "=" + URLEncoder.encode(param.getValue(), "iso-8859-1"));
+				first = false;
+			}
+
+			mInput = link.toString().getBytes("utf-8");
+		}
+
 		if (mInput == null)
 		{
 			throw new IllegalArgumentException("Source is not set.");
@@ -84,8 +107,11 @@ public class HttpPost extends HttpRequest<HttpPost>
 		HttpURLConnection conn = openConnection();
 
 		OutputStream out = conn.getOutputStream();
+
 		Streams.transfer(mInput, out);
 
-		return buildResponse(conn);
+		HttpResponse response = buildResponse(conn);
+
+		return response;
 	}
 }

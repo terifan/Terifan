@@ -16,6 +16,7 @@ public class HttpResponse
 	protected byte[] mContent;
 	protected HttpClient mClient;
 	protected Map<String, List<String>> mHeaders;
+	protected String mRedirect;
 
 
 	HttpResponse(HttpURLConnection aConnection) throws IOException
@@ -65,7 +66,7 @@ public class HttpResponse
 	}
 
 
-	public void setContent(byte[] aContent)
+	protected void setContent(byte[] aContent)
 	{
 		mContent = aContent;
 	}
@@ -74,6 +75,24 @@ public class HttpResponse
 	public Map<String, List<String>> getHeaders()
 	{
 		return mHeaders;
+	}
+
+
+	/**
+	 * Returns a redirect URL received from the server.
+	 *
+	 * @return
+	 *   a redirect URL received from the server.
+	 */
+	public String getRedirect()
+	{
+		return mRedirect;
+	}
+
+
+	protected void setRedirect(String aRedirect)
+	{
+		mRedirect = aRedirect;
 	}
 
 
