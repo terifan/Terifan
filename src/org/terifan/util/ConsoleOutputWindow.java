@@ -134,6 +134,24 @@ public class ConsoleOutputWindow implements AutoCloseable
 	}
 
 
+	public JTabbedPane getTabbedPane()
+	{
+		return mTabbedPane;
+	}
+
+
+	public boolean isCancelled()
+	{
+		return mCancelled;
+	}
+
+
+	public JFrame getFrame()
+	{
+		return mFrame;
+	}
+
+
 	public ConsoleOutputWindow show()
 	{
 		mFrame.setExtendedState(JFrame.NORMAL);
@@ -155,12 +173,6 @@ public class ConsoleOutputWindow implements AutoCloseable
 	{
 		mFrame.setVisible(false);
 		return this;
-	}
-
-
-	public JFrame getFrame()
-	{
-		return mFrame;
 	}
 
 
@@ -241,18 +253,6 @@ public class ConsoleOutputWindow implements AutoCloseable
 			onClose();
 		}
 	};
-
-
-	public JTabbedPane getTabbedPane()
-	{
-		return mTabbedPane;
-	}
-
-
-	public boolean isCancelled()
-	{
-		return mCancelled;
-	}
 
 
 	public void append(String aTab, String aStyle, Object aText)
@@ -404,7 +404,6 @@ public class ConsoleOutputWindow implements AutoCloseable
 			mWindow = aWindow;
 
 			mTextArea = new JTextPane();
-			mTextArea.setEditable(false);
 			mTextArea.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 
 			mDocument = mTextArea.getStyledDocument();
@@ -412,6 +411,8 @@ public class ConsoleOutputWindow implements AutoCloseable
 			mScrollPane = new JScrollPane();
 			mScrollPane.setViewportView(mTextArea);
 			mScrollPane.setBorder(null);
+
+			setEditable(false);
 		}
 
 
