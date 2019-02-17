@@ -125,8 +125,9 @@ public class ImageResizer
 		int tw = aImage.getWidth();
 		int th = aImage.getHeight();
 
-		((Graphics2D)aGraphics).setRenderingHint(RenderingHints.KEY_INTERPOLATION, aQuality ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		
+		Graphics2D g = (Graphics2D)aGraphics;
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, aQuality ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
 		aGraphics.drawImage(aImage, aPositionX, aPositionY, aPositionX + aFrameLeft, aPositionY + aHeight, 0, 0, aFrameLeft, th, null);
 		aGraphics.drawImage(aImage, aPositionX + aFrameLeft, aPositionY, aPositionX + aWidth - aFrameRight, aPositionY + aHeight, aFrameLeft, 0, tw - aFrameRight, th, null);
 		aGraphics.drawImage(aImage, aPositionX + aWidth - aFrameRight, aPositionY, aPositionX + aWidth, aPositionY + aHeight, tw - aFrameRight, 0, tw, th, null);
@@ -138,7 +139,8 @@ public class ImageResizer
 		int tw = aImage.getWidth();
 		int th = aImage.getHeight();
 
-		((Graphics2D)aGraphics).setRenderingHint(RenderingHints.KEY_INTERPOLATION, aQuality ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		Graphics2D g = (Graphics2D)aGraphics;
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, aQuality ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		
 		aGraphics.drawImage(aImage, aPositionX, aPositionY, aPositionX + aFrameLeft, aPositionY + aFrameTop, 0, 0, aFrameLeft, aFrameTop, null);
 		aGraphics.drawImage(aImage, aPositionX + aFrameLeft, aPositionY, aPositionX + aWidth - aFrameRight, aPositionY + aFrameTop, aFrameLeft, 0, tw - aFrameRight, aFrameTop, null);
