@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
+import java.util.Random;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
@@ -16,13 +17,12 @@ import javax.swing.JFrame;
 public class SpeedGraph extends JComponent
 {
 	private long mTotalWork;
-	private long mAccumWork;
-	private int mResolution;
 	private long mSumWork;
-	private long mSumDuration;
+	private int mResolution;
+	private long mAccumWork;
+	private long mAccumDuration;
 	private int mOffset;
 	private double mMax;
-	private boolean mFinished;
 	private double[] mSpeed;
 
 	private Color mLineColor = new Color(17, 125, 187);
@@ -39,48 +39,67 @@ public class SpeedGraph extends JComponent
 		mSpeed = new double[mResolution];
 		Arrays.fill(mSpeed, -1.0);
 
-		setBackground(Color.WHITE);
+		super.setBackground(Color.WHITE);
 	}
 
 
 	public synchronized void addWork(long aDuration, long aWork)
 	{
-		int x = (int)(mResolution * mAccumWork / mTotalWork);
+		int x0 = (int)(mResolution * mSumWork / mTotalWork);
+		int x1 = (int)(mResolution * (mSumWork + aWork) / mTotalWork);
 
-		if (x != mOffset)
+		if (x0 != x1)
+		{
+			long bs = mTotalWork / mResolution;
+
+			if (bs > 0)
+			{
+				long rw = (mSumWork + aWork) % bs;
+
+				if (rw < aWork)
+				{
+					long rd = aDuration * rw / aWork;
+
+					addWork(aDuration - rd, aWork - rw);
+					addWork(rd, rw);
+					return;
+				}
+			}
+		}
+
+		if (x0 != mOffset)
 		{
 			saveValue();
 		}
 
-		mSumWork += aWork;
-		mSumDuration += aDuration;
-		mOffset = x;
-
 		mAccumWork += aWork;
+		mAccumDuration += aDuration;
+		mOffset = x0;
+
+		mSumWork += aWork;
 	}
 
 
 	public synchronized void finish()
 	{
-		mFinished = true;
 		mOffset = mResolution - 1;
 
 		saveValue();
+
+		mOffset = mResolution;
 	}
 
 
 	private void saveValue()
 	{
-		if (mSumDuration > 0)
+		if (mAccumDuration > 0)
 		{
-			double speed = mSumWork / (double)mSumDuration;
-
-			System.out.println(mOffset + " " + mSumWork + " " + mSumDuration + " " + speed * 1000000000 / 1024 / 1024);
+			double speed = mAccumWork / (double)mAccumDuration;
 
 			mMax = Math.max(mMax, speed);
 			mSpeed[mOffset] = speed;
-			mSumWork = 0;
-			mSumDuration = 0;
+			mAccumWork = 0;
+			mAccumDuration = 0;
 
 			repaint();
 		}
@@ -89,7 +108,7 @@ public class SpeedGraph extends JComponent
 
 	public synchronized long remainingWork()
 	{
-		return mTotalWork - mAccumWork;
+		return mTotalWork - mSumWork;
 	}
 
 
@@ -143,55 +162,60 @@ public class SpeedGraph extends JComponent
 
 	private synchronized void drawGraph(Graphics2D g, int aWidth, int aHeight)
 	{
-		int w = mResolution;
-
-		int[] xp = new int[mOffset + 4];
-		int[] yp = new int[mOffset + 4];
-		int[] tmp = new int[mOffset + 4];
-
-		double lastSpeed = 0;
-		int i = 0;
-		for (; i < (mFinished ? mOffset + 1 : mOffset); i++)
+		if (mOffset == 0)
 		{
-			xp[i] = i * aWidth / (w - 1);
+			return;
+		}
 
+		int[] xp = new int[mOffset + 3];
+		int[] yp = new int[mOffset + 3];
+		double[] tmp = new double[mOffset];
+		
+		int limit = mOffset;
+
+		double last = 0;
+
+		for (int i = 0; i < limit; i++)
+		{
+			xp[i] = i * aWidth / (mResolution - 1);
+		}
+
+		for (int i = 0; i < limit; i++)
+		{
 			double s = mSpeed[i];
+
 			if (s < 0)
 			{
-				s = lastSpeed;
-				System.out.println("#");
+				s = last;
 			}
 
-			tmp[i] = aHeight - (int)(aHeight * s / mMax);
-			lastSpeed = s;
+			tmp[i] = s;
+			last = s;
 		}
 
-		int f = 100;
-		for (int j = 0; j < i; j++)
+		double max = 0;
+		for (int j = 0; j < limit; j++)
 		{
-			int s = 0;
-			for (int k = -f; k < 0; k++)
-			{
-				s += tmp[Math.min(Math.max(j + k, 0), i)];
-			}
-			yp[j] = s / f;
+			max = Math.max(max, tmp[j]);
 		}
 
-		if (i > 0)
+		for (int j = 0; j < limit; j++)
 		{
-			xp[i + 0] = xp[i - 1];
-			yp[i + 0] = aHeight;
-			xp[i + 1] = 0;
-			yp[i + 1] = aHeight;
-			xp[i + 2] = 0;
-			yp[i + 2] = yp[0];
-
-			g.setColor(mFillColor);
-			g.fillPolygon(xp, yp, i + 3);
-
-			g.setColor(mLineColor);
-			g.drawPolyline(xp, yp, i);
+			yp[j] = aHeight - (int)(tmp[j] * aHeight / max);
 		}
+
+		xp[limit + 0] = xp[limit - 1];
+		yp[limit + 0] = aHeight;
+		xp[limit + 1] = 0;
+		yp[limit + 1] = aHeight;
+		xp[limit + 2] = 0;
+		yp[limit + 2] = yp[0];
+
+		g.setColor(mFillColor);
+		g.fillPolygon(xp, yp, limit + 3);
+
+		g.setColor(mLineColor);
+		g.drawPolyline(xp, yp, limit);
 	}
 
 
@@ -213,6 +237,8 @@ public class SpeedGraph extends JComponent
 			{
 				totalWork += file.length();
 			}
+			
+//			long totalWork = 10000000;
 
 			SpeedGraph graph = new SpeedGraph(totalWork);
 			graph.setBackground(new Color(240, 240, 240));
@@ -225,6 +251,12 @@ public class SpeedGraph extends JComponent
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setVisible(true);
 
+//			Random rnd = new Random(0);
+//			while (graph.remainingWork() > 0)
+//			{
+//				graph.addWork((1<<rnd.nextInt(25))+rnd.nextInt(1000), 100);
+//			}
+			
 			byte[] buffer = new byte[16384];
 
 			for (File file : files)
@@ -241,7 +273,7 @@ public class SpeedGraph extends JComponent
 							break;
 						}
 
-						out.write(buffer, 0, len);
+//						out.write(buffer, 0, len);
 
 						duration = System.nanoTime() - duration;
 
