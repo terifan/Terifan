@@ -8,32 +8,36 @@ import java.awt.RenderingHints;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Map.Entry;
-import java.util.TreeMap;
+import java.util.Arrays;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
 
-public class ProgressGraph extends JComponent
+public class SpeedGraph extends JComponent
 {
-	private long mAccumWork;
 	private long mTotalWork;
-	private long mRemaining;
-	private TreeMap<Long, Double> mTimeForUnit;
+	private long mAccumWork;
+	private int mResolution;
+	private long mSumWork;
+	private long mSumDuration;
+	private int mOffset;
+	private double mMax;
+	private boolean mFinished;
+	private double[] mSpeed;
 
 	private Color mLineColor = new Color(17, 125, 187);
 	private Color mFillColor = new Color(17, 125, 187, 32);
 	private Color mGridColor = new Color(241, 246, 250);
-	private int mGridSize = 8;
 
-	public ProgressGraph(long aTotalWork)
+
+	public SpeedGraph(long aTotalWork)
 	{
+		mResolution = 1 + 1000;
+
 		mTotalWork = aTotalWork;
 
-		mTimeForUnit = new TreeMap<>();
-		mRemaining = mTotalWork;
+		mSpeed = new double[mResolution];
+		Arrays.fill(mSpeed, -1.0);
 
 		setBackground(Color.WHITE);
 	}
@@ -41,16 +45,51 @@ public class ProgressGraph extends JComponent
 
 	public synchronized void addWork(long aDuration, long aWork)
 	{
-		mTimeForUnit.put(mAccumWork, aWork / (double)aDuration);
+		int x = (int)(mResolution * mAccumWork / mTotalWork);
+
+		if (x != mOffset)
+		{
+			saveValue();
+		}
+
+		mSumWork += aWork;
+		mSumDuration += aDuration;
+		mOffset = x;
 
 		mAccumWork += aWork;
-		mRemaining -= aWork;
+	}
+
+
+	public synchronized void finish()
+	{
+		mFinished = true;
+		mOffset = mResolution - 1;
+
+		saveValue();
+	}
+
+
+	private void saveValue()
+	{
+		if (mSumDuration > 0)
+		{
+			double speed = mSumWork / (double)mSumDuration;
+
+			System.out.println(mOffset + " " + mSumWork + " " + mSumDuration + " " + speed * 1000000000 / 1024 / 1024);
+
+			mMax = Math.max(mMax, speed);
+			mSpeed[mOffset] = speed;
+			mSumWork = 0;
+			mSumDuration = 0;
+
+			repaint();
+		}
 	}
 
 
 	public synchronized long remainingWork()
 	{
-		return mRemaining;
+		return mTotalWork - mAccumWork;
 	}
 
 
@@ -69,38 +108,34 @@ public class ProgressGraph extends JComponent
 	@Override
 	protected void paintComponent(Graphics aGraphics)
 	{
-		int x = 4;
-		int y = 4;
+		int x = 0;
+		int y = 0;
 		int w = getWidth();
 		int h = getHeight();
-		int w1 = w - x;
-		int h1 = h - y;
 
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setColor(getBackground());
 		g.fillRect(0, 0, w, h);
 
-		drawGrid(g, w1, h1);
-		drawGraph(g, w1, h1);
+		drawGrid(g, w, h);
+		drawGraph(g, w, h);
 	}
 
 
 	private void drawGrid(Graphics2D g, int aWidth, int aHeight)
 	{
-		double stepSize = aWidth / 10;
-
 		g.setColor(mGridColor);
 
-		for (int i = 0; i <= aHeight / mGridSize; i++)
+		for (int y = 0; y < 10; y++)
 		{
-			int iy = (int)(i * aHeight / (double)(aHeight / mGridSize));
+			int iy = (int)(y * aHeight / 10);
 			g.drawLine(0, iy, aWidth, iy);
 		}
 
-		for (int x = 0; x < 40; x++)
+		for (int x = 0; x < 10; x++)
 		{
-			int ix = (int)(x * stepSize);
+			int ix = (int)(x * aWidth / 10);
 			g.drawLine(ix, 0, ix, aHeight);
 		}
 	}
@@ -108,51 +143,55 @@ public class ProgressGraph extends JComponent
 
 	private synchronized void drawGraph(Graphics2D g, int aWidth, int aHeight)
 	{
-		int W = aWidth;
+		int w = mResolution;
 
-		TreeMap<Integer, Double> xy = new TreeMap<>();
+		int[] xp = new int[mOffset + 4];
+		int[] yp = new int[mOffset + 4];
+		int[] tmp = new int[mOffset + 4];
 
-		double[] values = new double[W];
-		int[] count = new int[W];
-
-		double max = 0;
-
-		for (Entry<Long, Double> entry : mTimeForUnit.entrySet())
-		{
-			int x = (int)(entry.getKey() * W / mTotalWork / 5) * 5;
-
-			values[x] += entry.getValue();
-			count[x]++;
-
-			xy.put(x, values[x] / count[x]);
-
-			max = Math.max(max, values[x] / count[x]);
-		}
-
-		W = xy.size();
-
-		int[] xp = new int[xy.size() + 3];
-		int[] yp = new int[xy.size() + 3];
-
+		double lastSpeed = 0;
 		int i = 0;
-		for (Entry<Integer, Double> entry : xy.entrySet())
+		for (; i < (mFinished ? mOffset + 1 : mOffset); i++)
 		{
-			xp[i] = entry.getKey();
-			yp[i] = aHeight - (int)(aHeight * entry.getValue() / max);
-			i++;
+			xp[i] = i * aWidth / (w - 1);
+
+			double s = mSpeed[i];
+			if (s < 0)
+			{
+				s = lastSpeed;
+				System.out.println("#");
+			}
+
+			tmp[i] = aHeight - (int)(aHeight * s / mMax);
+			lastSpeed = s;
 		}
 
-		xp[W + 0] = xp[W - 1];
-		yp[W + 0] = aHeight;
-		xp[W + 1] = 0;
-		yp[W + 1] = aHeight;
-		xp[W + 2] = 0;
-		yp[W + 2] = yp[0];
+		int f = 100;
+		for (int j = 0; j < i; j++)
+		{
+			int s = 0;
+			for (int k = -f; k < 0; k++)
+			{
+				s += tmp[Math.min(Math.max(j + k, 0), i)];
+			}
+			yp[j] = s / f;
+		}
 
-		g.setColor(mFillColor);
-		g.fillPolygon(xp, yp, xp.length);
-		g.setColor(mLineColor);
-		g.drawPolyline(xp, yp, xp.length - 3);
+		if (i > 0)
+		{
+			xp[i + 0] = xp[i - 1];
+			yp[i + 0] = aHeight;
+			xp[i + 1] = 0;
+			yp[i + 1] = aHeight;
+			xp[i + 2] = 0;
+			yp[i + 2] = yp[0];
+
+			g.setColor(mFillColor);
+			g.fillPolygon(xp, yp, i + 3);
+
+			g.setColor(mLineColor);
+			g.drawPolyline(xp, yp, i);
+		}
 	}
 
 
@@ -167,7 +206,7 @@ public class ProgressGraph extends JComponent
 	{
 		try
 		{
-			File[] files = new File("D:\\tmp\\in").listFiles(e->e.isFile());
+			File[] files = new File("D:\\tmp\\in").listFiles(e -> e.isFile());
 
 			long totalWork = 0;
 			for (File file : files)
@@ -175,7 +214,7 @@ public class ProgressGraph extends JComponent
 				totalWork += file.length();
 			}
 
-			ProgressGraph graph = new ProgressGraph(totalWork);
+			SpeedGraph graph = new SpeedGraph(totalWork);
 			graph.setBackground(new Color(240, 240, 240));
 			graph.setGridColor(new Color(221, 226, 230));
 
@@ -186,7 +225,7 @@ public class ProgressGraph extends JComponent
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setVisible(true);
 
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[16384];
 
 			for (File file : files)
 			{
@@ -207,10 +246,11 @@ public class ProgressGraph extends JComponent
 						duration = System.nanoTime() - duration;
 
 						graph.addWork(duration, len);
-						graph.repaint();
 					}
 				}
 			}
+
+			graph.finish();
 		}
 		catch (Throwable e)
 		{
