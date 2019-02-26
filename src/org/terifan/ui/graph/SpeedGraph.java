@@ -48,24 +48,24 @@ public class SpeedGraph extends JComponent
 		int x0 = (int)(mResolution * mSumWork / mTotalWork);
 		int x1 = (int)(mResolution * (mSumWork + aWork) / mTotalWork);
 
-		if (x0 != x1)
-		{
-			long bs = mTotalWork / mResolution;
-
-			if (bs > 0)
-			{
-				long rw = (mSumWork + aWork) % bs;
-
-				if (rw < aWork)
-				{
-					long rd = aDuration * rw / aWork;
-
-					addWork(aDuration - rd, aWork - rw);
-					addWork(rd, rw);
-					return;
-				}
-			}
-		}
+//		if (x0 != x1)
+//		{
+//			long bs = mTotalWork / mResolution;
+//
+//			if (bs > 0)
+//			{
+//				long rw = (mSumWork + aWork) % bs;
+//
+//				if (rw > 0 && rw < aWork)
+//				{
+//					long rd = aDuration * rw / aWork;
+//
+//					addWork(aDuration - rd, aWork - rw);
+//					addWork(rd, rw);
+//					return;
+//				}
+//			}
+//		}
 
 		if (x0 != mOffset)
 		{
@@ -186,7 +186,8 @@ public class SpeedGraph extends JComponent
 
 			if (s < 0)
 			{
-				s = last;
+//				s = last;
+				s = 0;
 			}
 
 			tmp[i] = s;
@@ -230,15 +231,15 @@ public class SpeedGraph extends JComponent
 	{
 		try
 		{
-			File[] files = new File("D:\\tmp\\in").listFiles(e -> e.isFile());
-
-			long totalWork = 0;
-			for (File file : files)
-			{
-				totalWork += file.length();
-			}
+//			File[] files = new File("D:\\tmp\\in").listFiles(e -> e.isFile());
+//
+//			long totalWork = 0;
+//			for (File file : files)
+//			{
+//				totalWork += file.length();
+//			}
 			
-//			long totalWork = 10000000;
+			long totalWork = 10000000;
 
 			SpeedGraph graph = new SpeedGraph(totalWork);
 			graph.setBackground(new Color(240, 240, 240));
@@ -251,36 +252,37 @@ public class SpeedGraph extends JComponent
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setVisible(true);
 
-//			Random rnd = new Random(0);
-//			while (graph.remainingWork() > 0)
-//			{
-//				graph.addWork((1<<rnd.nextInt(25))+rnd.nextInt(1000), 100);
-//			}
-			
-			byte[] buffer = new byte[16384];
-
-			for (File file : files)
+			Random rnd = new Random(0);
+			while (graph.remainingWork() > 0)
 			{
-				try (FileInputStream in = new FileInputStream(file); FileOutputStream out = new FileOutputStream(new File("d:\\tmp\\out", file.getName())))
-				{
-					for (;;)
-					{
-						long duration = System.nanoTime();
-						int len = in.read(buffer);
-
-						if (len == -1)
-						{
-							break;
-						}
-
-//						out.write(buffer, 0, len);
-
-						duration = System.nanoTime() - duration;
-
-						graph.addWork(duration, len);
-					}
-				}
+//				graph.addWork((1<<rnd.nextInt(25))+rnd.nextInt(1000), 100);
+				graph.addWork(1000, 100000);
 			}
+			
+//			byte[] buffer = new byte[16384];
+//
+//			for (File file : files)
+//			{
+//				try (FileInputStream in = new FileInputStream(file); FileOutputStream out = new FileOutputStream(new File("d:\\tmp\\out", file.getName())))
+//				{
+//					for (;;)
+//					{
+//						long duration = System.nanoTime();
+//						int len = in.read(buffer);
+//
+//						if (len == -1)
+//						{
+//							break;
+//						}
+//
+////						out.write(buffer, 0, len);
+//
+//						duration = System.nanoTime() - duration;
+//
+//						graph.addWork(duration, len);
+//					}
+//				}
+//			}
 
 			graph.finish();
 		}
