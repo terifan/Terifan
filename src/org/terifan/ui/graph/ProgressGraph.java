@@ -9,31 +9,30 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
 
 public class ProgressGraph extends JComponent
 {
-	private final static SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
-
 	private long mAccumWork;
 	private long mTotalWork;
 	private long mRemaining;
-	private long[] mTimeForUnit;
+	private TreeMap<Long, Double> mTimeForUnit;
 
 	private Color mLineColor = new Color(17, 125, 187);
 	private Color mFillColor = new Color(17, 125, 187, 32);
 	private Color mGridColor = new Color(241, 246, 250);
 	private int mGridSize = 8;
 
-	private static final int B = 100;
-
 	public ProgressGraph(long aTotalWork)
 	{
 		mTotalWork = aTotalWork;
 
-		mTimeForUnit = new long[B];
+		mTimeForUnit = new TreeMap<>();
 		mRemaining = mTotalWork;
 
 		setBackground(Color.WHITE);
@@ -42,15 +41,13 @@ public class ProgressGraph extends JComponent
 
 	public synchronized void addWork(long aDuration, long aWork)
 	{
-		int bucket = (int)(mAccumWork * B / mTotalWork);
-
-		mTimeForUnit[bucket] += aDuration;
+		mTimeForUnit.put(mAccumWork, aWork / (double)aDuration);
 
 		mAccumWork += aWork;
 		mRemaining -= aWork;
 	}
 
-	
+
 	public synchronized long remainingWork()
 	{
 		return mRemaining;
@@ -109,40 +106,40 @@ public class ProgressGraph extends JComponent
 	}
 
 
-	private void drawGraph(Graphics2D g, int aWidth, int aHeight)
+	private synchronized void drawGraph(Graphics2D g, int aWidth, int aHeight)
 	{
-		int W = B;
+		int W = aWidth;
 
-		int[] xp = new int[W + 3];
-		int[] yp = new int[W + 3];
+		TreeMap<Integer, Double> xy = new TreeMap<>();
 
-		long slowestUnit = 1;
+		double[] values = new double[W];
+		int[] count = new int[W];
 
-		for (int i = 0; i < W; i++)
+		double max = 0;
+
+		for (Entry<Long, Double> entry : mTimeForUnit.entrySet())
 		{
-			xp[i] = i * aWidth / W;
+			int x = (int)(entry.getKey() * W / mTotalWork / 5) * 5;
 
-			if (mTimeForUnit[i] > slowestUnit)
-			{
-				slowestUnit = mTimeForUnit[i];
-			}
+			values[x] += entry.getValue();
+			count[x]++;
+
+			xy.put(x, values[x] / count[x]);
+
+			max = Math.max(max, values[x] / count[x]);
 		}
 
-		double scale = aHeight / (double)slowestUnit;
+		W = xy.size();
 
-		for (int i = 0; i < W; i++)
+		int[] xp = new int[xy.size() + 3];
+		int[] yp = new int[xy.size() + 3];
+
+		int i = 0;
+		for (Entry<Integer, Double> entry : xy.entrySet())
 		{
-			long speed = mAccumWork mTimeForUnit[i] * scale;
-
-			System.out.println(mTimeForUnit[i]+" "+speed);
-
-			yp[i] = (int)speed;
-			
-		}
-
-		for (int i = 0; i < W; i++)
-		{
-			yp[i] = aHeight - yp[i];
+			xp[i] = entry.getKey();
+			yp[i] = aHeight - (int)(aHeight * entry.getValue() / max);
+			i++;
 		}
 
 		xp[W + 0] = xp[W - 1];
@@ -162,7 +159,7 @@ public class ProgressGraph extends JComponent
 	@Override
 	public Dimension getPreferredSize()
 	{
-		return new Dimension(B, 80);
+		return new Dimension(1000, 80);
 	}
 
 
@@ -189,7 +186,7 @@ public class ProgressGraph extends JComponent
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setVisible(true);
 
-			byte[] buffer = new byte[4096];
+			byte[] buffer = new byte[1024];
 
 			for (File file : files)
 			{
@@ -197,17 +194,17 @@ public class ProgressGraph extends JComponent
 				{
 					for (;;)
 					{
-						long duration = System.currentTimeMillis();
+						long duration = System.nanoTime();
 						int len = in.read(buffer);
-						
+
 						if (len == -1)
 						{
 							break;
 						}
-						
+
 						out.write(buffer, 0, len);
-						
-						duration = System.currentTimeMillis() - duration;
+
+						duration = System.nanoTime() - duration;
 
 						graph.addWork(duration, len);
 						graph.repaint();
