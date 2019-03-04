@@ -32,16 +32,28 @@ public class SpeedGraph extends JComponent
 
 	public SpeedGraph(long aTotalWork)
 	{
-		mResolution = 1 + 1000;
+		restart(aTotalWork);
+
+		super.setBackground(Color.WHITE);
+	}
+
+	
+	public void restart(long aTotalWork)
+	{
+		mResolution = 1 + 200;
+		mTotalWork = 0;
+		mSumWork = 0;
+		mAccumWork = 0;
+		mAccumDuration = 0;
+		mOffset = 0;
+		mMax = 0;
 
 		mTotalWork = aTotalWork;
 
 		mSpeed = new double[mResolution];
 		Arrays.fill(mSpeed, -1.0);
-
-		super.setBackground(Color.WHITE);
 	}
-
+	
 
 	public synchronized void addWork(long aDuration, long aWork)
 	{
@@ -186,8 +198,8 @@ public class SpeedGraph extends JComponent
 
 			if (s < 0)
 			{
-//				s = last;
-				s = 0;
+				s = last;
+//				s = 0;
 			}
 
 			tmp[i] = s;
