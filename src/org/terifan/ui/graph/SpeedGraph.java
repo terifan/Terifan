@@ -157,14 +157,16 @@ public class SpeedGraph extends JComponent
 	private void drawGrid(Graphics2D g, int aWidth, int aHeight)
 	{
 		g.setColor(mGridColor);
+		aWidth--;
+		aHeight--;
 
-		for (int y = 0; y < 10; y++)
+		for (int y = 0; y <= 10; y++)
 		{
 			int iy = (int)(y * aHeight / 10);
 			g.drawLine(0, iy, aWidth, iy);
 		}
 
-		for (int x = 0; x < 10; x++)
+		for (int x = 0; x <= 10; x++)
 		{
 			int ix = (int)(x * aWidth / 10);
 			g.drawLine(ix, 0, ix, aHeight);
@@ -174,7 +176,7 @@ public class SpeedGraph extends JComponent
 
 	private synchronized void drawGraph(Graphics2D g, int aWidth, int aHeight)
 	{
-		if (mOffset == 0)
+		if (mOffset <= 0)
 		{
 			return;
 		}
