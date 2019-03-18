@@ -23,7 +23,7 @@ public final class LongArray implements Cloneable, Iterable<Long>
 
 	public LongArray(long[] aValues)
 	{
-		this(aValues, aValues.length);
+		this(aValues == null ? new long[0] : aValues, aValues == null ? 0 : aValues.length);
 	}
 
 
