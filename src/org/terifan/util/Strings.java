@@ -1,5 +1,6 @@
 package org.terifan.util;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -281,6 +282,26 @@ public class Strings
 			sb.append(item);
 		}
 		return sb.toString();
+	}
+
+
+	public static String arrayToString(Object aArray)
+	{
+		if (aArray != null && aArray.getClass().isArray())
+		{
+			StringBuilder sb = new StringBuilder("[");
+			for (int i = 0; i < Array.getLength(aArray); i++)
+			{
+				if (i > 0)
+				{
+					sb.append(',');
+				}
+				sb.append(Array.get(aArray, i));
+			}
+			return sb.append("]").toString();
+		}
+		
+		return asString(aArray);
 	}
 
 

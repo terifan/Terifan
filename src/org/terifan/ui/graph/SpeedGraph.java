@@ -32,16 +32,28 @@ public class SpeedGraph extends JComponent
 
 	public SpeedGraph(long aTotalWork)
 	{
-		mResolution = 1 + 1000;
+		restart(aTotalWork);
+
+		super.setBackground(Color.WHITE);
+	}
+
+	
+	public void restart(long aTotalWork)
+	{
+		mResolution = 1 + 200;
+		mTotalWork = 0;
+		mSumWork = 0;
+		mAccumWork = 0;
+		mAccumDuration = 0;
+		mOffset = 0;
+		mMax = 0;
 
 		mTotalWork = aTotalWork;
 
 		mSpeed = new double[mResolution];
 		Arrays.fill(mSpeed, -1.0);
-
-		super.setBackground(Color.WHITE);
 	}
-
+	
 
 	public synchronized void addWork(long aDuration, long aWork)
 	{
@@ -145,14 +157,16 @@ public class SpeedGraph extends JComponent
 	private void drawGrid(Graphics2D g, int aWidth, int aHeight)
 	{
 		g.setColor(mGridColor);
+		aWidth--;
+		aHeight--;
 
-		for (int y = 0; y < 10; y++)
+		for (int y = 0; y <= 10; y++)
 		{
 			int iy = (int)(y * aHeight / 10);
 			g.drawLine(0, iy, aWidth, iy);
 		}
 
-		for (int x = 0; x < 10; x++)
+		for (int x = 0; x <= 10; x++)
 		{
 			int ix = (int)(x * aWidth / 10);
 			g.drawLine(ix, 0, ix, aHeight);
@@ -162,7 +176,7 @@ public class SpeedGraph extends JComponent
 
 	private synchronized void drawGraph(Graphics2D g, int aWidth, int aHeight)
 	{
-		if (mOffset == 0)
+		if (mOffset <= 0)
 		{
 			return;
 		}
@@ -186,8 +200,8 @@ public class SpeedGraph extends JComponent
 
 			if (s < 0)
 			{
-//				s = last;
-				s = 0;
+				s = last;
+//				s = 0;
 			}
 
 			tmp[i] = s;
