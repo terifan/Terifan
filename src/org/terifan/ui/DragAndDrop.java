@@ -1,6 +1,7 @@
 package org.terifan.ui;
 
-import java.awt.Color;
+import java.awt.Container;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -19,10 +20,17 @@ import java.awt.dnd.DropTargetListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTree;
 import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import org.terifan.util.log.Log;
 
 
 /**
@@ -221,8 +229,8 @@ public abstract class DragAndDrop
 	public void dragExit(DropTargetEvent aDtde)
 	{
 	}
-	
-	
+
+
 	public void dragOver(DropTargetDragEvent aDtde)
 	{
 	}
@@ -232,7 +240,7 @@ public abstract class DragAndDrop
 	{
 	}
 
-	
+
 	/**
 	 * Return the type of data that can be dragged from the current location
 	 *
@@ -478,16 +486,24 @@ public abstract class DragAndDrop
 //				@Override
 //				public void drop(DropEvent aDropEvent)
 //				{
+//					DefaultMutableTreeNode data = (DefaultMutableTreeNode)aDropEvent.getTransferData();
+//
+//					if (data.getParent() != null)
+//					{
+//						((DefaultTreeModel)tree.getModel()).removeNodeFromParent(data);
+//					}
+//
 //					TreePath path = tree.getClosestPathForLocation(aDropEvent.getDropLocation().x, aDropEvent.getDropLocation().y);
+//
 //					DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode)path.getLastPathComponent();
-//					lastPathComponent.add(new DefaultMutableTreeNode(aDropEvent.getTransferData()));
+//					lastPathComponent.add(data);
 //					tree.expandPath(path);
 //				}
 //
 //				@Override
 //				public Object drag(Point aDragOrigin)
 //				{
-//					return tree.getClosestPathForLocation(aDragOrigin.x, aDragOrigin.y).getLastPathComponent().toString();
+//					return tree.getClosestPathForLocation(aDragOrigin.x, aDragOrigin.y).getLastPathComponent();
 //				}
 //
 //				@Override

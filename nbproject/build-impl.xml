@@ -28,9 +28,9 @@ is divided into following sections:
         </condition>
     </fail>
     <target depends="test,jar,javadoc" description="Build and test whole project." name="default"/>
-    <!-- 
+    <!--
                 ======================
-                INITIALIZATION SECTION 
+                INITIALIZATION SECTION
                 ======================
             -->
     <target name="-pre-init">
@@ -856,9 +856,6 @@ is divided into following sections:
             <attribute default="" name="stopclassname"/>
             <sequential>
                 <nbjpdastart addressproperty="jpda.address" name="@{name}" stopclassname="@{stopclassname}" transport="${debug-transport}">
-                    <modulepath>
-                        <path path="@{modulepath}"/>
-                    </modulepath>
                     <classpath>
                         <path path="@{classpath}"/>
                     </classpath>

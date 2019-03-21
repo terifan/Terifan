@@ -170,7 +170,7 @@ public class SpeedGraph extends JComponent
 		int[] xp = new int[mOffset + 3];
 		int[] yp = new int[mOffset + 3];
 		double[] tmp = new double[mOffset];
-		
+
 		int limit = mOffset;
 
 		double last = 0;
@@ -238,7 +238,7 @@ public class SpeedGraph extends JComponent
 //			{
 //				totalWork += file.length();
 //			}
-			
+
 			long totalWork = 10000000;
 
 			SpeedGraph graph = new SpeedGraph(totalWork);
@@ -258,7 +258,7 @@ public class SpeedGraph extends JComponent
 //				graph.addWork((1<<rnd.nextInt(25))+rnd.nextInt(1000), 100);
 				graph.addWork(1000, 100000);
 			}
-			
+
 //			byte[] buffer = new byte[16384];
 //
 //			for (File file : files)
