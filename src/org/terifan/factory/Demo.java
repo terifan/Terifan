@@ -7,19 +7,19 @@ public class Demo
 	{
 		try
 		{
-			Factory factory = new Factory();
-			factory.addNamedSupplier(Color.class, "border", () -> new Color(255, 0, 0));
-			factory.addNamedSupplier(Color.class, "background", () -> new Color(0, 255, 0));
-			factory.addNamedSupplier(Color.class, e -> e.equals("text") ? new Color(0, 0, 255) : e.equals("strange") ? new Color(123,57,204) : new Color(1,1,1));
-			factory.addDefaultSupplier(Color.class, () -> new Color(50, 150, 250));
-			factory.addTypeMapping(ColorSpace.class, RGBColorSpace.class);
-			factory.addDefaultSupplier(ColorSpace.class, () -> new ColorSpace());
+			Injector injector = new Injector();
+			injector.addNamedSupplier(Color.class, "border", () -> new Color(255, 0, 0));
+			injector.addNamedSupplier(Color.class, "background", () -> new Color(0, 255, 0));
+			injector.addNamedSupplier(Color.class, e -> e.equals("text") ? new Color(0, 0, 255) : e.equals("strange") ? new Color(123,57,204) : new Color(1,1,1));
+			injector.addDefaultSupplier(Color.class, () -> new Color(50, 150, 250));
+			injector.addTypeMapping(ColorSpace.class, RGBColorSpace.class);
+			injector.addDefaultSupplier(ColorSpace.class, () -> new ColorSpace());
 
-			ComponentByFields cls1 = factory.newInstance(ComponentByFields.class);
-			ComponentByConstructor cls2 = factory.newInstance(ComponentByConstructor.class);
-			ComponentBySetters cls3 = factory.newInstance(ComponentBySetters.class);
-			ComponentByInitializer cls4 = factory.newInstance(ComponentByInitializer.class);
-			ComponentByFactory cls5 = new ComponentByFactory(factory);
+			ComponentByFields cls1 = injector.getInstance(ComponentByFields.class);
+			ComponentByConstructor cls2 = injector.getInstance(ComponentByConstructor.class);
+			ComponentBySetters cls3 = injector.getInstance(ComponentBySetters.class);
+			ComponentByInitializer cls4 = injector.getInstance(ComponentByInitializer.class);
+			ComponentByFactory cls5 = new ComponentByFactory(injector);
 
 			System.out.println("fields: " + cls1);
 			System.out.println("constr: " + cls2);
@@ -27,7 +27,7 @@ public class Demo
 			System.out.println("initia: " + cls4);
 			System.out.println("factor: " + cls5);
 
-			System.out.println(factory.newInstance(ComponentByAllTypes.class));
+			System.out.println(injector.getInstance(ComponentByAllTypes.class));
 		}
 		catch (Throwable e)
 		{
@@ -77,11 +77,11 @@ public class Demo
 
 		private Color mStrangeColor;
 
-		public ComponentByFactory(Factory aFactory)
+		public ComponentByFactory(Injector aInjector)
 		{
-			aFactory.prepareInstance(this);
+			aInjector.injectMembers(this);
 
-			mStrangeColor = aFactory.newInstance(Color.class);
+			mStrangeColor = aInjector.getInstance(Color.class);
 		}
 
 		@Override

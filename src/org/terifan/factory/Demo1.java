@@ -1,6 +1,7 @@
 package org.terifan.factory;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -11,14 +12,21 @@ import javax.swing.JTextArea;
 
 public class Demo1
 {
-	public static void main(String ... args)
+	public static void main(String... args)
 	{
 		try
 		{
-			Factory factory = new Factory();
-			factory.addSingleton(UserService.class, new MockUserService(new User("dave", "sfasdasdadad adasdasdasd"), new User("steve", "fhtfh fthfhf htyy")));
+			Injector injector = new Injector();
 
-			JPanel panel = factory.newInstance(UserPanel.class);
+			// normal running
+//			injector.addTypeMapping(UserService.class, UserService.class);
+
+			// when developing & testing
+			injector.addSingleton(UserService.class, new MockUserService(new User("dave", "asasasasas asasasasas"), new User("steve", "ghghghghgh ghghghgh ghghghgh")));
+
+			injector.addSingleton(Conf.class, Conf.class);
+
+			UserPanel panel = injector.getInstance(UserPanel.class);
 
 			JFrame frame = new JFrame();
 			frame.add(panel);
@@ -33,20 +41,28 @@ public class Demo1
 		}
 	}
 
+	static class Conf
+	{
+		Color text = Color.WHITE;
+		Color background = Color.BLACK;
+	}
+
 	static class UserPanel extends JPanel
 	{
-		private final UserService mUserService;
+		private UserService mUserService;
 		private User mUser;
 
-		@Inject
-		public UserPanel(UserService aUserService)
-		{
-			super(new BorderLayout());
 
+		@Inject
+		public UserPanel(Conf aConf, UserService aUserService)
+		{
 			mUserService = aUserService;
 
 			JList<User> list = new JList<>(mUserService.getUsers());
 			JTextArea text = new JTextArea();
+
+			text.setForeground(aConf.text);
+			text.setBackground(aConf.background);
 
 			list.addListSelectionListener(aEvent ->
 			{
@@ -61,47 +77,65 @@ public class Demo1
 				text.setText(mUser.mDescription);
 			});
 
-			super.add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(list), new JScrollPane(text)));
+			super.setLayout(new BorderLayout());
+			super.add(new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(list), new JScrollPane(text)));
 		}
 	}
 
-	static class MockUserService implements UserService
+
+	static class MockUserService extends UserService
 	{
 		User[] mUsers;
+
+
 		public MockUserService(User... aUsers)
 		{
-			this.mUsers = aUsers;
+			mUsers = aUsers;
 		}
+
+
 		@Override
 		public User[] getUsers()
 		{
 			return mUsers;
 		}
 
+
 		@Override
 		public void save(User aUser)
 		{
-			System.out.println("saved user: " + aUser+"="+aUser.mDescription);
+			System.out.println("saved user: " + aUser + "=" + aUser.mDescription);
 		}
 	}
 
-	static interface UserService
-	{
-		User[] getUsers();
 
-		void save(User aUser);
+	static class UserService
+	{
+		User[] getUsers()
+		{
+			throw new UnsupportedOperationException();
+		}
+
+
+		void save(User aUser)
+		{
+			throw new UnsupportedOperationException();
+		}
 	}
+
 
 	static class User
 	{
 		String mName;
 		String mDescription;
 
+
 		public User(String aName, String aDescription)
 		{
-			this.mName = aName;
-			this.mDescription = aDescription;
+			mName = aName;
+			mDescription = aDescription;
 		}
+
 
 		@Override
 		public String toString()

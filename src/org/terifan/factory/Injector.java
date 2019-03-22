@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 
-public class Factory
+public class Injector
 {
 	private HashMap<Class, Object> mSingletons;
 	private HashMap<Class, Class> mTypeMappings;
@@ -19,7 +19,7 @@ public class Factory
 	private HashMap<Class, Function<String, Object>> mLookupMappings;
 
 
-	public Factory()
+	public Injector()
 	{
 		mSingletons = new HashMap<>();
 		mTypeMappings = new HashMap<>();
@@ -29,6 +29,17 @@ public class Factory
 	}
 
 
+	/**
+	 * Map a single instance of an Object to a type.
+	 *
+	 * If the instance is a Class object then a new instance is created using that type on the first request and replacing the mapping of
+	 * that type result in all future requests to return this single instance.
+	 *
+	 * @param aFrom
+	 *   type to map from
+	 * @param aTo
+	 *   instance or class to map to
+	 */
 	public void addSingleton(Class aFrom, Object aTo)
 	{
 		mSingletons.put(aFrom, aTo);
@@ -59,20 +70,54 @@ public class Factory
 	}
 
 
-	public <T> T newInstance(Class<T> aType)
+	/**
+	 * Returns the provider used to obtain instances for the given type.
+	 */
+	public <T>Provider<T> getProvider(Class<T> aType)
+	{
+		return ()->{
+			try
+			{
+				return getInstance(aType);
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception | Error e)
+			{
+				throw new IllegalStateException(e);
+			}
+		};
+	}
+
+
+	/**
+	 * Returns the appropriate instance for the given injection type; equivalent to getProvider(type).get().
+	 */
+	public <T> T getInstance(Class<T> aType)
 	{
 		if (aType == null)
 		{
 			throw new IllegalArgumentException("Provided argument is null.");
 		}
 
-		if (mSingletons.containsKey(aType))
-		{
-			return (T)mSingletons.get(aType);
-		}
-
 		try
 		{
+			if (mSingletons.containsKey(aType))
+			{
+				synchronized (this)
+				{
+					Object tmp = mSingletons.get(aType);
+					if (tmp instanceof Class)
+					{
+						tmp = (T)((Class)tmp).newInstance();
+						mSingletons.put(aType, tmp);
+					}
+					return (T)tmp;
+				}
+			}
+
 			Class newType = mTypeMappings.getOrDefault(aType, aType);
 
 			if (newType == null)
@@ -115,7 +160,7 @@ public class Factory
 
 			if (instance != null)
 			{
-				prepareInstance(instance);
+				injectMembers(instance);
 			}
 
 			return instance;
@@ -127,7 +172,10 @@ public class Factory
 	}
 
 
-	public void prepareInstance(Object aInstance)
+	/**
+	 * Injects dependencies into the fields and methods of instance.
+	 */
+	public void injectMembers(Object aInstance)
 	{
 		try
 		{
@@ -145,11 +193,11 @@ public class Factory
 
 						if (mappedType != null)
 						{
-							field.set(aInstance, newInstance(mappedType));
+							field.set(aInstance, getInstance(mappedType));
 						}
 						else if (!field.getType().isPrimitive())
 						{
-							field.set(aInstance, newInstance(field.getType()));
+							field.set(aInstance, getInstance(field.getType()));
 						}
 					}
 					else
@@ -158,7 +206,7 @@ public class Factory
 
 						while (mappedType instanceof Class)
 						{
-							mappedType = newInstance((Class)mappedType);
+							mappedType = getInstance((Class)mappedType);
 						}
 
 						field.set(aInstance, mappedType);
@@ -233,11 +281,11 @@ public class Factory
 
 				if (mappedType != null)
 				{
-					values[i] = newInstance(mappedType);
+					values[i] = getInstance(mappedType);
 				}
 				else if (!paramType.isPrimitive())
 				{
-					values[i] = newInstance(paramType);
+					values[i] = getInstance(paramType);
 				}
 			}
 			else
@@ -246,7 +294,7 @@ public class Factory
 
 				if (mappedType instanceof Class)
 				{
-					values[i] = newInstance((Class)mappedType);
+					values[i] = getInstance((Class)mappedType);
 				}
 				else
 				{
