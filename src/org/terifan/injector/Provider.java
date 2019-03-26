@@ -1,4 +1,4 @@
-package org.terifan.factory;
+package org.terifan.injector;
 
 
 public interface Provider<T>

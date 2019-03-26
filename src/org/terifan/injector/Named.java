@@ -1,4 +1,4 @@
-package org.terifan.factory;
+package org.terifan.injector;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import java.lang.annotation.Retention;

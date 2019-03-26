@@ -1,4 +1,4 @@
-package org.terifan.factory;
+package org.terifan.injector;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 
-public class Injector
+public class InjectorOLD
 {
 	private HashMap<Class, Object> mSingletons;
 	private HashMap<Class, Class> mTypeMappings;
@@ -19,7 +19,7 @@ public class Injector
 	private HashMap<Class, Function<String, Object>> mLookupMappings;
 
 
-	public Injector()
+	public InjectorOLD()
 	{
 		mSingletons = new HashMap<>();
 		mTypeMappings = new HashMap<>();
@@ -40,31 +40,31 @@ public class Injector
 	 * @param aTo
 	 *   instance or class to map to
 	 */
-	public void addSingleton(Class aFrom, Object aTo)
+	public void bindSingleton(Class aFrom, Object aTo)
 	{
 		mSingletons.put(aFrom, aTo);
 	}
 
 
-	public void addTypeMapping(Class aFrom, Class aTo)
+	public void bind(Class aFrom, Class aTo)
 	{
 		mTypeMappings.put(aFrom, aTo);
 	}
 
 
-	public void addDefaultSupplier(Class aFrom, Supplier<Object> aTo)
+	public void bindSupplier(Class aFrom, Supplier<Object> aTo)
 	{
 		mDefaultMappings.put(aFrom, aTo);
 	}
 
 
-	public void addNamedSupplier(Class aFrom, String aName, Supplier<Object> aTo)
+	public void bindNamedSupplier(Class aFrom, String aName, Supplier<Object> aTo)
 	{
 		mNamedMappings.computeIfAbsent(aFrom, e -> new HashMap<>()).put(aName, aTo);
 	}
 
 
-	public void addNamedSupplier(Class aFrom, Function<String, Object> aTo)
+	public void bindNamedSupplier(Class aFrom, Function<String, Object> aTo)
 	{
 		mLookupMappings.put(aFrom, aTo);
 	}

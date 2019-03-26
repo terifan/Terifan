@@ -1,4 +1,4 @@
-package org.terifan.factory;
+package org.terifan.injector;
 
 
 public class Demo
@@ -7,13 +7,13 @@ public class Demo
 	{
 		try
 		{
-			Injector injector = new Injector();
-			injector.addNamedSupplier(Color.class, "border", () -> new Color(255, 0, 0));
-			injector.addNamedSupplier(Color.class, "background", () -> new Color(0, 255, 0));
-			injector.addNamedSupplier(Color.class, e -> e.equals("text") ? new Color(0, 0, 255) : e.equals("strange") ? new Color(123,57,204) : new Color(1,1,1));
-			injector.addDefaultSupplier(Color.class, () -> new Color(50, 150, 250));
-			injector.addTypeMapping(ColorSpace.class, RGBColorSpace.class);
-			injector.addDefaultSupplier(ColorSpace.class, () -> new ColorSpace());
+			InjectorOLD injector = new InjectorOLD();
+			injector.bindNamedSupplier(Color.class, "border", () -> new Color(255, 0, 0));
+			injector.bindNamedSupplier(Color.class, "background", () -> new Color(0, 255, 0));
+			injector.bindNamedSupplier(Color.class, e -> e.equals("text") ? new Color(0, 0, 255) : e.equals("strange") ? new Color(123,57,204) : new Color(1,1,1));
+			injector.bindSupplier(Color.class, () -> new Color(50, 150, 250));
+			injector.bind(ColorSpace.class, RGBColorSpace.class);
+			injector.bindSupplier(ColorSpace.class, () -> new ColorSpace());
 
 			ComponentByFields cls1 = injector.getInstance(ComponentByFields.class);
 			ComponentByConstructor cls2 = injector.getInstance(ComponentByConstructor.class);
@@ -77,7 +77,7 @@ public class Demo
 
 		private Color mStrangeColor;
 
-		public ComponentByFactory(Injector aInjector)
+		public ComponentByFactory(InjectorOLD aInjector)
 		{
 			aInjector.injectMembers(this);
 

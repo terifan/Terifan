@@ -1,4 +1,4 @@
-package org.terifan.factory;
+package org.terifan.injector;
 
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
@@ -13,7 +13,6 @@ import java.lang.annotation.Target;
 	{
 		METHOD, FIELD, CONSTRUCTOR
 	})
-public @interface Inject
+public @interface PostConstruct
 {
-	String value() default "";
 }

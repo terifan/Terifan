@@ -1,4 +1,4 @@
-package org.terifan.factory;
+package org.terifan.injector;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,15 +16,15 @@ public class Demo1
 	{
 		try
 		{
-			Injector injector = new Injector();
+			InjectorOLD injector = new InjectorOLD();
 
 			// normal running
-//			injector.addTypeMapping(UserService.class, UserService.class);
+//			injector.bindTypeMapping(UserService.class, UserService.class);
 
 			// when developing & testing
-			injector.addSingleton(UserService.class, new MockUserService(new User("dave", "asasasasas asasasasas"), new User("steve", "ghghghghgh ghghghgh ghghghgh")));
+			injector.bindSupplier(UserService.class, ()->new MockUserService(new User("dave", "asasasasas asasasasas"), new User("steve", "ghghghghgh ghghghgh ghghghgh")));
 
-			injector.addSingleton(Conf.class, Conf.class);
+			injector.bindSingleton(Style.class, StyleInverted.class);
 
 			UserPanel panel = injector.getInstance(UserPanel.class);
 
@@ -41,10 +41,25 @@ public class Demo1
 		}
 	}
 
-	static class Conf
+	static class Style
 	{
-		Color text = Color.WHITE;
-		Color background = Color.BLACK;
+		Color text;
+		Color background;
+
+		public Style()
+		{
+			this.background = Color.WHITE;
+			this.text = Color.BLACK;
+		}
+	}
+
+	static class StyleInverted extends Style
+	{
+		StyleInverted()
+		{
+			this.background = Color.BLACK;
+			this.text = Color.WHITE;
+		}
 	}
 
 	static class UserPanel extends JPanel
@@ -54,15 +69,15 @@ public class Demo1
 
 
 		@Inject
-		public UserPanel(Conf aConf, UserService aUserService)
+		public UserPanel(Style aStyle, UserService aUserService)
 		{
 			mUserService = aUserService;
 
 			JList<User> list = new JList<>(mUserService.getUsers());
 			JTextArea text = new JTextArea();
 
-			text.setForeground(aConf.text);
-			text.setBackground(aConf.background);
+			text.setForeground(aStyle.text);
+			text.setBackground(aStyle.background);
 
 			list.addListSelectionListener(aEvent ->
 			{
@@ -86,6 +101,11 @@ public class Demo1
 	static class MockUserService extends UserService
 	{
 		User[] mUsers;
+
+
+		public MockUserService()
+		{
+		}
 
 
 		public MockUserService(User... aUsers)
