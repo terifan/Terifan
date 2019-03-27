@@ -3,7 +3,6 @@ package org.terifan.injector;
 import org.terifan.util.Tuple;
 
 
-
 public class BindingBuilderScope<T> extends Factory<Object>
 {
 	private Injector mInjector;

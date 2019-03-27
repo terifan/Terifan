@@ -2,6 +2,7 @@ package org.terifan.injector;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.util.HashMap;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -26,26 +27,41 @@ public class Demo
 
 			injector.bind(Style.class).toInstance(new Style(Color.RED, Color.BLUE));
 
-			// bind()
-			// bind().asSingleton()
-			// bind().to()
-			// bind().to().asSingleton()
-			// bind().to().in()
-			// bind().to().in().asSingleton()
-			// bind().toInstance()
-			// bind().toInstance().in()
-			// bind().toProvider()
-			// bind().toProvider().in()
-			// bind().named()
-			// bind().named().asSingleton()
-			// bind().named().to()
-			// bind().named().to().asSingleton()
-			// bind().named().to().in()
-			// bind().named().to().in().asSingleton()
-			// bind().named().toInstance()
-			// bind().named().toInstance().in()
-			// bind().named().toProvider()
-			// bind().named().toProvider().in()
+			// BindingBuilder
+			// BindingBuilderTo
+			// BindingBuilderNamed
+			// BindingBuilderScope
+			// BindingBuilderInstance
+			// BindingBuilderProvider
+
+			Builder builder = new Builder();
+			builder.bind(Style.class);
+			builder.bind(Style.class).asSingleton();
+			builder.bind(Style.class).to(Style.class);
+			builder.bind(Style.class).to(Style.class).asSingleton();
+			builder.bind(Style.class).toInstance(injector);
+			builder.bind(Style.class).toProvider(()->injector);
+			builder.bind(Style.class).in(Style.class);
+			builder.bind(Style.class).in(Style.class).asSingleton();
+			builder.bind(Style.class).in(Style.class).to(Style.class);
+			builder.bind(Style.class).in(Style.class).to(Style.class).asSingleton();
+			builder.bind(Style.class).in(Style.class).toInstance(injector);
+			builder.bind(Style.class).in(Style.class).toProvider(()->injector);
+			builder.bind(Style.class).named("name");
+			builder.bind(Style.class).named("name").asSingleton();
+			builder.bind(Style.class).named("name").to(Style.class);
+			builder.bind(Style.class).named("name").to(Style.class).asSingleton();
+			builder.bind(Style.class).named("name").toInstance(injector);
+			builder.bind(Style.class).named("name").toProvider(()->injector);
+			builder.bind(Style.class).named("name").in(Style.class);
+			builder.bind(Style.class).named("name").in(Style.class).asSingleton();
+			builder.bind(Style.class).named("name").in(Style.class).to();
+			builder.bind(Style.class).named("name").in(Style.class).to().asSingleton();
+			builder.bind(Style.class).named("name").in(Style.class).toInstance();
+			builder.bind(Style.class).named("name").in(Style.class).toProvider();
+
+			builder.getInstance(UserPanel.class);
+
 
 			UserPanel panel = injector.getInstance(UserPanel.class);
 

@@ -3,7 +3,6 @@ package org.terifan.injector;
 import java.lang.reflect.InvocationTargetException;
 
 
-
 public class BindingBuilderNamed<T> extends Factory<T>
 {
 	private Injector mInjector;
