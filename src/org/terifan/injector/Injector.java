@@ -124,43 +124,60 @@ public class Injector
 	{
 		try
 		{
-			for (Field field : aInstance.getClass().getDeclaredFields())
+			Class<?> type = aInstance.getClass();
+
+			for (;;)
 			{
-				if (field.getAnnotation(Inject.class) != null)
+				if (type == Object.class)
 				{
-					field.setAccessible(true);
+					return;
+				}
 
-					Inject annotation = field.getAnnotation(Inject.class);
-
-					Object mappedType;
-
-					if (annotation.value().isEmpty())
+				for (Field field : type.getDeclaredFields())
+				{
+					if (field.getAnnotation(Inject.class) != null)
 					{
-						mappedType = getInstance(field.getType());
-					}
-					else
-					{
-						mappedType = getNamedInstance(field.getType(), annotation.value());
+						field.setAccessible(true);
 
-						if (mappedType == null)
+						Inject annotation = field.getAnnotation(Inject.class);
+
+						Object mappedType;
+
+						if (annotation.name().isEmpty() && annotation.value().isEmpty())
 						{
-							throw new InjectionException("Failed to inject named member into " + aInstance.getClass() + ", not found: " + annotation);
+							mappedType = getInstance(field.getType());
+						}
+						else
+						{
+							mappedType = getNamedInstance(field.getType(), annotation.value().isEmpty() ? annotation.name() : annotation.value());
+
+							if (mappedType == null && !annotation.optional())
+							{
+								throw new InjectionException("Failed to inject named member into " + type + ", not found: " + annotation);
+							}
+						}
+
+						if (mappedType != null || !annotation.optional())
+						{
+							log(aInstance, field, mappedType, annotation);
+
+							field.set(aInstance, mappedType);
 						}
 					}
-
-					field.set(aInstance, mappedType);
 				}
-			}
 
-			for (Method method : aInstance.getClass().getDeclaredMethods())
-			{
-				Inject annotation = method.getAnnotation(Inject.class);
-
-				if (annotation != null)
+				for (Method method : type.getDeclaredMethods())
 				{
-					method.setAccessible(true);
-					method.invoke(aInstance, createMappedValues(annotation, method.getParameterTypes(), method.getParameterAnnotations()));
+					Inject annotation = method.getAnnotation(Inject.class);
+
+					if (annotation != null)
+					{
+						method.setAccessible(true);
+						method.invoke(aInstance, createMappedValues(annotation, method.getParameterTypes(), method.getParameterAnnotations()));
+					}
 				}
+
+				type = type.getSuperclass();
 			}
 		}
 		catch (RuntimeException e)
@@ -247,5 +264,18 @@ public class Injector
 		}
 
 		return values;
+	}
+
+
+	private void log(Object aInstance, Field aField, Object aMappedType, Inject aAnnotation)
+	{
+		if (aAnnotation.name().isEmpty() && aAnnotation.value().isEmpty())
+		{
+			System.out.printf("Injecting [%s] into [%s].[%s]%n", aMappedType.getClass().getSimpleName(), aInstance.getClass().getSimpleName(), aField.getName());
+		}
+		else
+		{
+			System.out.printf("Injecting [%s] named [%s] into [%s].[%s]%n", aMappedType.getClass().getSimpleName(), aAnnotation.name().isEmpty()?aAnnotation.value():aAnnotation.name(), aInstance.getClass().getSimpleName(), aField.getName());
+		}
 	}
 }

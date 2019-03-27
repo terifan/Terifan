@@ -39,21 +39,6 @@ public class InjectNGTest
 		Apple fruit1 = (Apple)injector.getInstance(Fruit.class);
 		Apple fruit2 = (Apple)injector.getInstance(Fruit.class);
 
-		System.out.println("-------------------- " + fruit1);
-		System.out.println(fruit1.mFruitProperty1);
-		System.out.println(fruit1.mFruitProperty2);
-		System.out.println(fruit1.mFruitProperty3);
-		System.out.println(fruit1.mAppleProperty1);
-		System.out.println(fruit1.mAppleProperty2);
-		System.out.println(fruit1.mAppleProperty3);
-		System.out.println("-------------------- " + fruit2);
-		System.out.println(fruit2.mFruitProperty1);
-		System.out.println(fruit2.mFruitProperty2);
-		System.out.println(fruit2.mFruitProperty3);
-		System.out.println(fruit2.mAppleProperty1);
-		System.out.println(fruit2.mAppleProperty2);
-		System.out.println(fruit2.mAppleProperty3);
-
 		assertNotNull(fruit1);
 		assertNotNull(fruit2);
 		assertNotSame(fruit1, fruit2);
@@ -193,7 +178,7 @@ public class InjectNGTest
 		@Inject FruitProperty mFruitProperty1;
 		FruitProperty mFruitProperty2;
 		FruitProperty mFruitProperty3;
-		@Inject("color") FruitProperty mFruitProperty4;
+		@Inject(name = "color", optional = true) FruitProperty mFruitProperty4;
 
 		@Inject
 		public Fruit(FruitProperty aFruitProperty2)
