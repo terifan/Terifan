@@ -17,6 +17,7 @@ public class InjectNGTest
 		Injector injector = new Injector();
 
 		injector.bind(Fruit.class);
+		injector.bind(FruitProperty.class);
 
 		injector.bind(String.class).named("value").toInstance("string-value");
 

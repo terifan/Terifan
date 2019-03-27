@@ -1,5 +1,6 @@
 package org.terifan.injector;
 
+import java.lang.reflect.InvocationTargetException;
 import org.terifan.util.Tuple;
 
 
@@ -53,7 +54,7 @@ public class BindingBuilder<T> extends Factory<T>
 
 
 	@Override
-	T getInstance() throws IllegalAccessException, InstantiationException
+	T getInstance() throws IllegalAccessException, InstantiationException, InvocationTargetException
 	{
 		return (T)mInjector.createInstance(mFromClass);
 	}

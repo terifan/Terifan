@@ -1,5 +1,8 @@
 package org.terifan.injector;
 
+import java.lang.reflect.InvocationTargetException;
+
+
 
 public class BindingBuilderNamed<T> extends Factory<T>
 {
@@ -44,7 +47,7 @@ public class BindingBuilderNamed<T> extends Factory<T>
 
 
 	@Override
-	T getInstance() throws IllegalAccessException, InstantiationException
+	T getInstance() throws IllegalAccessException, InstantiationException, InvocationTargetException
 	{
 		return mFactory.getInstance();
 	}

@@ -11,6 +11,7 @@ import org.terifan.util.Tuple;
 
 public class Injector
 {
+	private boolean mStrict;
 	HashMap<Class, Factory> mBindings;
 	HashMap<Tuple<Class, String>, Factory> mNamedBindings;
 
@@ -19,6 +20,23 @@ public class Injector
 	{
 		mBindings = new HashMap<>();
 		mNamedBindings = new HashMap<>();
+	}
+
+
+	public boolean isStrict()
+	{
+		return mStrict;
+	}
+
+
+	/**
+	 * Will throw an exception if an unbound instance is created from an injection. Default is false, which allow unbound objects to be
+	 * created by the injector.
+	 */
+	public Injector setStrict(boolean aStrict)
+	{
+		mStrict = aStrict;
+		return this;
 	}
 
 
@@ -69,6 +87,10 @@ public class Injector
 			if (binding != null)
 			{
 				return (T)binding.getInstance();
+			}
+			if (mStrict)
+			{
+				throw new IllegalArgumentException("Type not bound: " + aType);
 			}
 
 			return (T)createInstance(aType);
@@ -134,7 +156,7 @@ public class Injector
 		{
 			if (aMethod.getAnnotation(PostConstruct.class) != null)
 			{
-				log(aType, aMethod);
+				logPostConstruct(aType, aMethod);
 
 				aMethod.invoke(aInstance);
 			}
@@ -171,7 +193,7 @@ public class Injector
 
 				if (mappedType != null || !annotation.optional())
 				{
-					log(aInstance, aField, mappedType, annotation);
+					logInjection(aInstance, aField, mappedType, annotation);
 
 					aField.set(aInstance, mappedType);
 				}
@@ -242,7 +264,7 @@ public class Injector
 
 			if (annotation != null)
 			{
-				log(aType, constructor);
+				logCreation(aType, constructor);
 				instance = constructor.newInstance(createMappedValues(annotation, constructor.getParameterTypes(), constructor.getParameterAnnotations()));
 				break;
 			}
@@ -304,7 +326,7 @@ public class Injector
 	}
 
 
-	private void log(Object aInstance, Field aField, Object aMappedType, Inject aAnnotation)
+	private void logInjection(Object aInstance, Field aField, Object aMappedType, Inject aAnnotation)
 	{
 		if (getName(aAnnotation).isEmpty())
 		{
@@ -317,7 +339,7 @@ public class Injector
 	}
 
 
-	private void log(Class aType, Constructor aConstructor)
+	private void logCreation(Class aType, Constructor aConstructor)
 	{
 		StringBuilder sb = new StringBuilder();
 		for (Class cls : aConstructor.getParameterTypes())
@@ -332,7 +354,7 @@ public class Injector
 	}
 
 
-	private void log(Class aType, Method aMethod)
+	private void logPostConstruct(Class aType, Method aMethod)
 	{
 		System.out.printf("Invoking PostConstruct method [%s] in instance of [%s]%n", aMethod.getName(), aType.getSimpleName());
 	}

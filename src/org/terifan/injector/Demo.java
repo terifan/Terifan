@@ -1,33 +1,60 @@
 package org.terifan.injector;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
+
 
 public class Demo
 {
-	public static void main(String ... args)
+	public static void main(String... args)
 	{
 		try
 		{
-			InjectorOLD injector = new InjectorOLD();
-			injector.bindNamedSupplier(Color.class, "border", () -> new Color(255, 0, 0));
-			injector.bindNamedSupplier(Color.class, "background", () -> new Color(0, 255, 0));
-			injector.bindNamedSupplier(Color.class, e -> e.equals("text") ? new Color(0, 0, 255) : e.equals("strange") ? new Color(123,57,204) : new Color(1,1,1));
-			injector.bindSupplier(Color.class, () -> new Color(50, 150, 250));
-			injector.bind(ColorSpace.class, RGBColorSpace.class);
-			injector.bindSupplier(ColorSpace.class, () -> new ColorSpace());
+			Injector injector = new Injector();
 
-			ComponentByFields cls1 = injector.getInstance(ComponentByFields.class);
-			ComponentByConstructor cls2 = injector.getInstance(ComponentByConstructor.class);
-			ComponentBySetters cls3 = injector.getInstance(ComponentBySetters.class);
-			ComponentByInitializer cls4 = injector.getInstance(ComponentByInitializer.class);
-			ComponentByFactory cls5 = new ComponentByFactory(injector);
+			// normal running
+//			injector.bind(UserService.class).asSingleton();
 
-			System.out.println("fields: " + cls1);
-			System.out.println("constr: " + cls2);
-			System.out.println("setter: " + cls3);
-			System.out.println("initia: " + cls4);
-			System.out.println("factor: " + cls5);
+			// when developing & testing
+			injector.bind(UserService.class).toInstance(new MockUserService(new User("dave", "asasasasas asasasasas"), new User("steve", "ghghghghgh ghghghgh ghghghgh")));
 
-			System.out.println(injector.getInstance(ComponentByAllTypes.class));
+			injector.bind(Style.class).toInstance(new Style(Color.RED, Color.BLUE));
+
+			// bind()
+			// bind().asSingleton()
+			// bind().to()
+			// bind().to().asSingleton()
+			// bind().to().in()
+			// bind().to().in().asSingleton()
+			// bind().toInstance()
+			// bind().toInstance().in()
+			// bind().toProvider()
+			// bind().toProvider().in()
+			// bind().named()
+			// bind().named().asSingleton()
+			// bind().named().to()
+			// bind().named().to().asSingleton()
+			// bind().named().to().in()
+			// bind().named().to().in().asSingleton()
+			// bind().named().toInstance()
+			// bind().named().toInstance().in()
+			// bind().named().toProvider()
+			// bind().named().toProvider().in()
+
+			UserPanel panel = injector.getInstance(UserPanel.class);
+
+			JFrame frame = new JFrame();
+			frame.add(panel);
+			frame.setSize(1024, 768);
+			frame.setLocationRelativeTo(null);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setVisible(true);
 		}
 		catch (Throwable e)
 		{
@@ -35,220 +62,125 @@ public class Demo
 		}
 	}
 
-	static class ComponentByAllTypes
+
+	static class Style
 	{
-		private Color mBorderColor;
-		private Color mBackgroundColor;
-		private Color mTextColor;
-		@Inject private Color mOtherColor;
-		@Inject("strange") private Color mStrangeColor;
+		Color mText;
+		Color mBackground;
 
-		@Inject
-		public ComponentByAllTypes(@Named("border") Color aBorderColor)
+
+		public Style()
 		{
-			mBorderColor = aBorderColor;
+			this(Color.BLACK, Color.WHITE);
 		}
 
-		@Inject
-		public void initialize(@Named("text") Color aTextColor)
-		{
-			mTextColor = aTextColor;
-		}
 
-		@Inject("background")
-		public void setBackgroundColor(Color aBackgroundColor)
+		public Style(Color aText, Color aBackground)
 		{
-			mBackgroundColor = aBackgroundColor;
-		}
-
-		@Override
-		public String toString()
-		{
-			return "Component{" + "mBorderColor=" + mBorderColor + ", mBackgroundColor=" + mBackgroundColor + ", mTextColor=" + mTextColor + ", mOtherColor=" + mOtherColor + ", mStrangeColor=" + mStrangeColor + '}';
+			mText = aText;
+			mBackground = aBackground;
 		}
 	}
 
-	static class ComponentByFactory
+
+	static class UserPanel extends JPanel
 	{
-		@Inject("border") private Color mBorderColor;
-		@Inject("background") private Color mBackgroundColor;
-		@Inject("text") private Color mTextColor;
-		@Inject private Color mOtherColor;
+		@Inject private UserService mUserService;
+		@Inject private Style mStyle;
+		private User mUser;
 
-		private Color mStrangeColor;
 
-		public ComponentByFactory(InjectorOLD aInjector)
+		@PostConstruct
+		public void buildForm()
 		{
-			aInjector.injectMembers(this);
+			JList<User> list = new JList<>(mUserService.getUsers());
+			JTextArea text = new JTextArea();
 
-			mStrangeColor = aInjector.getInstance(Color.class);
-		}
+			text.setForeground(mStyle.mText);
+			text.setBackground(mStyle.mBackground);
 
-		@Override
-		public String toString()
-		{
-			return "Component{" + "mBorderColor=" + mBorderColor + ", mBackgroundColor=" + mBackgroundColor + ", mTextColor=" + mTextColor + ", mOtherColor=" + mOtherColor + ", mStrangeColor=" + mStrangeColor + '}';
+			list.addListSelectionListener(aEvent ->
+			{
+				if (mUser != null && !mUser.mDescription.equals(text.getText()))
+				{
+					mUser.mDescription = text.getText();
+					mUserService.save(mUser);
+				}
+
+				mUser = list.getModel().getElementAt(list.getSelectedIndex());
+
+				text.setText(mUser.mDescription);
+			});
+
+			super.setLayout(new BorderLayout());
+			super.add(new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(list), new JScrollPane(text)));
 		}
 	}
 
-	static class ComponentByFields
-	{
-		@Inject("border") private Color mBorderColor;
-		@Inject("background") private Color mBackgroundColor;
-		@Inject("text") private Color mTextColor;
-		@Inject private Color mOtherColor;
 
-		public ComponentByFields()
+	static class MockUserService extends UserService
+	{
+		User[] mUsers;
+
+
+		public MockUserService()
 		{
 		}
 
-		@Override
-		public String toString()
+
+		public MockUserService(User... aUsers)
 		{
-			return "Component{" + "mBorderColor=" + mBorderColor + ", mBackgroundColor=" + mBackgroundColor + ", mTextColor=" + mTextColor + ", mOtherColor=" + mOtherColor + '}';
+			mUsers = aUsers;
+		}
+
+
+		@Override
+		public User[] getUsers()
+		{
+			return mUsers;
+		}
+
+
+		@Override
+		public void save(User aUser)
+		{
+			System.out.println("saved user: " + aUser + "=" + aUser.mDescription);
 		}
 	}
 
-	static class ComponentByConstructor
+
+	static class UserService
 	{
-		private Color mBorderColor;
-		private Color mBackgroundColor;
-		private Color mTextColor;
-		private Color mOtherColor;
-
-		public ComponentByConstructor()
+		User[] getUsers()
 		{
+			throw new UnsupportedOperationException();
 		}
 
-		@Inject
-		public ComponentByConstructor(@Named("border") Color aBorderColor, @Named("background") Color aBackgroundColor, @Named("text") Color aTextColor, Color aOtherColor)
-		{
-			mBorderColor = aBorderColor;
-			mBackgroundColor = aBackgroundColor;
-			mTextColor = aTextColor;
-			mOtherColor = aOtherColor;
-		}
 
-		@Override
-		public String toString()
+		void save(User aUser)
 		{
-			return "Component{" + "mBorderColor=" + mBorderColor + ", mBackgroundColor=" + mBackgroundColor + ", mTextColor=" + mTextColor + ", mOtherColor=" + mOtherColor + '}';
+			throw new UnsupportedOperationException();
 		}
 	}
 
-	static class ComponentBySetters
-	{
-		private Color mBorderColor;
-		private Color mBackgroundColor;
-		private Color mTextColor;
-		private Color mOtherColor;
 
-		public ComponentBySetters()
+	static class User
+	{
+		String mName;
+		String mDescription;
+
+
+		public User(String aName, String aDescription)
 		{
+			mName = aName;
+			mDescription = aDescription;
 		}
+
 
 		@Override
 		public String toString()
 		{
-			return "Component{" + "mBorderColor=" + mBorderColor + ", mBackgroundColor=" + mBackgroundColor + ", mTextColor=" + mTextColor + ", mOtherColor=" + mOtherColor + '}';
-		}
-
-		@Inject("border")
-		public void setBorderColor(Color aBorderColor)
-		{
-			mBorderColor = aBorderColor;
-		}
-
-		@Inject("background")
-		public void setBackgroundColor(Color aBackgroundColor)
-		{
-			mBackgroundColor = aBackgroundColor;
-		}
-
-		@Inject("text")
-		public void setTextColor(Color aTextColor)
-		{
-			mTextColor = aTextColor;
-		}
-
-		@Inject
-		public void setOtherColor(Color aOtherColor)
-		{
-			mOtherColor = aOtherColor;
-		}
-	}
-
-	static class ComponentByInitializer
-	{
-		private Color mBorderColor;
-		private Color mBackgroundColor;
-		private Color mTextColor;
-		private Color mOtherColor;
-
-		public ComponentByInitializer()
-		{
-		}
-
-		@Override
-		public String toString()
-		{
-			return "Component{" + "mBorderColor=" + mBorderColor + ", mBackgroundColor=" + mBackgroundColor + ", mTextColor=" + mTextColor + ", mOtherColor=" + mOtherColor + '}';
-		}
-
-		@Inject
-		public void initialize(@Named("border") Color aBorderColor, @Named("background") Color aBackgroundColor, @Named("text") Color aTextColor, Color aOtherColor)
-		{
-			mBorderColor = aBorderColor;
-			mBackgroundColor = aBackgroundColor;
-			mTextColor = aTextColor;
-			mOtherColor = aOtherColor;
-		}
-	}
-
-	static class Color
-	{
-		@Inject int r;
-		@Inject int g;
-		@Inject int b;
-		@Inject ColorSpace mColorSpace;
-
-		public Color()
-		{
-		}
-
-		public Color(int aR, int aG, int aB)
-		{
-			r = aR;
-			g = aG;
-			b = aB;
-		}
-
-		@Override
-		public String toString()
-		{
-			return "Color{" + "r=" + r + ", g=" + g + ", b=" + b + ", coloSpace=" + mColorSpace + '}';
-		}
-	}
-
-	static class ColorSpace
-	{
-		protected String x = "cs";
-
-		@Override
-		public String toString()
-		{
-			return "ColorSpace{" + "x=" + x + '}';
-		}
-	}
-
-	static class RGBColorSpace extends ColorSpace
-	{
-		protected String y = "rgb-cs";
-
-		@Override
-		public String toString()
-		{
-			return "RGBColorSpace{" + "x=" + x + ", y=" + y + '}';
+			return mName;
 		}
 	}
 }
