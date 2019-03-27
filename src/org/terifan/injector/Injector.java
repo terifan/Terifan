@@ -3,6 +3,7 @@ package org.terifan.injector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import org.terifan.util.Tuple;
@@ -122,6 +123,78 @@ public class Injector
 	 */
 	public void injectMembers(Object aInstance)
 	{
+		visit(aInstance, mInjectVisitor);
+	}
+
+
+	private final Visitor mPostConstructVisitor = new Visitor()
+	{
+		@Override
+		public void visitMethod(Object aInstance, Class aType, Method aMethod) throws Exception
+		{
+			if (aMethod.getAnnotation(PostConstruct.class) != null)
+			{
+				log(aType, aMethod);
+
+				aMethod.invoke(aInstance);
+			}
+		}
+	};
+
+
+	private final Visitor mInjectVisitor = new Visitor()
+	{
+		@Override
+		public void visitField(Object aInstance, Class aType, Field aField) throws IllegalAccessException, SecurityException
+		{
+			if (aField.getAnnotation(Inject.class) != null)
+			{
+				aField.setAccessible(true);
+
+				Inject annotation = aField.getAnnotation(Inject.class);
+
+				Object mappedType;
+
+				if (getName(annotation).isEmpty())
+				{
+					mappedType = getInstance(aField.getType());
+				}
+				else
+				{
+					mappedType = getNamedInstance(aField.getType(), getName(annotation));
+
+					if (mappedType == null && !annotation.optional())
+					{
+						throw new InjectionException("Named instance of " + aType + " not found: " + getName(annotation));
+					}
+				}
+
+				if (mappedType != null || !annotation.optional())
+				{
+					log(aInstance, aField, mappedType, annotation);
+
+					aField.set(aInstance, mappedType);
+				}
+			}
+		}
+
+
+		@Override
+		public void visitMethod(Object aInstance, Class aType, Method aMethod) throws IllegalAccessException, InvocationTargetException
+		{
+			Inject annotation = aMethod.getAnnotation(Inject.class);
+
+			if (annotation != null)
+			{
+				aMethod.setAccessible(true);
+				aMethod.invoke(aInstance, createMappedValues(annotation, aMethod.getParameterTypes(), aMethod.getParameterAnnotations()));
+			}
+		}
+	};
+
+
+	private void visit(Object aInstance, Visitor aVisitor)
+	{
 		try
 		{
 			Class<?> type = aInstance.getClass();
@@ -133,48 +206,16 @@ public class Injector
 					return;
 				}
 
+				aVisitor.visitClass(aInstance, type);
+
 				for (Field field : type.getDeclaredFields())
 				{
-					if (field.getAnnotation(Inject.class) != null)
-					{
-						field.setAccessible(true);
-
-						Inject annotation = field.getAnnotation(Inject.class);
-
-						Object mappedType;
-
-						if (annotation.name().isEmpty() && annotation.value().isEmpty())
-						{
-							mappedType = getInstance(field.getType());
-						}
-						else
-						{
-							mappedType = getNamedInstance(field.getType(), annotation.value().isEmpty() ? annotation.name() : annotation.value());
-
-							if (mappedType == null && !annotation.optional())
-							{
-								throw new InjectionException("Failed to inject named member into " + type + ", not found: " + annotation);
-							}
-						}
-
-						if (mappedType != null || !annotation.optional())
-						{
-							log(aInstance, field, mappedType, annotation);
-
-							field.set(aInstance, mappedType);
-						}
-					}
+					aVisitor.visitField(aInstance, type, field);
 				}
 
 				for (Method method : type.getDeclaredMethods())
 				{
-					Inject annotation = method.getAnnotation(Inject.class);
-
-					if (annotation != null)
-					{
-						method.setAccessible(true);
-						method.invoke(aInstance, createMappedValues(annotation, method.getParameterTypes(), method.getParameterAnnotations()));
-					}
+					aVisitor.visitMethod(aInstance, type, method);
 				}
 
 				type = type.getSuperclass();
@@ -184,14 +225,14 @@ public class Injector
 		{
 			throw e;
 		}
-		catch (Exception e)
+		catch (Exception | Error e)
 		{
 			throw new IllegalArgumentException(e);
 		}
 	}
 
 
-	Object createInstance(Class aType)
+	Object createInstance(Class aType) throws InstantiationException, IllegalAccessException, InvocationTargetException
 	{
 		Object instance = null;
 
@@ -201,15 +242,9 @@ public class Injector
 
 			if (annotation != null)
 			{
-				try
-				{
-					instance = constructor.newInstance(createMappedValues(annotation, constructor.getParameterTypes(), constructor.getParameterAnnotations()));
-					break;
-				}
-				catch (Exception | Error e)
-				{
-					e.printStackTrace(System.out);
-				}
+				log(aType, constructor);
+				instance = constructor.newInstance(createMappedValues(annotation, constructor.getParameterTypes(), constructor.getParameterAnnotations()));
+				break;
 			}
 		}
 
@@ -229,6 +264,8 @@ public class Injector
 		if (instance != null)
 		{
 			injectMembers(instance);
+
+			visit(instance, mPostConstructVisitor);
 		}
 
 		return instance;
@@ -269,13 +306,40 @@ public class Injector
 
 	private void log(Object aInstance, Field aField, Object aMappedType, Inject aAnnotation)
 	{
-		if (aAnnotation.name().isEmpty() && aAnnotation.value().isEmpty())
+		if (getName(aAnnotation).isEmpty())
 		{
-			System.out.printf("Injecting [%s] into [%s].[%s]%n", aMappedType.getClass().getSimpleName(), aInstance.getClass().getSimpleName(), aField.getName());
+			System.out.printf("Injecting [%s] instance into [%s] instance field [%s]%n", aMappedType.getClass().getSimpleName(), aInstance.getClass().getSimpleName(), aField.getName());
 		}
 		else
 		{
-			System.out.printf("Injecting [%s] named [%s] into [%s].[%s]%n", aMappedType.getClass().getSimpleName(), aAnnotation.name().isEmpty()?aAnnotation.value():aAnnotation.name(), aInstance.getClass().getSimpleName(), aField.getName());
+			System.out.printf("Injecting [%s] instance named [%s] into [%s] instance field [%s]%n", aMappedType.getClass().getSimpleName(), getName(aAnnotation), aInstance.getClass().getSimpleName(), aField.getName());
 		}
+	}
+
+
+	private void log(Class aType, Constructor aConstructor)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (Class cls : aConstructor.getParameterTypes())
+		{
+			if (sb.length() > 0)
+			{
+				sb.append(", ");
+			}
+			sb.append(cls.getSimpleName());
+		}
+		System.out.printf("Creating instance of [%s] using constructor [%s]%n", aType.getSimpleName(), sb);
+	}
+
+
+	private void log(Class aType, Method aMethod)
+	{
+		System.out.printf("Invoking PostConstruct method [%s] in instance of [%s]%n", aMethod.getName(), aType.getSimpleName());
+	}
+
+
+	private String getName(Inject aAnnotation)
+	{
+		return aAnnotation.name().isEmpty() ? aAnnotation.value() : aAnnotation.name();
 	}
 }
