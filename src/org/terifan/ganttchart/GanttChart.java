@@ -8,7 +8,7 @@ import static org.terifan.ganttchart.GanttChartPanel.C;
 public class GanttChart implements AutoCloseable
 {
 	GanttChartPanel mPanel;
-	final TreeMap<Long, Element> mMap;
+	final TreeMap<Long, GanttChartElement> mMap;
 	final ArrayList<Long> mStack;
 
 	private int ci;
@@ -23,7 +23,7 @@ public class GanttChart implements AutoCloseable
 
 	public void tick(String aName)
 	{
-		mMap.get(mStack.get(mStack.size() - 1)).mSubItems.add(new Element(System.nanoTime(), aName, C[ci++ % C.length]));
+		mMap.get(mStack.get(mStack.size() - 1)).getSubElements().add(new GanttChartElement(System.nanoTime(), aName, C[ci++ % C.length]));
 
 		if (mPanel != null)
 		{
@@ -36,7 +36,7 @@ public class GanttChart implements AutoCloseable
 	{
 		Long key = System.nanoTime();
 		mStack.add(key);
-		mMap.put(key, new Element(key, aName, C[ci++ % C.length]));
+		mMap.put(key, new GanttChartElement(key, aName, C[ci++ % C.length]));
 		return this;
 	}
 
@@ -45,7 +45,7 @@ public class GanttChart implements AutoCloseable
 	public void close() throws Exception
 	{
 		Long key = mStack.remove(mStack.size() - 1);
-		mMap.get(key).mEndTime = System.nanoTime();
+		mMap.get(key).setEndTime(System.nanoTime());
 
 		if (mPanel != null)
 		{

@@ -29,7 +29,7 @@ public class GanttChartPanel extends JPanel
 	private final static int MINIMUM_WIDTH = 50;
 
 	private int mRowHeight = 24;
-	private int mItemHeight = 9;
+	private int mBarHeight = 9;
 	private int mLabelWidth = 200;
 	private int mRightMargin = 50;
 	private Font mLabelFont = new Font("segoe ui", Font.PLAIN, 12);
@@ -37,7 +37,7 @@ public class GanttChartPanel extends JPanel
 	private boolean mRequestFocusOnDisplay;
 
 	private final GanntChartDetailPanel mDetailPanel;
-	private Element mSelectedElement;
+	private GanttChartElement mSelectedElement;
 
 
 	public GanttChartPanel(GanttChart aGanttChart, GanntChartDetailPanel aDetailPanel)
@@ -92,7 +92,7 @@ public class GanttChartPanel extends JPanel
 	}
 
 
-	public Element getSelectedElement()
+	public GanttChartElement getSelectedElement()
 	{
 		return mSelectedElement;
 	}
@@ -100,12 +100,12 @@ public class GanttChartPanel extends JPanel
 
 	public int getSelectedElementIndex()
 	{
-		TreeMap<Long, Element> map = mChart.mMap;
+		TreeMap<Long, GanttChartElement> map = mChart.mMap;
 
 		int i = 0;
-		for (Element item : map.values())
+		for (GanttChartElement element : map.values())
 		{
-			if (item == mSelectedElement)
+			if (element == mSelectedElement)
 			{
 				return i;
 			}
@@ -118,7 +118,7 @@ public class GanttChartPanel extends JPanel
 
 	public void setSelectedElementIndex(int aIndex)
 	{
-		TreeMap<Long, Element> map = mChart.mMap;
+		TreeMap<Long, GanttChartElement> map = mChart.mMap;
 
 		if (aIndex < 0 || aIndex >= map.size())
 		{
@@ -144,7 +144,7 @@ public class GanttChartPanel extends JPanel
 		Utilities.enableTextAntialiasing(aGraphics);
 		Utilities.enableBilinear(aGraphics);
 
-		TreeMap<Long, Element> map = mChart.mMap;
+		TreeMap<Long, GanttChartElement> map = mChart.mMap;
 
 		int w = Math.max(getWidth(), mLabelWidth + mRightMargin + MINIMUM_WIDTH);
 		int h = getHeight();
@@ -163,9 +163,9 @@ public class GanttChartPanel extends JPanel
 			return;
 		}
 
-		Entry<Long, Element> firstEntry = map.firstEntry();
-		long start = firstEntry.getValue().mStartTime;
-		long end = firstEntry.getValue().mEndTime;
+		GanttChartElement firstEntry = map.firstEntry().getValue();
+		long start = firstEntry.getStartTime();
+		long end = firstEntry.getEndTime();
 
 		if (end == start)
 		{
@@ -175,9 +175,9 @@ public class GanttChartPanel extends JPanel
 		int wi = w - mLabelWidth - mRightMargin;
 		int y = 0;
 
-		for (Element item : map.values())
+		for (GanttChartElement element : map.values())
 		{
-			drawElement(aGraphics, item, y, w, start, end, wi);
+			drawElement(aGraphics, element, y, w, start, end, wi);
 
 			y += mRowHeight;
 		}
@@ -210,7 +210,7 @@ public class GanttChartPanel extends JPanel
 	}
 
 
-	private void drawElement(Graphics aGraphics, Element aElement, int aY, int aWidth, long aStartTime, long aEndTime, int aContentWidth)
+	private void drawElement(Graphics aGraphics, GanttChartElement aElement, int aY, int aWidth, long aStartTime, long aEndTime, int aContentWidth)
 	{
 		if (mSelectedElement == aElement)
 		{
@@ -218,41 +218,41 @@ public class GanttChartPanel extends JPanel
 			aGraphics.fillRect(0, aY, aWidth, mRowHeight);
 		}
 
-		boolean inProgress = aElement.mEndTime == aElement.mStartTime;
+		long startTime = aElement.getStartTime();
+		boolean inProgress = aElement.getEndTime() == startTime;
+		long endTime = inProgress ? System.nanoTime() : aElement.getEndTime();
 
-		long endTime = inProgress ? System.nanoTime() : aElement.mEndTime;
-
-		int x0 = mLabelWidth + (int)((aElement.mStartTime - aStartTime) * aContentWidth / (aEndTime - aStartTime));
+		int x0 = mLabelWidth + (int)((startTime - aStartTime) * aContentWidth / (aEndTime - aStartTime));
 		int x1 = mLabelWidth + (int)((endTime - aStartTime) * aContentWidth / (aEndTime - aStartTime));
 
-		aGraphics.setColor(new Color(aElement.mColor));
+		aGraphics.setColor(new Color(aElement.getColor()));
 
 		if (inProgress)
 		{
-			aGraphics.drawRect(x0, aY + (mRowHeight - mItemHeight) / 2, x1 - x0, mItemHeight);
+			aGraphics.drawRect(x0, aY + (mRowHeight - mBarHeight) / 2, x1 - x0, mBarHeight);
 		}
 		else
 		{
-			aGraphics.fillRect(x0, aY + (mRowHeight - mItemHeight) / 2, x1 - x0, mItemHeight);
+			aGraphics.fillRect(x0, aY + (mRowHeight - mBarHeight) / 2, x1 - x0, mBarHeight);
 		}
 
-		for (Element subItem : aElement.mSubItems)
+		for (GanttChartElement subElement : aElement.getSubElements())
 		{
-			int x2 = mLabelWidth + (int)((subItem.mStartTime - aStartTime) * aContentWidth / (aEndTime - aStartTime));
+			int x2 = mLabelWidth + (int)((subElement.getStartTime() - aStartTime) * aContentWidth / (aEndTime - aStartTime));
 
-			aGraphics.setColor(new Color(subItem.mColor));
-			aGraphics.fillRect(x0, aY + (mRowHeight - mItemHeight) / 2, x2 - x0, mItemHeight);
+			aGraphics.setColor(new Color(subElement.getColor()));
+			aGraphics.fillRect(x0, aY + (mRowHeight - mBarHeight) / 2, x2 - x0, mBarHeight);
 
 			x0 = x2;
 		}
 
 		aGraphics.setColor(mSelectedElement == aElement ? Color.WHITE : Color.BLACK);
 		aGraphics.setFont(mTimeFont);
-		aGraphics.drawString(formatTime(aElement.mEndTime - aElement.mStartTime), x1 + 5, aY + 15);
+		aGraphics.drawString(formatTime(endTime - startTime), x1 + 5, aY + 15);
 
 		aGraphics.setColor(mSelectedElement == aElement ? Color.WHITE : Color.BLACK);
 		aGraphics.setFont(mLabelFont);
-		aGraphics.drawString(aElement.mName, 0, aY + 15);
+		aGraphics.drawString(aElement.getName(), 0, aY + 15);
 	}
 
 
