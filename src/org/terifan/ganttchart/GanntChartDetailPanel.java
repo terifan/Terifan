@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import javax.swing.JPanel;
+import static org.terifan.ganttchart.GanttChartPanel.formatTime;
 import org.terifan.ui.Utilities;
 
 
@@ -81,7 +82,7 @@ public class GanntChartDetailPanel extends JPanel
 
 			aGraphics.setColor(Color.BLACK);
 			aGraphics.setFont(mTimeFont);
-			aGraphics.drawString((tickTime - lastTime)/1000000 + "ms", mLabelWidth + x1 + 5, y + 15);
+			aGraphics.drawString(formatTime(tickTime - lastTime), mLabelWidth + x1 + 5, y + 15);
 
 			aGraphics.setColor(Color.BLACK);
 			aGraphics.setFont(mLabelFont);

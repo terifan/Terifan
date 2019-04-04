@@ -38,6 +38,12 @@ public class Test
 
 			try (GanttChart m0 = chart.start("adasdasd"))
 			{
+				Thread.sleep(10);
+
+				chart.start("start");
+				chart.tick("tick");
+				chart.close();
+
 				Thread.sleep(100);
 				try (GanttChart m1 = chart.start("bsfsf"))
 				{

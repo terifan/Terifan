@@ -172,7 +172,7 @@ public class GanttChartPanel extends JPanel
 
 		aGraphics.setColor(mSelectedElement == aElement ? Color.WHITE : Color.BLACK);
 		aGraphics.setFont(mTimeFont);
-		aGraphics.drawString((aElement.mEndTime - aElement.mStartTime) / 1000000 + "ms", x1 + 5, aY + 15);
+		aGraphics.drawString(formatTime(aElement.mEndTime - aElement.mStartTime), x1 + 5, aY + 15);
 
 		aGraphics.setColor(mSelectedElement == aElement ? Color.WHITE : Color.BLACK);
 		aGraphics.setFont(mLabelFont);
@@ -184,5 +184,24 @@ public class GanttChartPanel extends JPanel
 	public Dimension preferredSize()
 	{
 		return new Dimension(mLabelWidth + MINIMUM_WIDTH + mRightMargin, mRowHeight * mGanttChart.mMap.size());
+	}
+
+
+	static String formatTime(long aTimeNanos)
+	{
+		if (aTimeNanos < 1000)
+		{
+			return aTimeNanos + "ns";
+		}
+		if (aTimeNanos < 1000_000)
+		{
+			return aTimeNanos / 1000 + "µs";
+		}
+		if (aTimeNanos < 10_000_000_000L)
+		{
+			return aTimeNanos / 1000_000 + "ms";
+		}
+
+		return aTimeNanos / 1000_000_000 + "s";
 	}
 }
