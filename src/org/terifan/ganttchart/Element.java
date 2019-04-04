@@ -3,7 +3,7 @@ package org.terifan.ganttchart;
 import java.util.ArrayList;
 
 
-class Element
+public class Element
 {
 	ArrayList<Element> mSubItems = new ArrayList<>();
 	long mStartTime;
@@ -12,11 +12,41 @@ class Element
 	int mColor;
 
 
-	public Element(long aStartTime, String aName, int aColor)
+	Element(long aStartTime, String aName, int aColor)
 	{
 		mStartTime = aStartTime;
 		mEndTime = aStartTime;
 		mName = aName;
 		mColor = aColor;
+	}
+
+
+	public ArrayList<Element> getSubItems()
+	{
+		return mSubItems;
+	}
+
+
+	public long getStartTime()
+	{
+		return mStartTime;
+	}
+
+
+	public long getEndTime()
+	{
+		return mEndTime;
+	}
+
+
+	public String getName()
+	{
+		return mName;
+	}
+
+
+	public int getColor()
+	{
+		return mColor;
 	}
 }

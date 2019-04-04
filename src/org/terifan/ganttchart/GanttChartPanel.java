@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Map.Entry;
@@ -14,7 +16,8 @@ import org.terifan.ui.Utilities;
 
 public class GanttChartPanel extends JPanel
 {
-	private final GanttChart mGanttChart;
+	private final static long serialVersionUID = 1L;
+	private final GanttChart mChart;
 
 	final static int[] C =
 	{
@@ -31,6 +34,7 @@ public class GanttChartPanel extends JPanel
 	private int mRightMargin = 50;
 	private Font mLabelFont = new Font("segoe ui", Font.PLAIN, 12);
 	private Font mTimeFont = new Font("segoe ui", Font.PLAIN, 9);
+	private boolean mRequestFocusOnDisplay;
 
 	private final GanntChartDetailPanel mDetailPanel;
 	private Element mSelectedElement;
@@ -38,32 +42,98 @@ public class GanttChartPanel extends JPanel
 
 	public GanttChartPanel(GanttChart aGanttChart, GanntChartDetailPanel aDetailPanel)
 	{
-		mGanttChart = aGanttChart;
+		mChart = aGanttChart;
 
 		mDetailPanel = aDetailPanel;
-		mGanttChart.mPanel = this;
+		mChart.mPanel = this;
+		mRequestFocusOnDisplay = true;
 
-		addMouseListener(new MouseAdapter()
+		MouseAdapter ma = new MouseAdapter()
 		{
+			@Override
+			public void mouseDragged(MouseEvent aEvent)
+			{
+				setSelectedElementIndex(aEvent.getY() / mRowHeight);
+			}
+
 			@Override
 			public void mousePressed(MouseEvent aEvent)
 			{
-				int i = aEvent.getY() / mRowHeight;
+				requestFocus();
+				setSelectedElementIndex(aEvent.getY() / mRowHeight);
+			}
+		};
 
-				TreeMap<Long, Element> map = mGanttChart.mMap;
+		addMouseListener(ma);
+		addMouseMotionListener(ma);
 
-				if (i < map.size())
+		addKeyListener(new KeyAdapter()
+		{
+			@Override
+			public void keyPressed(KeyEvent aEvent)
+			{
+				switch (aEvent.getKeyCode())
 				{
-					Element element = map.get(map.keySet().toArray(new Long[map.size()])[i]);
-					mDetailPanel.setElement(element);
-					mDetailPanel.repaint();
-
-					mSelectedElement = element;
-
-					repaint();
+					case KeyEvent.VK_UP:
+						setSelectedElementIndex(Math.max(getSelectedElementIndex() - 1, 0));
+						break;
+					case KeyEvent.VK_DOWN:
+						setSelectedElementIndex(Math.min(getSelectedElementIndex() + 1, mChart.mMap.size() - 1));
+						break;
+					case KeyEvent.VK_END:
+						setSelectedElementIndex(Math.max(mChart.mMap.size() - 1, 0));
+						break;
+					case KeyEvent.VK_HOME:
+						setSelectedElementIndex(0);
+						break;
 				}
 			}
 		});
+	}
+
+
+	public Element getSelectedElement()
+	{
+		return mSelectedElement;
+	}
+
+
+	public int getSelectedElementIndex()
+	{
+		TreeMap<Long, Element> map = mChart.mMap;
+
+		int i = 0;
+		for (Element item : map.values())
+		{
+			if (item == mSelectedElement)
+			{
+				return i;
+			}
+			i++;
+		}
+
+		return -1;
+	}
+
+
+	public void setSelectedElementIndex(int aIndex)
+	{
+		TreeMap<Long, Element> map = mChart.mMap;
+
+		if (aIndex < 0 || aIndex >= map.size())
+		{
+			return;
+		}
+
+		mSelectedElement = map.get(map.keySet().toArray(new Long[map.size()])[aIndex]);
+
+		if (mDetailPanel != null)
+		{
+			mDetailPanel.setElement(mSelectedElement);
+			mDetailPanel.repaint();
+		}
+
+		repaint();
 	}
 
 
@@ -74,7 +144,7 @@ public class GanttChartPanel extends JPanel
 		Utilities.enableTextAntialiasing(aGraphics);
 		Utilities.enableBilinear(aGraphics);
 
-		TreeMap<Long, Element> map = mGanttChart.mMap;
+		TreeMap<Long, Element> map = mChart.mMap;
 
 		int w = Math.max(getWidth(), mLabelWidth + mRightMargin + MINIMUM_WIDTH);
 		int h = getHeight();
@@ -113,6 +183,12 @@ public class GanttChartPanel extends JPanel
 		}
 
 		drawGrid(aGraphics, wi, h);
+
+		if (mRequestFocusOnDisplay)
+		{
+			requestFocus();
+			mRequestFocusOnDisplay = false;
+		}
 	}
 
 
@@ -183,7 +259,7 @@ public class GanttChartPanel extends JPanel
 	@Override
 	public Dimension preferredSize()
 	{
-		return new Dimension(mLabelWidth + MINIMUM_WIDTH + mRightMargin, mRowHeight * mGanttChart.mMap.size());
+		return new Dimension(mLabelWidth + MINIMUM_WIDTH + mRightMargin, mRowHeight * mChart.mMap.size());
 	}
 
 
