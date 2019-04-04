@@ -36,11 +36,11 @@ public class GanttChartPanel extends JPanel
 	private Font mTimeFont = new Font("segoe ui", Font.PLAIN, 9);
 	private boolean mRequestFocusOnDisplay;
 
-	private final GanntChartDetailPanel mDetailPanel;
+	private final GanttChartDetailPanel mDetailPanel;
 	private GanttChartElement mSelectedElement;
 
 
-	public GanttChartPanel(GanttChart aGanttChart, GanntChartDetailPanel aDetailPanel)
+	public GanttChartPanel(GanttChart aGanttChart, GanttChartDetailPanel aDetailPanel)
 	{
 		mChart = aGanttChart;
 
@@ -163,14 +163,8 @@ public class GanttChartPanel extends JPanel
 			return;
 		}
 
-		GanttChartElement firstEntry = map.firstEntry().getValue();
-		long start = firstEntry.getStartTime();
-		long end = firstEntry.getEndTime();
-
-		if (end == start)
-		{
-			end = System.nanoTime();
-		}
+		long start = mChart.getStartTime();
+		long end = mChart.getEndTime();
 
 		int wi = w - mLabelWidth - mRightMargin;
 		int y = 0;
@@ -220,7 +214,7 @@ public class GanttChartPanel extends JPanel
 
 		long startTime = aElement.getStartTime();
 		boolean inProgress = aElement.getEndTime() == startTime;
-		long endTime = inProgress ? System.nanoTime() : aElement.getEndTime();
+		long endTime = inProgress ? aEndTime : aElement.getEndTime();
 
 		int x0 = mLabelWidth + (int)((startTime - aStartTime) * aContentWidth / (aEndTime - aStartTime));
 		int x1 = mLabelWidth + (int)((endTime - aStartTime) * aContentWidth / (aEndTime - aStartTime));
@@ -229,11 +223,11 @@ public class GanttChartPanel extends JPanel
 
 		if (inProgress)
 		{
-			aGraphics.drawRect(x0, aY + (mRowHeight - mBarHeight) / 2, x1 - x0, mBarHeight);
+			aGraphics.drawRect(x0, aY + (mRowHeight - mBarHeight) / 2, Math.max(1, x1 - x0), mBarHeight);
 		}
 		else
 		{
-			aGraphics.fillRect(x0, aY + (mRowHeight - mBarHeight) / 2, x1 - x0, mBarHeight);
+			aGraphics.fillRect(x0, aY + (mRowHeight - mBarHeight) / 2, Math.max(1, x1 - x0), mBarHeight);
 		}
 
 		for (GanttChartElement subElement : aElement.getSubElements())
@@ -252,7 +246,7 @@ public class GanttChartPanel extends JPanel
 
 		aGraphics.setColor(mSelectedElement == aElement ? Color.WHITE : Color.BLACK);
 		aGraphics.setFont(mLabelFont);
-		aGraphics.drawString(aElement.getName(), 0, aY + 15);
+		aGraphics.drawString(aElement.getDescription(), 0, aY + 15);
 	}
 
 

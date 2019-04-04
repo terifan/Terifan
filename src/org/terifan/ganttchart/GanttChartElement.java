@@ -8,15 +8,15 @@ public class GanttChartElement
 	private ArrayList<GanttChartElement> mSubElements;
 	private long mStartTime;
 	private long mEndTime;
-	private String mName;
+	private String mDescription;
 	private int mColor;
 
 
-	GanttChartElement(long aStartTime, String aName, int aColor)
+	GanttChartElement(long aStartTime, String aDescription, int aColor)
 	{
 		mStartTime = aStartTime;
 		mEndTime = aStartTime;
-		mName = aName;
+		mDescription = aDescription;
 		mColor = aColor;
 	}
 
@@ -49,9 +49,9 @@ public class GanttChartElement
 	}
 
 
-	public String getName()
+	public String getDescription()
 	{
-		return mName;
+		return mDescription;
 	}
 
 

@@ -10,7 +10,7 @@ import static org.terifan.ganttchart.GanttChartPanel.formatTime;
 import org.terifan.ui.Utilities;
 
 
-public class GanntChartDetailPanel extends JPanel
+public class GanttChartDetailPanel extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 
@@ -23,7 +23,7 @@ public class GanntChartDetailPanel extends JPanel
 	private Font mTimeFont = new Font("segoe ui", Font.PLAIN, 9);
 
 
-	public GanntChartDetailPanel()
+	public GanttChartDetailPanel()
 	{
 	}
 
@@ -88,7 +88,7 @@ public class GanntChartDetailPanel extends JPanel
 
 			aGraphics.setColor(Color.BLACK);
 			aGraphics.setFont(mLabelFont);
-			aGraphics.drawString(i == 0 ? mElement.getName() : subElements.get(i - 1).getName(), 0, y + 15);
+			aGraphics.drawString(i == 0 ? mElement.getDescription() : subElements.get(i - 1).getDescription(), 0, y + 15);
 
 			x0 = x1;
 			lastTime = tickTime;

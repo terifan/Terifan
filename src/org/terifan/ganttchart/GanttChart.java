@@ -11,7 +11,9 @@ public class GanttChart implements AutoCloseable
 
 	final TreeMap<Long, GanttChartElement> mMap;
 	GanttChartPanel mPanel;
-
+	
+	private long mStartTime;
+	private long mEndTime;
 	private int ci;
 
 
@@ -22,9 +24,13 @@ public class GanttChart implements AutoCloseable
 	}
 
 
-	public void tick(String aName)
+	public void tick(String aDescription)
 	{
-		mMap.get(mStack.get(mStack.size() - 1)).getSubElements().add(new GanttChartElement(System.nanoTime(), aName, C[ci++ % C.length]));
+		long time = System.nanoTime();
+		
+		mMap.get(mStack.get(mStack.size() - 1)).getSubElements().add(new GanttChartElement(time, aDescription, C[ci++ % C.length]));
+
+		mEndTime = time;
 
 		if (mPanel != null)
 		{
@@ -33,11 +39,19 @@ public class GanttChart implements AutoCloseable
 	}
 
 
-	public GanttChart start(String aName)
+	public GanttChart enter(String aDescription)
 	{
-		Long key = System.nanoTime();
-		mStack.add(key);
-		mMap.put(key, new GanttChartElement(key, aName, C[ci++ % C.length]));
+		long time = System.nanoTime();
+
+		if (mMap.isEmpty())
+		{
+			mStartTime = time - 1; // to avoid divide by zero else where...
+			mEndTime = time;
+		}
+		
+		mStack.add(time);
+		
+		mMap.put(time, new GanttChartElement(time, aDescription, C[ci++ % C.length]));
 
 		if (mPanel != null)
 		{
@@ -49,15 +63,37 @@ public class GanttChart implements AutoCloseable
 	}
 
 
-	@Override
-	public void close() throws Exception
+	public void exit()
 	{
-		Long key = mStack.remove(mStack.size() - 1);
-		mMap.get(key).setEndTime(System.nanoTime());
+		long key = mStack.remove(mStack.size() - 1);
+		long time = System.nanoTime();
+
+		mMap.get(key).setEndTime(time);
+
+		mEndTime = time;
 
 		if (mPanel != null)
 		{
 			mPanel.repaint();
 		}
+	}
+	
+
+	@Override
+	public void close()
+	{
+		exit();
+	}
+
+
+	public long getStartTime()
+	{
+		return mStartTime;
+	}
+
+
+	public long getEndTime()
+	{
+		return mStack.isEmpty() ? mEndTime : System.nanoTime();
 	}
 }
