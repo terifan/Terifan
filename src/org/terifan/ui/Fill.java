@@ -1,9 +1,10 @@
 package org.terifan.ui;
 
 
-public enum FillFunction
+public enum Fill
 {
 	HORIZONTAL,
 	VERTICAL,
-	BOTH
+	BOTH,
+	NONE
 }

@@ -12,12 +12,23 @@ import java.util.function.Function;
  * A ParameterizedTemplate is used to insert parameter values into a String, e.g "hello ${name}". The template is "compiled" making the
  * process of formatting very efficient when reused.
  *
- *  Map<String,Object> map = new HashMap<>();
- *  map.put("name", "Stig");
- *  map.put("size", 7);
- *  System.out.println(new ParameterizedTemplate("${name}${size}").format(map::get));
+ * e.g.:
+ * <code>
+ * Map<String,Object> map = new HashMap<>();
+ * map.put("name", "jones");
+ * map.put("size", 7);
+ *
+ * String result = new ParameterizedTemplate("Name: ${name}\nSize: ${size}\n").format(map::get);
+ * </code>
+ *
+ * Using the simplified parameterised builder:
+ *
+ * e.g.:
+ * <code>
+ * String result = new ParameterizedTemplate("Name: ${name}\nSize: ${size}\n").put("name", "Olle").put("size", 8).format();
+ * </code>
  */
-public class ParameterizedTemplate<V>
+public final class ParameterizedTemplate<V>
 {
 	private final static char START_SYMBOL_1 = '$';
 	private final static char START_SYMBOL_2 = '#';
@@ -161,7 +172,7 @@ public class ParameterizedTemplate<V>
 	}
 
 
-	protected static class Command
+	private static class Command
 	{
 		char symbol;
 		String key;
@@ -174,6 +185,58 @@ public class ParameterizedTemplate<V>
 	}
 
 
+	/**
+	 * Creates a builder to easily format a parameterised String.
+	 * <p>
+	 * <code>
+	 * String result = ParameterizedTemplate.builder("${value}").put("value", 7).format();
+	 * </code>
+	 * </p>
+	 */
+	public static ParameterizedTemplateBuilder builder(String aTemplate)
+	{
+		return new ParameterizedTemplateBuilder(new ParameterizedTemplate(aTemplate));
+	}
+
+
+	public static class ParameterizedTemplateBuilder
+	{
+		private final ParameterizedTemplate mTemplate;
+		private final HashMap<String,Object> mValues;
+
+
+		ParameterizedTemplateBuilder(ParameterizedTemplate aTemplate)
+		{
+			mTemplate = aTemplate;
+			mValues = new HashMap<>();
+		}
+
+
+		public ParameterizedTemplateBuilder put(String aKey, Object aValue)
+		{
+			mValues.put(aKey, aValue);
+			return this;
+		}
+
+
+		public String format() throws IOException
+		{
+			return mTemplate.format(mValues::get);
+		}
+	}
+
+
+	/**
+	 * Process the parameterised String without building a template.
+	 * <p>
+	 * <code>
+	 * HashMap<String,Object> map = new HashMap<>();
+	 * map.put("value", 7);
+	 *
+	 * String result = ParameterizedTemplate.format("${value}").format(map::get);
+	 * </code>
+	 * </p>
+	 */
 	public static String replace(String aTemplate, Function<String,Object> aParameters)
 	{
 		StringBuilder buffer = new StringBuilder(aTemplate);
@@ -206,6 +269,10 @@ public class ParameterizedTemplate<V>
 
 			System.out.println(new ParameterizedTemplate("${name}${size}").format(map::get));
 			System.out.println(new ParameterizedTemplate("{${name}:${size}}").format(map::get));
+
+			System.out.println("-----");
+
+			System.out.println(ParameterizedTemplate.builder("${name}${size}").put("name","Olle").put("size",8).format());
 
 			System.out.println("-----");
 
