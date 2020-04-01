@@ -48,18 +48,18 @@ public class Assert
 	/**
 	 * Throws exception if values aren't equal.
 	 */
-	public static void assertEquals(Object aValue0, Object aValue1)
+	public static void assertEquals(Object aActual, Object aExpected)
 	{
-		assertEquals(aValue0, aValue1, "Values not equal");
+		assertEquals(aActual, aExpected, "Values not equal: actual: " + aActual + ", expected: " + aExpected);
 	}
 
 
 	/**
 	 * Throws exception if values aren't equal.
 	 */
-	public static void assertEquals(Object aValue0, Object aValue1, String aErrorMessage, Object... aArguments)
+	public static void assertEquals(Object aActual, Object aExpected, String aErrorMessage, Object... aArguments)
 	{
-		if ((aValue0 == null && aValue1 != null) || aValue0 != null && !aValue0.equals(aValue1))
+		if ((aActual == null && aExpected != null) || aActual != null && !aActual.equals(aExpected))
 		{
 			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
 		}

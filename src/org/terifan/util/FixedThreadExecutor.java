@@ -273,4 +273,11 @@ public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 	{
 		mOnCompletion = aOnCompletion;
 	}
+
+
+	@FunctionalInterface
+	public interface OnCompletion<T>
+	{
+		void onCompletion(T aItem);
+	}
 }
