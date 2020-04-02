@@ -2,27 +2,29 @@ package org.terifan.util;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 /**
  * Helper class replacing Executors.newFixedThreadPool()
  */
-public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
+public class FixedThreadExecutor<T> implements AutoCloseable
 {
-	private LinkedBlockingQueue<T> mBlockingQueue;
+	private LinkedBlockingQueue mBlockingQueue;
 	private ExecutorService mExecutorService;
 	private int mThreads;
 	private int mQueueSizeLimit;
-	private OnCompletion<T> mOnCompletion;
+	private OnCompletion mOnCompletion;
+	private HashMap<CallableTask, AtomicReference> mResultReceivers;
 
 
 	/**
@@ -44,6 +46,7 @@ public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 
 		mBlockingQueue = new LinkedBlockingQueue<>();
 		mQueueSizeLimit = Integer.MAX_VALUE;
+		mResultReceivers = new HashMap<>();
 	}
 
 
@@ -64,6 +67,7 @@ public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
 		mBlockingQueue = new LinkedBlockingQueue<>();
 		mQueueSizeLimit = Integer.MAX_VALUE;
+		mResultReceivers = new HashMap<>();
 	}
 
 
@@ -98,45 +102,58 @@ public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 	 *
 	 * @see java.util.concurrent.ExecutorService#submit
 	 */
-	public void submit(T aRunnable)
+	public void submit(RunnableTask aRunnable)
 	{
 		doSubmit(init(), aRunnable);
 	}
 
 
-	/**
-	 * Submit a task, this method may block if the queue size exceeds the limit.
-	 *
-	 * @see java.util.concurrent.ExecutorService#submit
-	 */
-	public void submit(T... aRunnables)
+	public void call(AtomicReference aResultReceiver, CallableTask aRunnable)
 	{
-		ExecutorService service = init();
-
-		for (T r : aRunnables)
-		{
-			doSubmit(service, r);
-		}
+		mResultReceivers.put(aRunnable, aResultReceiver);
+		doSubmit(init(), aRunnable);
 	}
 
 
-	/**
-	 * Submit a task, this method may block if the queue size exceeds the limit.
-	 *
-	 * @see java.util.concurrent.ExecutorService#submit
-	 */
-	public void submit(Iterable<? extends T> aRunnables)
-	{
-		ExecutorService service = init();
-
-		for (T r : aRunnables)
-		{
-			doSubmit(service, r);
-		}
-	}
+//	public void submit(Callable aCallable)
+//	{
+//		doSubmit(init(), aCallable);
+//	}
 
 
-	private void doSubmit(ExecutorService aService, T aRunnable)
+//	/**
+//	 * Submit a task, this method may block if the queue size exceeds the limit.
+//	 *
+//	 * @see java.util.concurrent.ExecutorService#submit
+//	 */
+//	public void submit(T... aRunnables)
+//	{
+//		ExecutorService service = init();
+//
+//		for (T r : aRunnables)
+//		{
+//			doSubmit(service, r);
+//		}
+//	}
+//
+//
+//	/**
+//	 * Submit a task, this method may block if the queue size exceeds the limit.
+//	 *
+//	 * @see java.util.concurrent.ExecutorService#submit
+//	 */
+//	public void submit(Iterable<? extends T> aRunnables)
+//	{
+//		ExecutorService service = init();
+//
+//		for (T r : aRunnables)
+//		{
+//			doSubmit(service, r);
+//		}
+//	}
+
+
+	private void doSubmit(ExecutorService aService, Object aRunnable)
 	{
 		try
 		{
@@ -147,7 +164,41 @@ public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 					FixedThreadExecutor.class.wait();
 				}
 
-				aService.submit(aRunnable);
+				if (aRunnable instanceof RunnableTask)
+				{
+					aService.submit(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							try
+							{
+								((RunnableTask)aRunnable).run();
+							}
+							catch (Exception e)
+							{
+							}
+						}
+					});
+				}
+				else if (aRunnable instanceof CallableTask)
+				{
+					aService.submit(new Callable()
+					{
+						@Override
+						public Object call()
+						{
+							try
+							{
+								return ((CallableTask)aRunnable).run();
+							}
+							catch (Exception e)
+							{
+								return e;
+							}
+						}
+					});
+				}
 			}
 		}
 		catch (InterruptedException e)
@@ -207,28 +258,28 @@ public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 
 					if (mOnCompletion != null)
 					{
-						mOnCompletion.onCompletion((T)aRunnable);
+						mOnCompletion.onCompletion((Future)aRunnable);
 					}
 
-					if (aThrowable == null && aRunnable instanceof Future<?>)
-					{
-						try
-						{
-							Object result = ((Future<?>)aRunnable).get();
-						}
-						catch (CancellationException ce)
-						{
-							aThrowable = ce;
-						}
-						catch (ExecutionException ee)
-						{
-							aThrowable = ee.getCause();
-						}
-						catch (InterruptedException ie)
-						{
-							Thread.currentThread().interrupt(); // ignore/reset
-						}
-					}
+//					if (aThrowable == null && aRunnable instanceof Future<?>)
+//					{
+//						try
+//						{
+//							Object result = ((Future<?>)aRunnable).get();
+//						}
+//						catch (CancellationException ce)
+//						{
+//							aThrowable = ce;
+//						}
+//						catch (ExecutionException ee)
+//						{
+//							aThrowable = ee.getCause();
+//						}
+//						catch (InterruptedException ie)
+//						{
+//							Thread.currentThread().interrupt(); // ignore/reset
+//						}
+//					}
 
 					if (aThrowable != null)
 					{
@@ -257,20 +308,36 @@ public class FixedThreadExecutor<T extends Runnable> implements AutoCloseable
 	/**
 	 * Sets how many items the blocking queue will contain before the submit methods start blocking.
 	 */
-	public void setQueueSizeLimit(int aQueueSizeLimit)
+	public FixedThreadExecutor<T> setQueueSizeLimit(int aQueueSizeLimit)
 	{
 		mQueueSizeLimit = aQueueSizeLimit;
+		return this;
 	}
 
 
-	public OnCompletion<T> getOnCompletion()
+	public OnCompletion getOnCompletion()
 	{
 		return mOnCompletion;
 	}
 
 
-	public void setOnCompletion(OnCompletion<T> aOnCompletion)
+	public FixedThreadExecutor<T> setOnCompletion(OnCompletion aOnCompletion)
 	{
 		mOnCompletion = aOnCompletion;
+		return this;
+	}
+
+
+	@FunctionalInterface
+	public interface RunnableTask
+	{
+		void  run() throws Exception;
+	}
+
+
+	@FunctionalInterface
+	public interface CallableTask<U>
+	{
+		U run() throws Exception;
 	}
 }

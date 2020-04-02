@@ -1,8 +1,10 @@
 package org.terifan.util;
 
+import java.util.concurrent.Future;
+
 
 @FunctionalInterface
-public interface OnCompletion<T>
+public interface OnCompletion
 {
-	void onCompletion(T aItem);
+	void onCompletion(Future aItem);
 }
