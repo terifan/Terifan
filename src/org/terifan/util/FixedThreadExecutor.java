@@ -340,4 +340,11 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	{
 		U run() throws Exception;
 	}
+
+
+	@FunctionalInterface
+	public interface OnCompletion<T>
+	{
+		void onCompletion(T aItem);
+	}
 }

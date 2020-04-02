@@ -207,7 +207,7 @@ public final class LongArray implements Cloneable, Iterable<Long>
 	}
 	
 	
-	public LongArray trimToSize()
+	public LongArray trim()
 	{
 		mValues = Arrays.copyOfRange(mValues, 0, mSize);
 		return this;
