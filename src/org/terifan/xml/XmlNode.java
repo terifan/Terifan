@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import static java.nio.file.Files.size;
+import java.util.ArrayList;
 import java.util.Arrays;
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.OutputKeys;
@@ -119,24 +121,27 @@ public class XmlNode
 	 */
     public XmlElement [] getElements(XPath aXPath)
     {
-        try
-        {
+		try
+		{
 			NodeList nodeList = (NodeList)aXPath.getDOMExpression().evaluate(mNode, XPathConstants.NODESET);
+
 			if (nodeList == null)
 			{
 				return new XmlElement[0];
 			}
-			XmlElement [] elements = new XmlElement[nodeList.getLength()];
-			int size = 0;
-			for (int i = 0; i < elements.length; i++)
+
+			ArrayList<XmlElement> elements = new ArrayList<>();
+
+			for (int i = 0; i < nodeList.getLength(); i++)
 			{
 				Node node = nodeList.item(i);
 				if (node instanceof Element)
 				{
-					elements[size++] = new XmlElement(node);
+					elements.add(new XmlElement(node));
 				}
 			}
-            return Arrays.copyOfRange(elements, 0, size);
+
+			return elements.toArray(new XmlElement[0]);
         }
         catch (XPathExpressionException e)
         {

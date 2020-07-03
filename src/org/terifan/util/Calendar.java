@@ -26,11 +26,17 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 		"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
 	};
 
-	private final static SimpleDateFormat DEFAULT_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
 	private final static long serialVersionUID = 1;
-	private final static Calendar mStaticCalendar = new Calendar();
-	private final static GregorianCalendar mStaticGregorianCalendar = new GregorianCalendar();
+
+	private final static String DEFAULT_DATE_FORMAT_STRING = "yyyy-MM-dd";
+	private final static String DEFAULT_TIME_FORMAT_STRING = "hh:MM:ss";
+	private final static String DEFAULT_DATETIME_FORMAT_STRING = "yyyy-MM-dd hh:MM:ss";
+
+	private final static SimpleDateFormat DEFAULT_TIME_FORMAT = new SimpleDateFormat(DEFAULT_TIME_FORMAT_STRING);
+	private final static SimpleDateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat(DEFAULT_DATE_FORMAT_STRING);
+	private final static SimpleDateFormat DEFAULT_DATETIME_FORMAT = new SimpleDateFormat(DEFAULT_DATETIME_FORMAT_STRING);
+
+	private final static Calendar STATIC_CALENDAR_INSTANCE = new Calendar();
 
 
 	private int mYear;
@@ -559,7 +565,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 */
 	public synchronized long get()
 	{
-		GregorianCalendar gc = mStaticGregorianCalendar;
+		GregorianCalendar gc = new GregorianCalendar();
 
 		gc.setMinimalDaysInFirstWeek(4);
 		gc.setFirstDayOfWeek(GregorianCalendar.MONDAY);
@@ -613,12 +619,25 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	@Override
 	public String toString()
 	{
-		return DEFAULT_FORMAT.format(new Date(get()));
+		return DEFAULT_DATETIME_FORMAT.format(new Date(get()));
 	}
 
 
 	public String format(String aFormat)
 	{
+		if (aFormat.equals(DEFAULT_DATE_FORMAT_STRING))
+		{
+			return DEFAULT_DATE_FORMAT.format(new Date(get()));
+		}
+		if (aFormat.equals(DEFAULT_TIME_FORMAT_STRING))
+		{
+			return DEFAULT_TIME_FORMAT.format(new Date(get()));
+		}
+		if (aFormat.equals(DEFAULT_DATETIME_FORMAT_STRING))
+		{
+			return DEFAULT_DATETIME_FORMAT.format(new Date(get()));
+		}
+
 		return new SimpleDateFormat(aFormat).format(new Date(get()));
 	}
 
@@ -659,7 +678,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 */
 	public static synchronized String format(long aTimeInMillis, String aFormat)
 	{
-		return mStaticCalendar.set(aTimeInMillis).format(aFormat);
+		return STATIC_CALENDAR_INSTANCE.set(aTimeInMillis).format(aFormat);
 	}
 
 
@@ -695,7 +714,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 */
 	public static synchronized String date()
 	{
-		return mStaticCalendar.set(System.currentTimeMillis()).format("yyyy-MM-dd");
+		return STATIC_CALENDAR_INSTANCE.set(System.currentTimeMillis()).format(DEFAULT_DATE_FORMAT_STRING);
 	}
 
 
@@ -707,7 +726,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 */
 	public static synchronized String time()
 	{
-		return mStaticCalendar.set(System.currentTimeMillis()).format("HH:mm:ss");
+		return STATIC_CALENDAR_INSTANCE.set(System.currentTimeMillis()).format("HH:mm:ss");
 	}
 
 
@@ -1059,16 +1078,37 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	}
 
 
-	public static Calendar parse(String aString)
+	/**
+	 * Constructs a new Calendar object, return null if the input provided is null.
+	 */
+	public static Calendar parse(Object aInput)
 	{
-		if (Strings.isEmptyOrNull(aString))
+		if (aInput != null)
 		{
-			return null;
+			if (aInput instanceof String)
+			{
+				String s = (String)aInput;
+				if (s.isEmpty())
+				{
+					return null;
+				}
+				return new Calendar(s);
+			}
+			if (aInput instanceof Date)
+			{
+				return new Calendar((Date)aInput);
+			}
+			if (aInput instanceof GregorianCalendar)
+			{
+				return new Calendar((GregorianCalendar)aInput);
+			}
+			if (aInput instanceof Long)
+			{
+				return new Calendar((Long)aInput);
+			}
 		}
-		else
-		{
-			return new Calendar(aString);
-		}
+
+		return null;
 	}
 
 
