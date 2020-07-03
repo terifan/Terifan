@@ -50,6 +50,15 @@ public class ColorHeatMap
 	 */
 	public static int getRGBForValue(boolean aHighlightLimits, double aValue, double aMaxVal)
 	{
+		if (aValue < 0)
+		{
+			throw new IllegalArgumentException("aValue < 0");
+		}
+		if (aMaxVal <= 0)
+		{
+			throw new IllegalArgumentException("aMaxVal <= 0");
+		}
+
 		int[][] colors = COLORS[aHighlightLimits ? 1 : 0];
 
 		double valPerc = aValue / aMaxVal;
@@ -59,7 +68,7 @@ public class ColorHeatMap
 		double valPercResidual = valPerc - (blockIdx * colorPerc);
 		double percOfColor = valPercResidual / colorPerc;
 
-		int[] first = colors[blockIdx];
+		int[] first = colors[Math.min(blockIdx, colors.length - 1)];
 		int[] second = colors[Math.min(blockIdx + 1, colors.length - 1)];
 
 		int r = Math.max(0, Math.min(255, first[0] + (int)((second[0] - first[0]) * percOfColor)));
