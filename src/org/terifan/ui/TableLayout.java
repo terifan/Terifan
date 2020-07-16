@@ -34,13 +34,14 @@ public class TableLayout implements LayoutManager2
 
 	public TableLayout(int aSpacingX, int aSpacingY)
 	{
-		mCurrentRow = new ArrayList<>();
 		mColumnWidths = new ArrayList<>();
 		mRowHeights = new ArrayList<>();
 		mComponents = new ArrayList<>();
-		mComponents.add(mCurrentRow);
 		mSpacingX = aSpacingX;
 		mSpacingY = aSpacingY;
+
+		mCurrentRow = new ArrayList<>();
+		mComponents.add(mCurrentRow);
 	}
 
 
@@ -170,7 +171,7 @@ public class TableLayout implements LayoutManager2
 	private int getRowCount()
 	{
 		int rowCount;
-		for (rowCount = mComponents.size(); --rowCount > 0 && mComponents.get(rowCount).isEmpty();)
+		for (rowCount = mComponents.size(); rowCount > 0 && mComponents.get(rowCount - 1).isEmpty(); rowCount--)
 		{
 		}
 		return rowCount;
