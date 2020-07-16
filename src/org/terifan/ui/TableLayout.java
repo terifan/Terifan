@@ -103,8 +103,8 @@ public class TableLayout implements LayoutManager2
 	@Override
 	public synchronized void invalidateLayout(Container aTarget)
 	{
-		mColumnWidths.clear();
-		mRowHeights.clear();
+		ArrayList<Integer> columnWidths = new ArrayList<>();
+		ArrayList<Integer> rowHeights = new ArrayList<>();
 
 		int rowCount = getRowCount();
 		int maxColumns = 0;
@@ -117,22 +117,24 @@ public class TableLayout implements LayoutManager2
 				Component comp = mComponents.get(y).get(x);
 				Dimension d = comp.getPreferredSize();
 				rowHeight = Math.max(rowHeight, d.height);
-				if (x == mColumnWidths.size())
+				if (x == columnWidths.size())
 				{
-					mColumnWidths.add(d.width);
+					columnWidths.add(d.width);
 				}
 				else
 				{
-					int w = Math.max(d.width, mColumnWidths.get(x));
-					mColumnWidths.set(x, w);
+					int w = Math.max(d.width, columnWidths.get(x));
+					columnWidths.set(x, w);
 				}
 			}
-			mRowHeights.add(rowHeight);
+			rowHeights.add(rowHeight);
 			maxColumns = Math.max(maxColumns, mComponents.get(y).size());
 		}
 
-		mWidth = mColumnWidths.stream().mapToInt(e -> e).sum() + mSpacingX * (maxColumns - 1);
-		mHeight = mRowHeights.stream().mapToInt(e -> e).sum() + mSpacingY * (rowCount - 1);
+		mColumnWidths = columnWidths;
+		mRowHeights = rowHeights;
+		mWidth = columnWidths.stream().mapToInt(e -> e).sum() + mSpacingX * (maxColumns - 1);
+		mHeight = rowHeights.stream().mapToInt(e -> e).sum() + mSpacingY * (rowCount - 1);
 
 //		System.out.println(rowCount+"/"+mComponents.size());
 //		System.out.println(mColumnWidths);
@@ -145,19 +147,22 @@ public class TableLayout implements LayoutManager2
 	@Override
 	public synchronized void layoutContainer(Container aParent)
 	{
+		ArrayList<Integer> columnWidths = mColumnWidths;
+		ArrayList<Integer> rowHeights = mRowHeights;
+
 		int rowCount = getRowCount();
 
 		int v = 0;
-		for (int y = 0; y < rowCount; y++)
+		for (int y = 0; y < rowHeights.size() && y < rowCount; y++)
 		{
 			int u = 0;
-			for (int x = 0; x < mComponents.get(y).size(); x++)
+			for (int x = 0; x < columnWidths.size() && x < mComponents.get(y).size(); x++)
 			{
 				Component comp = mComponents.get(y).get(x);
-				comp.setBounds(u, v, mColumnWidths.get(x), mRowHeights.get(y));
-				u += mColumnWidths.get(x) + mSpacingX;
+				comp.setBounds(u, v, columnWidths.get(x), rowHeights.get(y));
+				u += columnWidths.get(x) + mSpacingX;
 			}
-			v += mRowHeights.get(y) + mSpacingY;
+			v += rowHeights.get(y) + mSpacingY;
 		}
 	}
 
