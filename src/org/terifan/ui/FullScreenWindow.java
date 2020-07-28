@@ -111,9 +111,6 @@ public class FullScreenWindow
 		mTitleBarFont = new Font[3];
 		mTitleBarButtonSymbolSize = 14;
 
-		mMinSize = new Dimension(2 * mBorderSize + 4 * mTitleBarButtonWidth, mBorderSize + mTitleBarHeight);
-		mMaxSize = new Dimension(32000, 32000);
-
 		mStyle = aStyle;
 
 		switch (mStyle)
@@ -169,8 +166,11 @@ public class FullScreenWindow
 			mFrame.addWindowFocusListener(mWindowStateListener);
 		}
 
-
 		updateDimensions();
+
+		mMinSize = new Dimension(2 * mBorderSize + 4 * mTitleBarButtonWidth, mBorderSize + mTitleBarHeight);
+		mMaxSize = new Dimension(32000, 32000);
+
 		updateButtonPositions(100);
 		updateBorder(JFrame.NORMAL, true);
 	}
@@ -263,12 +263,12 @@ public class FullScreenWindow
 		mTitleBarForeground[1].add(new Color(255, 255, 255), DEFAULT);
 		mTitleBarForeground[2].add(new Color(160, 160, 160), DEFAULT);
 
-		if(mStyle==3)
+		if (mStyle == 3)
 		{
 			mBorderInner.add(new Color(0, 0, 0), DEFAULT);
 			mBorderInner.add(new Color(0, 0, 0), FOCUSED);
-			mBorderOuter.add(new Color(145,206,17), DEFAULT);
-			mBorderOuter.add(new Color(145,206,17), FOCUSED);
+			mBorderOuter.add(new Color(145, 206, 17), DEFAULT);
+			mBorderOuter.add(new Color(145, 206, 17), FOCUSED);
 		}
 		else
 		{
@@ -756,7 +756,6 @@ public class FullScreenWindow
 		}
 	};
 
-
 	private WindowAdapter mWindowStateListener = new WindowAdapter()
 	{
 		@Override
@@ -995,21 +994,21 @@ public class FullScreenWindow
 
 			Color[] grad1 = new Color[]
 			{
-				new Color(145,206,17), new Color(242, 249, 230)
+				new Color(145, 206, 17), new Color(242, 249, 230)
 			};
 			Color[] grad2 = new Color[]
 			{
-				new Color(145,206,17), new Color(242, 249, 230, 0)
+				new Color(145, 206, 17), new Color(242, 249, 230, 0)
 			};
 
 			Paint p = aGraphics.getPaint();
 
 			aGraphics.setPaint(new LinearGradientPaint(0, 0, 0, mTitleBarHeight, GRAD_RANGE, grad1, MultipleGradientPaint.CycleMethod.NO_CYCLE));
 			aGraphics.fillRect(bs, 1, aWidth - bs - bs, mTitleBarHeight - 1);
-			aGraphics.setPaint(new LinearGradientPaint(bs, 1, bs+mTitleBarHeight/2, 1, GRAD_RANGE, grad2, MultipleGradientPaint.CycleMethod.NO_CYCLE));
-			aGraphics.fillRect(bs, 1, mTitleBarHeight/2, mTitleBarHeight - 1);
-			aGraphics.setPaint(new LinearGradientPaint(aWidth - bs, 1, aWidth - bs - mTitleBarHeight/2, 1, GRAD_RANGE, grad2, MultipleGradientPaint.CycleMethod.NO_CYCLE));
-			aGraphics.fillRect(aWidth - bs - mTitleBarHeight/2, 1, mTitleBarHeight/2, mTitleBarHeight - 1);
+			aGraphics.setPaint(new LinearGradientPaint(bs, 1, bs + mTitleBarHeight / 2, 1, GRAD_RANGE, grad2, MultipleGradientPaint.CycleMethod.NO_CYCLE));
+			aGraphics.fillRect(bs, 1, mTitleBarHeight / 2, mTitleBarHeight - 1);
+			aGraphics.setPaint(new LinearGradientPaint(aWidth - bs, 1, aWidth - bs - mTitleBarHeight / 2, 1, GRAD_RANGE, grad2, MultipleGradientPaint.CycleMethod.NO_CYCLE));
+			aGraphics.fillRect(aWidth - bs - mTitleBarHeight / 2, 1, mTitleBarHeight / 2, mTitleBarHeight - 1);
 			aGraphics.setPaint(p);
 
 			Rectangle rect = new TextBox(mTitle[0])
@@ -1087,8 +1086,8 @@ public class FullScreenWindow
 			mLayoutSize = aWidth;
 			mButtonRects = new Rectangle[]
 			{
-				new Rectangle(mLayoutSize - (mDialog!=null?1:3) * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, (mDialog!=null?0:1)*mTitleBarButtonWidth, mTitleBarButtonHeight),
-				new Rectangle(mLayoutSize - (mDialog!=null?1:2) * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, (mDialog!=null?0:1)*mTitleBarButtonWidth, mTitleBarButtonHeight),
+				new Rectangle(mLayoutSize - (mDialog != null ? 1 : 3) * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, (mDialog != null ? 0 : 1) * mTitleBarButtonWidth, mTitleBarButtonHeight),
+				new Rectangle(mLayoutSize - (mDialog != null ? 1 : 2) * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, (mDialog != null ? 0 : 1) * mTitleBarButtonWidth, mTitleBarButtonHeight),
 				new Rectangle(mLayoutSize - 1 * mTitleBarButtonWidth - (maximized ? 0 : mBorderSize), maximized ? 0 : 1, mTitleBarButtonWidth, mTitleBarButtonHeight)
 			};
 		}
@@ -1118,7 +1117,7 @@ public class FullScreenWindow
 //		}
 		int S = mTitleBarButtonSymbolSize / 2;
 		int cx = aBounds.x + aBounds.width / 2;
-		int cy = aBounds.y + aBounds.height / 2 + (aMaximized || aArmed ? 0 : mBorderSize/2);
+		int cy = aBounds.y + aBounds.height / 2 + (aMaximized || aArmed ? 0 : mBorderSize / 2);
 		aGraphics.setColor(mCloseButtonForegroundShadow.get(mFocused, aArmed));
 		aGraphics.drawLine(cx - S + 1, cy - S, cx + S, cy + S - 1);
 		aGraphics.drawLine(cx - S, cy - S + 1, cx + S - 1, cy + S);
@@ -1152,7 +1151,7 @@ public class FullScreenWindow
 		int S = mTitleBarButtonSymbolSize / 2 - 1;
 		int L = 1 + S / 2;
 		int cx = aBounds.x + aBounds.width / 2 - L / 2 - 1;
-		int cy = aBounds.y + aBounds.height / 2 + L / 2 + (aMaximized || aArmed ? 0 : mBorderSize/2);
+		int cy = aBounds.y + aBounds.height / 2 + L / 2 + 0 * (aMaximized || aArmed ? 0 : mBorderSize / 2);
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
 		aGraphics.drawRect(cx - S, cy - S, 2 * S, 2 * S);
 		aGraphics.drawLine(cx - S + L, cy - S - L, cx - S + L, cy - S);
@@ -1182,7 +1181,7 @@ public class FullScreenWindow
 //			aGraphics.setPaint(p);
 //		}
 		int cx = aBounds.x + aBounds.width / 2;
-		int cy = aBounds.y + aBounds.height / 2 + (aMaximized || aArmed ? 0 : mBorderSize/2);
+		int cy = aBounds.y + aBounds.height / 2 + 0 * (aMaximized || aArmed ? 0 : mBorderSize / 2);
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
 		aGraphics.drawLine(cx - 7, cy, cx + 7, cy);
 	}
@@ -1207,10 +1206,9 @@ public class FullScreenWindow
 //			aGraphics.fill(aBounds);
 //			aGraphics.setPaint(p);
 //		}
-
 		int S = mTitleBarButtonSymbolSize / 2;
 		int cx = aBounds.x + aBounds.width / 2 - S;
-		int cy = aBounds.y + aBounds.height / 2 - S + (aMaximized || aArmed ? 0 : mBorderSize/2);
+		int cy = aBounds.y + aBounds.height / 2 - S + 0 * (aMaximized || aArmed ? 0 : mBorderSize / 2);
 		aGraphics.setColor(mWindowButtonForeground.get(mFocused, aArmed));
 		aGraphics.drawRect(cx, cy, 2 * S + 1, 2 * S + 1);
 	}
@@ -1405,7 +1403,7 @@ public class FullScreenWindow
 	{
 		try
 		{
-			FullScreenWindow wnd = new FullScreenWindow(null, "New window", true, true, 1);
+			FullScreenWindow wnd = new FullScreenWindow(null, "New window", false, true, 1);
 			wnd.getContentPanel().setLayout(new GridLayout(1, 2));
 			wnd.add(new JButton(new AbstractAction("undecorated")
 			{
@@ -1423,14 +1421,18 @@ public class FullScreenWindow
 					wnd.setBorderVisible(!wnd.isBorderVisible());
 				}
 			}));
-			wnd.setOnClosing(()->{System.out.println("closing");return true;});
-			wnd.setOnClosed(()->System.out.println("closed"));
-			wnd.setOnResize(()->System.out.println("resize"));
-			wnd.setOnMinizmie(()->System.out.println("minimize"));
-			wnd.setOnMaximize(()->System.out.println("maximize"));
-			wnd.setOnRestore(()->System.out.println("restore"));
-			wnd.setOnGainedFocus(()->System.out.println("focused"));
-			wnd.setOnLostFocus(()->System.out.println("unfocused"));
+			wnd.setOnClosing(() ->
+			{
+				System.out.println("closing");
+				return true;
+			});
+			wnd.setOnClosed(() -> System.out.println("closed"));
+			wnd.setOnResize(() -> System.out.println("resize"));
+			wnd.setOnMinizmie(() -> System.out.println("minimize"));
+			wnd.setOnMaximize(() -> System.out.println("maximize"));
+			wnd.setOnRestore(() -> System.out.println("restore"));
+			wnd.setOnGainedFocus(() -> System.out.println("focused"));
+			wnd.setOnLostFocus(() -> System.out.println("unfocused"));
 			wnd.setVisible(true);
 		}
 		catch (Throwable e)
