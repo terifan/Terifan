@@ -31,8 +31,25 @@ public final class Streams
 	 */
 	public static byte[] readAll(Object aInput) throws IOException
 	{
+		return readAll(aInput, true);
+	}
+
+
+	public static byte[] readAll(Object aInput, boolean aClose) throws IOException
+	{
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		transfer(aInput, output);
+		InputStream inputStream = createInputStream(aInput);
+		try
+		{
+			transfer(inputStream, output, aClose, Long.MAX_VALUE);
+		}
+		finally
+		{
+			if (inputStream != null && !(aInput instanceof InputStream))
+			{
+				inputStream.close();
+			}
+		}
 		return output.toByteArray();
 	}
 
