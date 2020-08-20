@@ -6,7 +6,7 @@ import java.util.TreeMap;
 
 public class SparseDoubleArray implements Iterable<Integer>
 {
-	private TreeMap<Integer,Double> mValues;
+	private TreeMap<Integer, Double> mValues;
 
 
 	public SparseDoubleArray()
@@ -25,14 +25,20 @@ public class SparseDoubleArray implements Iterable<Integer>
 	{
 		return mValues.getOrDefault(aIndex, aDefaultValue);
 	}
-	
-	
+
+
+	public double add(int aIndex, double aValue)
+	{
+		return mValues.put(aIndex, mValues.getOrDefault(aIndex, 0.0) + aValue);
+	}
+
+
 	public int size()
 	{
 		return mValues.isEmpty() ? 0 : mValues.lastKey();
 	}
-	
-	
+
+
 	public double[] toArray()
 	{
 		double[] array = new double[size()];
@@ -42,8 +48,8 @@ public class SparseDoubleArray implements Iterable<Integer>
 		}
 		return array;
 	}
-	
-	
+
+
 	@Override
 	public Iterator<Integer> iterator()
 	{
@@ -75,8 +81,8 @@ public class SparseDoubleArray implements Iterable<Integer>
 	{
 		return mValues.lastKey();
 	}
-	
-	
+
+
 	public boolean contains(Integer aIndex)
 	{
 		return mValues.containsKey(aIndex);
