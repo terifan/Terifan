@@ -16,28 +16,44 @@ public class ColorHeatMap
 		0xFFFF00, // Yellow
 		0xFF0000, // Red
 	};
-	/** blue-to-red rainbow scale with black minimum and white maximum */
+	/** blue-to-red rainbow scale with thin black minimum and white maximum */
 	public final static int[] WIDE =
 	{
 		0x000000, // Black
 		0x0000FF, // Blue
-		0x0040FF, // Cyan
-		0x0080FF, // Cyan
-		0x00C0FF, // Cyan
+		0x0020FF,
+		0x0040FF,
+		0x0060FF,
+		0x0080FF,
+		0x00A0FF,
+		0x00C0FF,
+		0x00E0FF,
 		0x00FFFF, // Cyan
-		0x00FFC0, // Green
-		0x00FF80, // Green
-		0x00FF40, // Green
+		0x00FFE0,
+		0x00FFC0,
+		0x00FFA0,
+		0x00FF80,
+		0x00FF60,
+		0x00FF40,
+		0x00FF20,
 		0x00FF00, // Green
-		0x40FF00, // Yellow
-		0x80FF00, // Yellow
-		0xC0FF00, // Yellow
+		0x20FF00,
+		0x40FF00,
+		0x60FF00,
+		0x80FF00,
+		0xA0FF00,
+		0xC0FF00,
+		0xE0FF00,
 		0xFFFF00, // Yellow
-		0xFFC000, // Red
-		0xFF8000, // Red
-		0xFF4000, // Red
+		0xFFE000,
+		0xFFC000,
+		0xFFA000,
+		0xFF8000,
+		0xFF6000,
+		0xFF4000,
+		0xFF2000,
 		0xFF0000, // Red
-		0xFFFFFF // White
+		0xFFFFFF  // White
 	};
 	public final static int[] BLACK_BLUE =
 	{
