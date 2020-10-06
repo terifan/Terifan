@@ -37,7 +37,7 @@ public class SpeedGraph extends JComponent
 		super.setBackground(Color.WHITE);
 	}
 
-	
+
 	public void restart(long aTotalWork)
 	{
 		mResolution = 1 + 200;
@@ -53,7 +53,7 @@ public class SpeedGraph extends JComponent
 		mSpeed = new double[mResolution];
 		Arrays.fill(mSpeed, -1.0);
 	}
-	
+
 
 	public synchronized void addWork(long aDuration, long aWork)
 	{
@@ -269,8 +269,8 @@ public class SpeedGraph extends JComponent
 			Random rnd = new Random(0);
 			while (graph.remainingWork() > 0)
 			{
-//				graph.addWork((1<<rnd.nextInt(25))+rnd.nextInt(1000), 100);
-				graph.addWork(1000, 100000);
+				graph.addWork((1<<rnd.nextInt(25))+rnd.nextInt(1000), 100);
+//				graph.addWork(1000, 100000);
 			}
 
 //			byte[] buffer = new byte[16384];

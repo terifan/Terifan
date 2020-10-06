@@ -65,7 +65,7 @@ public class ProgressPane extends JPanel
 	@Override
 	public Dimension getPreferredSize()
 	{
-		return new Dimension(100,1000);
+		return new Dimension(100, 1000);
 	}
 
 
@@ -80,7 +80,7 @@ public class ProgressPane extends JPanel
 			mWork.addAll(mPendingWork);
 			mPendingWork.clear();
 		}
-		
+
 		paintImpl(aGraphics, 0, 0, mWork);
 	}
 
@@ -99,12 +99,12 @@ public class ProgressPane extends JPanel
 				aGraphics.setColor(Color.RED);
 				aGraphics.fillRect(x * s, y, p, work.mHeight);
 				aGraphics.setColor(Color.BLUE);
-				aGraphics.fillRect(x * s + p, y, w-p, work.mHeight);
+				aGraphics.fillRect(x * s + p, y, w - p, work.mHeight);
 				aGraphics.setColor(Color.YELLOW);
 
 				Shape oldClip = aGraphics.getClip();
 				aGraphics.setClip(x * s, y, w, work.mHeight);
-				aGraphics.drawString((work.getProgress() * 100 / (work.getLimit() == 0 ? 100 : work.getLimit())) + "% " + work.getLabel(), w/2-50, y + work.mHeight-5);
+				aGraphics.drawString((work.getProgress() * 100 / (work.getLimit() == 0 ? 100 : work.getLimit())) + "% " + work.getLabel(), x * s + w / 2 - 50, y + work.mHeight - 5);
 				aGraphics.setClip(oldClip);
 
 				y += work.mHeight + 2;

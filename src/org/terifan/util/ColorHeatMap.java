@@ -43,6 +43,11 @@ public class ColorHeatMap
 			0x000080,
 			0x0000C0,
 			0x0000FF
+		},
+		{
+			new Color(255,109,32).getRGB(),
+			new Color(255,219,3).getRGB(),
+			new Color(114,197,27).getRGB()
 		}
 	};
 

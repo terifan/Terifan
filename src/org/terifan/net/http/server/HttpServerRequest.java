@@ -1,7 +1,5 @@
 package org.terifan.net.http.server;
 
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -10,7 +8,6 @@ import java.util.HashMap;
 
 public class HttpServerRequest
 {
-	private byte [] mContent;
 	private String mMethod;
 	private String mPath;
 	private Integer mContentLength;
@@ -55,25 +52,6 @@ public class HttpServerRequest
 	}
 
 
-	void setContent(byte [] aContent)
-	{
-		mContent = aContent;
-	}
-
-
-	public byte[] getContent() throws IOException
-	{
-		if (mContent == null && mContentLength != null && mInputStream != null)
-		{
-            DataInputStream in = new DataInputStream(mInputStream);
-            mContent = new byte[mContentLength];
-            in.readFully(mContent);
-		}
-
-		return mContent;
-	}
-
-
 	void setPath(String aPath)
 	{
 		mPath = aPath;
@@ -92,9 +70,9 @@ public class HttpServerRequest
 	}
 
 
-	public int getContentLength()
+	public Integer getContentLength()
 	{
-		return mContentLength != null ? mContentLength : mContent != null ? mContent.length : 0;
+		return mContentLength;
 	}
 
 
@@ -106,7 +84,7 @@ public class HttpServerRequest
 
 	void setInputStream(InputStream aInputStream)
 	{
-		this.mInputStream = aInputStream;
+		mInputStream = aInputStream;
 	}
 
 
@@ -138,6 +116,6 @@ public class HttpServerRequest
 
 	void setMethod(String aMethod)
 	{
-		this.mMethod = aMethod;
+		mMethod = aMethod;
 	}
 }
