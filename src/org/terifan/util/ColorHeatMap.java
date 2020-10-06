@@ -118,6 +118,7 @@ public class ColorHeatMap
 			ArrayList<Function<Integer, Integer>> op = new ArrayList<>();
 			op.add(e -> new ColorHeatMap(image.getWidth(), WIDE).getRGBForValue(e));
 			op.add(e -> new ColorHeatMap(image.getWidth(), NARROW).getRGBForValue(e));
+			op.add(e -> new ColorHeatMap(image.getWidth(), RED_YELLOW_GREEN).getRGBForValue(e));
 			for (Function<Integer, Integer> fn : op)
 			{
 				for (int x = 0; x < image.getWidth(); x++)
