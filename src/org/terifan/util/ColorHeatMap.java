@@ -7,99 +7,97 @@ import java.util.function.Function;
 
 public class ColorHeatMap
 {
-	public final static int[][] COLORS =
+	/** blue-to-red rainbow scale */
+	public final static int[] NARROW =
 	{
-		{
-			0x0000FF, // Blue
-			0x00FFFF, // Cyan
-			0x00FF00, // Green
-			0xFFFF00, // Yellow
-			0xFF0000, // Red
-		},
-		{
-			0x000000, // Black
-			0x0000FF, // Blue
-			0x0040FF, // Cyan
-			0x0080FF, // Cyan
-			0x00C0FF, // Cyan
-			0x00FFFF, // Cyan
-			0x00FFC0, // Green
-			0x00FF80, // Green
-			0x00FF40, // Green
-			0x00FF00, // Green
-			0x40FF00, // Yellow
-			0x80FF00, // Yellow
-			0xC0FF00, // Yellow
-			0xFFFF00, // Yellow
-			0xFFC000, // Red
-			0xFF8000, // Red
-			0xFF4000, // Red
-			0xFF0000, // Red
-			0xFFFFFF // White
-		},
-		{
-			0x000000,
-			0x000040,
-			0x000080,
-			0x0000C0,
-			0x0000FF
-		},
-		{
-			new Color(255,109,32).getRGB(),
-			new Color(255,219,3).getRGB(),
-			new Color(114,197,27).getRGB()
-		}
+		0x0000FF, // Blue
+		0x00FFFF, // Cyan
+		0x00FF00, // Green
+		0xFFFF00, // Yellow
+		0xFF0000, // Red
+	};
+	/** blue-to-red rainbow scale with thin black minimum and white maximum */
+	public final static int[] WIDE =
+	{
+		0x000000, // Black
+		0x0000FF, // Blue
+		0x0020FF,
+		0x0040FF,
+		0x0060FF,
+		0x0080FF,
+		0x00A0FF,
+		0x00C0FF,
+		0x00E0FF,
+		0x00FFFF, // Cyan
+		0x00FFE0,
+		0x00FFC0,
+		0x00FFA0,
+		0x00FF80,
+		0x00FF60,
+		0x00FF40,
+		0x00FF20,
+		0x00FF00, // Green
+		0x20FF00,
+		0x40FF00,
+		0x60FF00,
+		0x80FF00,
+		0xA0FF00,
+		0xC0FF00,
+		0xE0FF00,
+		0xFFFF00, // Yellow
+		0xFFE000,
+		0xFFC000,
+		0xFFA000,
+		0xFF8000,
+		0xFF6000,
+		0xFF4000,
+		0xFF2000,
+		0xFF0000, // Red
+		0xFFFFFF  // White
+	};
+	public final static int[] BLACK_BLUE =
+	{
+		0x000000,
+		0x000040,
+		0x000080,
+		0x0000C0,
+		0x0000FF
+	};
+	public final static int[] RED_YELLOW_GREEN =
+	{
+		new Color(255,109,32).getRGB(),
+		new Color(255,219,3).getRGB(),
+		new Color(114,197,27).getRGB()
 	};
 
 
-	private ColorHeatMap()
+	private final double mMaxValue;
+	private final int[] mColors;
+
+
+	public ColorHeatMap(double aMaxValueInclusive, int... aColors)
 	{
+		mMaxValue = aMaxValueInclusive;
+		mColors = aColors;
 	}
 
 
-	/** blue-to-red rainbow scale */
-	public static int getNarrowScale(double aValue, double aMaxVal)
+	public int getRGBForValue(double aValue)
 	{
-		return getRGBForValue(COLORS[0], aValue, aMaxVal);
-	}
-
-
-	/** blue-to-red rainbow scale with black minimum and white maximum */
-	public static int getWideScale(double aValue, double aMaxVal)
-	{
-		return getRGBForValue(COLORS[1], aValue, aMaxVal);
-	}
-
-
-	/** black-to-blue scale */
-	public static int getBlueScale(double aValue, double aMaxVal)
-	{
-		return getRGBForValue(COLORS[2], aValue, aMaxVal);
-	}
-
-
-	public static int getRGBForValue(int[] aColors, double aValue, double aMaxVal)
-	{
-		if (aValue < 0)
+		if (aValue < 0 || aValue > mMaxValue)
 		{
-			throw new IllegalArgumentException("aValue < 0");
-		}
-		if (aMaxVal <= 0)
-		{
-			throw new IllegalArgumentException("aMaxVal <= 0");
+			throw new IllegalArgumentException("0 <= " + aValue + " <= " + mMaxValue);
 		}
 
-		int[] colors = aColors;
-
-		double valPerc = aValue / aMaxVal;
-		double colorPerc = 1.0 / (colors.length - 1);
+		double valPerc = aValue / mMaxValue;
+		double colorPerc = 1.0 / (mColors.length - 1);
 		double blockOfColor = valPerc / colorPerc;
 		int blockIdx = (int)blockOfColor;
 		double valPercResidual = valPerc - (blockIdx * colorPerc);
 		double percOfColor = valPercResidual / colorPerc;
 
-		int first = colors[Math.min(blockIdx, colors.length - 1)];
-		int second = colors[Math.min(blockIdx + 1, colors.length - 1)];
+		int first = mColors[Math.min(blockIdx, mColors.length - 1)];
+		int second = mColors[Math.min(blockIdx + 1, mColors.length - 1)];
 
 		int r = Math.max(0, Math.min(255, (0xFF & (first >> 16)) + (int)(((0xFF & (second >> 16)) - (0xFF & (first >> 16))) * percOfColor)));
 		int g = Math.max(0, Math.min(255, (0xFF & (first >>  8)) + (int)(((0xFF & (second >>  8)) - (0xFF & (first >>  8))) * percOfColor)));
@@ -118,9 +116,8 @@ public class ColorHeatMap
 			int h = image.getHeight();
 			int s = 0;
 			ArrayList<Function<Integer, Integer>> op = new ArrayList<>();
-			op.add(e -> ColorHeatMap.getBlueScale(e, image.getWidth()));
-			op.add(e -> ColorHeatMap.getNarrowScale(e, image.getWidth()));
-			op.add(e -> ColorHeatMap.getWideScale(e, image.getWidth()));
+			op.add(e -> new ColorHeatMap(image.getWidth(), WIDE).getRGBForValue(e));
+			op.add(e -> new ColorHeatMap(image.getWidth(), NARROW).getRGBForValue(e));
 			for (Function<Integer, Integer> fn : op)
 			{
 				for (int x = 0; x < image.getWidth(); x++)

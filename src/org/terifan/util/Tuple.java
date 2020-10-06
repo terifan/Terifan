@@ -21,8 +21,8 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	private final Comparator<T> mTComparator = (T aO1, T aO2) -> ((Comparable<T>)aO1).compareTo(aO2);
 	private final Comparator<U> mUComparator = (U aO1, U aO2) -> ((Comparable<U>)aO1).compareTo(aO2);
 
-	private T mFirst;
-	private U mSecond;
+	public T first;
+	public U second;
 
 
 	/**
@@ -48,7 +48,7 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	@Override
 	public int hashCode()
 	{
-		return Objects.hashCode(mFirst) ^ Objects.hashCode(mSecond);
+		return Objects.hashCode(first) ^ Objects.hashCode(second);
 	}
 
 
@@ -67,15 +67,15 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 		{
 			return true;
 		}
-		
+
 		if (aObject instanceof Tuple)
 		{
 			Tuple<T, U> t = (Tuple<T, U>)aObject;
 
-			T f1 = mFirst;
-			T f2 = t.mFirst;
-			U s1 = mSecond;
-			U s2 = t.mSecond;
+			T f1 = first;
+			T f2 = t.first;
+			U s1 = second;
+			U s2 = t.second;
 
 			if (f1 == f2 && s1 == s2)
 			{
@@ -96,7 +96,7 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	 */
 	public T getFirst()
 	{
-		return mFirst;
+		return first;
 	}
 
 
@@ -105,9 +105,10 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	 * @param aFirst
 	 *   the value
 	 */
-	public void setFirst(T aFirst)
+	public Tuple<T, U> setFirst(T aFirst)
 	{
-		mFirst = aFirst;
+		first = aFirst;
+		return this;
 	}
 
 
@@ -118,7 +119,7 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	 */
 	public U getSecond()
 	{
-		return mSecond;
+		return second;
 	}
 
 
@@ -127,9 +128,10 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	 * @param aSecond
 	 *   the value
 	 */
-	public void setSecond(U aSecond)
+	public Tuple<T, U> setSecond(U aSecond)
 	{
-		mSecond = aSecond;
+		second = aSecond;
+		return this;
 	}
 
 
@@ -140,7 +142,7 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	@Override
 	public String toString()
 	{
-		return "Tuple{first=" + getFirst() + ", second=" + getSecond() + "}";
+		return "{" + getFirst() + ", " + getSecond() + "}";
 	}
 
 
@@ -151,7 +153,7 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	 *
 	 * Note: Values must implement the Comparable interface for this method to
 	 * be useful.
-	 * 
+	 *
 	 * @param aTuple
 	 *   the Tuple to compare against.
 	 * @return
@@ -162,11 +164,11 @@ public class Tuple<T, U> implements Serializable, Comparable<Tuple<T, U>>
 	@Override
 	public int compareTo(Tuple<T, U> aTuple)
 	{
-		int i = Objects.compare(mFirst, aTuple.mFirst, mTComparator);
-		
+		int i = Objects.compare(first, aTuple.first, mTComparator);
+
 		if (i == 0)
 		{
-			return Objects.compare(mSecond, aTuple.mSecond, mUComparator);
+			return Objects.compare(second, aTuple.second, mUComparator);
 		}
 
 		return i;
