@@ -69,6 +69,21 @@ public class ColorHeatMap
 		new Color(255,219,3).getRGB(),
 		new Color(114,197,27).getRGB()
 	};
+	public final static int[] RAINBOW =
+	{
+		0x00CC00,
+		0x9CEF00,
+		0xFFFF00,
+		0xFFD300,
+		0xFFAD00,
+		0xFF7300,
+		0xFF0000,
+		0xCD0074,
+		0x7209AB,
+		0x3914AF,
+		0x1241AB,
+		0x009C9C
+	};
 
 
 	private final double mMaxValue;
