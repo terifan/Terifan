@@ -8,7 +8,7 @@ public class Assert
 	 */
 	public static void fail(boolean aValue)
 	{
-		fail(aValue, "Test failed");
+		fail(aValue, "%s", "Test failed");
 	}
 
 
@@ -19,28 +19,49 @@ public class Assert
 	{
 		if (aValue)
 		{
-			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
+			throw new AssertionException(aErrorMessage, aArguments);
 		}
 	}
 
 
 	/**
-	 * Throws exception if value is false.
+	 * Throws exception if value isn't true.
 	 */
 	public static void assertTrue(boolean aValue)
 	{
-		assertTrue(aValue, "Value not verified");
+		assertTrue(aValue, "%s", "Value not true");
 	}
 
 
 	/**
-	 * Throws exception if value is false.
+	 * Throws exception if value isn't true.
 	 */
 	public static void assertTrue(boolean aValue, String aErrorMessage, Object... aArguments)
 	{
 		if (!aValue)
 		{
-			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
+			throw new AssertionException(aErrorMessage, aArguments);
+		}
+	}
+
+
+	/**
+	 * Throws exception if value isn't false.
+	 */
+	public static void assertFalse(boolean aValue)
+	{
+		assertFalse(aValue, "%s", "Value not false");
+	}
+
+
+	/**
+	 * Throws exception if value isn't false.
+	 */
+	public static void assertFalse(boolean aValue, String aErrorMessage, Object... aArguments)
+	{
+		if (aValue)
+		{
+			throw new AssertionException(aErrorMessage, aArguments);
 		}
 	}
 
@@ -50,7 +71,7 @@ public class Assert
 	 */
 	public static void assertEquals(Object aActual, Object aExpected)
 	{
-		assertEquals(aActual, aExpected, "Values not equal: actual: " + aActual + ", expected: " + aExpected);
+		assertEquals(aActual, aExpected, "Values not equal: actual: %s, expected: %s", aActual, aExpected);
 	}
 
 
@@ -61,7 +82,7 @@ public class Assert
 	{
 		if ((aActual == null && aExpected != null) || aActual != null && !aActual.equals(aExpected))
 		{
-			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
+			throw new AssertionException(aErrorMessage, aArguments);
 		}
 	}
 
@@ -71,7 +92,7 @@ public class Assert
 	 */
 	public static void assertNotNull(Object aValue)
 	{
-		assertNotNull(aValue, "Value is null");
+		assertNotNull(aValue, "%s", "Value is null");
 	}
 
 
@@ -82,7 +103,28 @@ public class Assert
 	{
 		if (aValue == null)
 		{
-			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
+			throw new AssertionException(aErrorMessage, aArguments);
+		}
+	}
+
+
+	/**
+	 * Throws exception if value isn't null.
+	 */
+	public static void assertNull(Object aValue)
+	{
+		assertNull(aValue, "%s", "Value is null");
+	}
+
+
+	/**
+	 * Throws exception if value isn't null.
+	 */
+	public static void assertNull(Object aValue, String aErrorMessage, Object... aArguments)
+	{
+		if (aValue != null)
+		{
+			throw new AssertionException(aErrorMessage, aArguments);
 		}
 	}
 
@@ -92,7 +134,7 @@ public class Assert
 	 */
 	public static void assertNotEmptyOrNull(Object aValue)
 	{
-		assertNotEmptyOrNull(aValue, "Value is empty or null");
+		assertNotEmptyOrNull(aValue, "%s", "Value is empty or null");
 	}
 
 
@@ -103,7 +145,7 @@ public class Assert
 	{
 		if (aValue == null || aValue.toString().isEmpty())
 		{
-			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
+			throw new AssertionException(aErrorMessage, aArguments);
 		}
 	}
 
@@ -113,7 +155,7 @@ public class Assert
 	 */
 	public static void assertMatchesOrNull(Object aValue, String aPattern)
 	{
-		assertMatchesOrNull(aValue, aPattern, "Value don't match pattern");
+		assertMatchesOrNull(aValue, aPattern, "%s", "Value don't match pattern");
 	}
 
 
@@ -124,7 +166,7 @@ public class Assert
 	{
 		if (aValue != null && !aValue.toString().matches(aPattern))
 		{
-			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
+			throw new AssertionException(aErrorMessage, aArguments);
 		}
 	}
 
@@ -134,7 +176,7 @@ public class Assert
 	 */
 	public static void assertMatches(Object aValue, String aPattern)
 	{
-		assertMatches(aValue, aPattern, "Value don't match pattern");
+		assertMatches(aValue, aPattern, "%s", "Value don't match pattern");
 	}
 
 
@@ -145,7 +187,49 @@ public class Assert
 	{
 		if (aValue == null || !aValue.toString().matches(aPattern))
 		{
-			throw new IllegalArgumentException(String.format(aErrorMessage, aArguments));
+			throw new AssertionException(aErrorMessage, aArguments);
+		}
+	}
+
+
+	/**
+	 * Throws exception if the values are the same.
+	 */
+	public static void assertSame(Object aExpected, Object aActual)
+	{
+		assertSame(aExpected, aActual, "%s", "Provided objects are not the same.");
+	}
+
+
+	/**
+	 * Throws exception if the values are the same.
+	 */
+	public static void assertSame(Object aExpected, Object aActual, String aErrorMessage, Object... aArguments)
+	{
+		if (aExpected != aActual)
+		{
+			throw new AssertionException(aErrorMessage, aArguments);
+		}
+	}
+
+
+	/**
+	 * Throws exception if the values aren't the same.
+	 */
+	public static void assertNotSame(Object aExpected, Object aActual)
+	{
+		assertNotSame(aExpected, aActual, "%s", "Provided objects are the same.");
+	}
+
+
+	/**
+	 * Throws exception if the values aren't the same.
+	 */
+	public static void assertNotSame(Object aExpected, Object aActual, String aErrorMessage, Object... aArguments)
+	{
+		if (aExpected == aActual)
+		{
+			throw new AssertionException(aErrorMessage, aArguments);
 		}
 	}
 }
