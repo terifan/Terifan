@@ -25,7 +25,6 @@ public class DefaultWindowBorder
 	protected ColorSet mTitleBarBackground;
 	protected ColorSet mTitleBarForeground;
 	protected Font mTitleBarFont;
-	protected Insets mInsets;
 	protected WindowButtonType[] mButtons;
 	protected BufferedImage mButtonTemplateImage;
 	protected int mButtonWidth;
@@ -62,13 +61,10 @@ public class DefaultWindowBorder
 
 		mBounds = new Rectangle();
 		mButtonBounds = new Rectangle();
-
-		mInsets = new Insets(0, 0, 0, 0);
-		mInsets.set(mButtonHeight + mBorderSize, mBorderSize, mBorderSize, mBorderSize);
 	}
 
 
-	public void setButtons(WindowButtonType... aButtons)
+	protected void setButtons(WindowButtonType... aButtons)
 	{
 		mButtons = aButtons;
 		mButtonBounds.setSize(mButtonWidth * mButtons.length, mButtonHeight);
@@ -77,26 +73,26 @@ public class DefaultWindowBorder
 	}
 
 
-	public void paintBorder(FullScreenWindow aWindow, Graphics2D aGraphics, boolean aBorderPainted, boolean aMaximized, boolean aWindowFocused, int aX, int aY, int aWidth, int aHeight, WindowButtonType aHoverButton, WindowButtonType aArmedButton)
+	protected void updateState(boolean aBorderPainted, boolean aMaximized, boolean aWindowFocused)
 	{
 		mMaximized = aMaximized;
 		mWindowFocused = aWindowFocused;
-		mBorderPainted = !mMaximized && aBorderPainted;
+		mBorderPainted = !aMaximized && aBorderPainted;
+	}
+
+
+	protected void paintBorder(FullScreenWindow aWindow, Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight, WindowButtonType aHoverButton, WindowButtonType aArmedButton)
+	{
 		mBounds.setBounds(aX, aY, aWidth, aHeight);
-		mInsets.set(mButtonHeight + (aBorderPainted ? mBorderSize : 0), mBorderSize, mBorderSize, mBorderSize);
 
 		mButtonBounds.x = mBounds.x + mBounds.width - (mBorderPainted ? mBorderSize : 0) - mButtonBounds.width;
 		mButtonBounds.y = mBorderPainted ? 1 : 0;
 
-		paintTitleBar(aGraphics, mBounds.x, mBounds.y, mBounds.width, mInsets.top);
+		int top = mButtonHeight + mBorderSize;
 
-		if (mBorderPainted)
-		{
-			paintBorder(aGraphics, mBounds.x, mBounds.y + mInsets.top, mBounds.width, mBounds.height - mInsets.top);
-		}
-
-		paintTitleText(aGraphics, aWindow, aX, aY, mButtonBounds.x, mInsets.top);
-
+		paintTitleBar(aGraphics, mBounds.x, mBounds.y, mBounds.width, top);
+		paintBorder(aGraphics, mBounds.x, mBounds.y + top, mBounds.width, mBounds.height - top);
+		paintTitleText(aGraphics, aWindow, aX, aY, mButtonBounds.x, top);
 		paintButtons(aGraphics, aArmedButton, aHoverButton);
 	}
 
@@ -135,17 +131,20 @@ public class DefaultWindowBorder
 
 	protected void paintBorder(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight)
 	{
-		int s = mBorderSize;
+		if (mBorderPainted)
+		{
+			int s = mBorderSize;
 
-		aGraphics.setColor(mBorderInner.get(mWindowFocused));
-		aGraphics.fillRect(aX, aY, s, aHeight);
-		aGraphics.fillRect(aX, aY + aHeight - s, aWidth, s);
-		aGraphics.fillRect(aWidth - s, aY, s, aHeight);
+			aGraphics.setColor(mBorderInner.get(mWindowFocused));
+			aGraphics.fillRect(aX, aY, s, aHeight);
+			aGraphics.fillRect(aX, aY + aHeight - s, aWidth, s);
+			aGraphics.fillRect(aWidth - s, aY, s, aHeight);
 
-		aGraphics.setColor(mBorderOuter.get(mWindowFocused));
-		aGraphics.drawLine(aX, aY, aX, aY + aHeight - 1);
-		aGraphics.drawLine(aX, aY + aHeight - 1, aX + aWidth, aY + aHeight - 1);
-		aGraphics.drawLine(aX + aWidth - 1, aY, aX + aWidth - 1, aY + aHeight - 1);
+			aGraphics.setColor(mBorderOuter.get(mWindowFocused));
+			aGraphics.drawLine(aX, aY, aX, aY + aHeight - 1);
+			aGraphics.drawLine(aX, aY + aHeight - 1, aX + aWidth, aY + aHeight - 1);
+			aGraphics.drawLine(aX + aWidth - 1, aY, aX + aWidth - 1, aY + aHeight - 1);
+		}
 	}
 
 
@@ -154,20 +153,24 @@ public class DefaultWindowBorder
 		aGraphics.setColor(mTitleBarBackground.get(mWindowFocused));
 		aGraphics.fillRect(aX, aY, aWidth, aHeight);
 
-		aGraphics.setColor(mBorderOuter.get(mWindowFocused));
-		aGraphics.drawLine(aX, aY, aX, aY + aHeight - 1);
-		aGraphics.drawLine(aX, aY, aX + aWidth - 1, aY);
-		aGraphics.drawLine(aX + aWidth - 1, aY, aX + aWidth - 1, aY + aHeight - 1);
+		if (mBorderPainted)
+		{
+			aGraphics.setColor(mBorderOuter.get(mWindowFocused));
+			aGraphics.drawLine(aX, aY, aX, aY + aHeight - 1);
+			aGraphics.drawLine(aX, aY, aX + aWidth - 1, aY);
+			aGraphics.drawLine(aX + aWidth - 1, aY, aX + aWidth - 1, aY + aHeight - 1);
+		}
 	}
 
 
-	public Insets getBorderInsets()
+	protected Insets getBorderInsets()
 	{
-		return mInsets;
+		int s = mBorderPainted ? mBorderSize : 0;
+		return new Insets(mButtonHeight + mBorderSize, s, s, s);
 	}
 
 
-	public WindowButtonType intersectButton(FullScreenWindow aWindow, Point aPoint)
+	protected WindowButtonType intersectButton(FullScreenWindow aWindow, Point aPoint)
 	{
 		if (mButtonBounds.contains(aPoint))
 		{
@@ -178,20 +181,26 @@ public class DefaultWindowBorder
 	}
 
 
-	public int intersectBorder(FullScreenWindow aWindow, Point aPoint)
+	/**
+	 * Test whether or not the Point provided intersects the border and return the direction.
+	 *
+	 * @return
+	 *   Cursor.DEFAULT_CURSOR if no intersection occurs or one of the directional cursors e.g. Cursor.NW_RESIZE_CURSOR
+	 */
+	protected int intersectBorder(FullScreenWindow aWindow, Point aPoint)
 	{
-		boolean resizeHor = aWindow.isResizeHorizontal();
-		boolean resizeVer = aWindow.isResizeVertical();
+		boolean hor = aWindow.isResizeHorizontal();
+		boolean ver = aWindow.isResizeVertical();
 
-		if (!resizeHor && !resizeVer || mMaximized)
+		if (!mBorderPainted)
 		{
 			return Cursor.DEFAULT_CURSOR;
 		}
-		if (resizeVer)
+		if (ver)
 		{
 			if (aPoint.y < mBorderSize)
 			{
-				if (resizeHor)
+				if (hor)
 				{
 					if (aPoint.x < mBorderSize)
 					{
@@ -210,7 +219,7 @@ public class DefaultWindowBorder
 			}
 			if (aPoint.y >= mBounds.height - mBorderSize)
 			{
-				if (resizeHor)
+				if (hor)
 				{
 					if (aPoint.x < mBorderSize)
 					{
@@ -224,7 +233,7 @@ public class DefaultWindowBorder
 				return Cursor.S_RESIZE_CURSOR;
 			}
 		}
-		if (resizeHor)
+		if (hor)
 		{
 			if (aPoint.x < mBorderSize)
 			{
@@ -240,9 +249,16 @@ public class DefaultWindowBorder
 	}
 
 
-	boolean intersectDragHandle(FullScreenWindow aWindow, Point aPoint)
+	/**
+	 * Test whether or not the Point provided intersects the border allowing the window to be dragged.
+	 */
+	protected boolean intersectDragHandle(FullScreenWindow aWindow, Point aPoint)
 	{
-		return mBorderPainted && aPoint.x >= mBorderSize && aPoint.y >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < mInsets.top
-			|| !mBorderPainted && aPoint.x < mButtonBounds.x && aPoint.y < mInsets.top;
+		int top = mButtonHeight + mBorderSize;
+		if (mBorderPainted)
+		{
+			return aPoint.x >= mBorderSize && aPoint.y >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < top;
+		}
+		return aPoint.x < mButtonBounds.x && aPoint.y < top;
 	}
 }

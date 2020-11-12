@@ -49,7 +49,7 @@ public class FullScreenWindow
 	protected Dimension mMinSize;
 	protected Dimension mMaxSize;
 	protected JComponent mContentPanel;
-	protected boolean mWindowMowing;
+	protected boolean mWindowMoving;
 	protected boolean mWindowFocused;
 	protected int mLastKnownNormalWidth;
 	protected int mLayoutSize;
@@ -116,6 +116,8 @@ public class FullScreenWindow
 
 		mMinSize = new Dimension(mWindowBorder.getBorderInsets().left + mWindowBorder.getBorderInsets().right, mWindowBorder.getBorderInsets().top + mWindowBorder.getBorderInsets().bottom);
 		mMaxSize = new Dimension(32000, 32000);
+
+		updateBorder();
 	}
 
 
@@ -300,6 +302,8 @@ public class FullScreenWindow
 
 	private void updateBorder()
 	{
+		mWindowBorder.updateState(mBorderPainted, mMaximized, mWindowFocused);
+
 		mBorderPanel.invalidate();
 		mBorderPanel.validate();
 		mBorderPanel.repaint();
@@ -315,7 +319,7 @@ public class FullScreenWindow
 		{
 			if (!mUndecorated)
 			{
-				mWindowBorder.paintBorder(FullScreenWindow.this, (Graphics2D)aGraphics, mBorderPainted, mMaximized, mWindowFocused, aX, aY, aWidth, aHeight, mHoverButton, mArmedButton);
+				mWindowBorder.paintBorder(FullScreenWindow.this, (Graphics2D)aGraphics, aX, aY, aWidth, aHeight, mHoverButton, mArmedButton);
 			}
 		}
 
@@ -418,13 +422,13 @@ public class FullScreenWindow
 			mClickPoint = aEvent.getPoint();
 			mCursor = mWindowBorder.intersectBorder(FullScreenWindow.this, mClickPoint);
 			mWindowResizing = !mMaximized && mCursor != Cursor.DEFAULT_CURSOR;
-			mWindowMowing = mWindowBorder.intersectDragHandle(FullScreenWindow.this, mClickPoint);
+			mWindowMoving = mWindowBorder.intersectDragHandle(FullScreenWindow.this, mClickPoint);
 			mMousePressed = true;
 
 			mArmedButton = mHoverButton = mWindowBorder.intersectButton(FullScreenWindow.this, mClickPoint);
 			mBorderPanel.repaint();
 
-			if (mWindowMowing && aEvent.getClickCount() > 1)
+			if (mWindowMoving && aEvent.getClickCount() > 1)
 			{
 				if (mMaximized)
 				{
@@ -448,7 +452,7 @@ public class FullScreenWindow
 		@Override
 		public void mouseExited(MouseEvent aEvent)
 		{
-			if (!mWindowMowing)
+			if (!mWindowMoving)
 			{
 				mHoverButton = null;
 				mWindow.setCursor(Cursor.getDefaultCursor());
@@ -487,6 +491,11 @@ public class FullScreenWindow
 		@Override
 		public void mouseDragged(MouseEvent aEvent)
 		{
+			if (System.currentTimeMillis() - mExtendedStateTime < 100) // bug work-around, changing window state triggers drag
+			{
+				return;
+			}
+
 			if (mWindowResizing)
 			{
 				Point p = aEvent.getLocationOnScreen();
@@ -500,21 +509,13 @@ public class FullScreenWindow
 			mHoverButton = tmp == mArmedButton ? tmp : null;
 			mBorderPanel.repaint();
 
-			if (mArmedButton != null || System.currentTimeMillis() - mExtendedStateTime < 100) // handle bug, changing window state triggers drag
-			{
-				return;
-			}
-
-			if (mWindowMowing)
+			if (mWindowMoving)
 			{
 				if (mMaximized)
 				{
 					int x = mLastKnownNormalWidth / 2;
-
 					setExtendedState(JFrame.NORMAL);
-
 					mWindow.setLocation(aEvent.getXOnScreen() - x, aEvent.getYOnScreen());
-
 					mClickPoint.x = x;
 				}
 				else
@@ -528,10 +529,10 @@ public class FullScreenWindow
 		@Override
 		public void mouseReleased(MouseEvent aEvent)
 		{
-			boolean wasMoving = mWindowMowing;
+			boolean wasMoving = mWindowMoving;
 
 			Point p = aEvent.getPoint();
-			mWindowMowing = false;
+			mWindowMoving = false;
 			mMousePressed = false;
 			mCursor = null;
 
@@ -600,13 +601,11 @@ public class FullScreenWindow
 		@Override
 		public void windowClosing(WindowEvent e)
 		{
-			if (!onWindowClosing())
+			if (onWindowClosing())
 			{
-				return;
+				dispose();
+				onWindowClosed();
 			}
-
-			dispose();
-			onWindowClosed();
 		}
 
 
@@ -645,7 +644,6 @@ public class FullScreenWindow
 		public void componentResized(ComponentEvent aEvent)
 		{
 			revalidate();
-
 			onWindowResized();
 		}
 
