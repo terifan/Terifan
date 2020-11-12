@@ -3,7 +3,6 @@ package org.terifan.ui.fullscreenwindow;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
@@ -14,36 +13,46 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import org.terifan.ui.Anchor;
 import org.terifan.ui.ColorSet;
-import static org.terifan.ui.ColorSet.DEFAULT;
 import static org.terifan.ui.ColorSet.FOCUSED;
 import org.terifan.ui.TextBox;
+import static org.terifan.ui.ColorSet.UNFOCUSED;
 
 
-public class FullScreenWindowTitlePainter
+public class DefaultWindowBorder
 {
-	protected ColorSet mBorderInner = new ColorSet();
-	protected ColorSet mBorderOuter = new ColorSet();
-	protected ColorSet mTitleBarBackground = new ColorSet();
-	protected ColorSet mTitleBarForeground = new ColorSet();
+	protected ColorSet mBorderInner;
+	protected ColorSet mBorderOuter;
+	protected ColorSet mTitleBarBackground;
+	protected ColorSet mTitleBarForeground;
 	protected Font mTitleBarFont;
 	protected Insets mInsets;
 	protected WindowButtonType[] mButtons;
-	private BufferedImage mButtonTemplateImage;
+	protected BufferedImage mButtonTemplateImage;
 	protected int mButtonWidth;
 	protected int mButtonHeight;
 	protected int mBorderSize;
-	private Rectangle mBounds;
-	private boolean mMaximized;
-	private boolean mBorderPainted;
-	private Rectangle mButtonBounds;
-	private boolean mWindowFocused;
+	protected Rectangle mBounds;
+	protected boolean mMaximized;
+	protected boolean mBorderPainted;
+	protected Rectangle mButtonBounds;
+	protected boolean mWindowFocused;
 
 
-	public FullScreenWindowTitlePainter() throws IOException
+	public DefaultWindowBorder() throws IOException
 	{
-		mTitleBarBackground.add(new Color(238,238,242), DEFAULT);
-		mTitleBarForeground = new ColorSet().add(new Color(0, 0, 0), DEFAULT);
 		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 12);
+		mTitleBarBackground = new ColorSet()
+			.add(new Color(255, 255, 255), UNFOCUSED)
+			.add(new Color(238, 238, 242), FOCUSED);
+		mTitleBarForeground = new ColorSet()
+			.add(new Color(0, 0, 0), UNFOCUSED)
+			.add(new Color(0, 0, 0), FOCUSED);
+		mBorderInner = new ColorSet()
+			.add(new Color(255, 255, 255), UNFOCUSED)
+			.add(new Color(240, 240, 240), FOCUSED);
+		mBorderOuter = new ColorSet()
+			.add(new Color(204, 206, 219), UNFOCUSED)
+			.add(new Color(155, 159, 185), FOCUSED);
 
 		mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_light.png"));
 		mButtonWidth = mButtonTemplateImage.getWidth() / 4;
@@ -51,15 +60,10 @@ public class FullScreenWindowTitlePainter
 
 		mBorderSize = 4;
 
-		mBorderInner.add(new Color(240,240,240), DEFAULT);
-		mBorderInner.add(new Color(240,240,240), FOCUSED);
-		mBorderOuter.add(new Color(204,206,219), DEFAULT);
-		mBorderOuter.add(new Color(155,159,185), FOCUSED);
-
 		mBounds = new Rectangle();
 		mButtonBounds = new Rectangle();
 
-		mInsets = new Insets(0,0,0,0);
+		mInsets = new Insets(0, 0, 0, 0);
 		mInsets.set(mButtonHeight + mBorderSize, mBorderSize, mBorderSize, mBorderSize);
 	}
 
@@ -81,6 +85,8 @@ public class FullScreenWindowTitlePainter
 		mBounds.setBounds(aX, aY, aWidth, aHeight);
 		mInsets.set(mButtonHeight + (aBorderPainted ? mBorderSize : 0), mBorderSize, mBorderSize, mBorderSize);
 
+		System.out.println(mWindowFocused);
+
 		mButtonBounds.x = mBounds.x + mBounds.width - (mBorderPainted ? mBorderSize : 0) - mButtonBounds.width;
 		mButtonBounds.y = mBorderPainted ? 1 : 0;
 
@@ -88,18 +94,19 @@ public class FullScreenWindowTitlePainter
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-		aGraphics.setColor(mBorderInner.get(mWindowFocused));
-		aGraphics.fillRect(mBounds.x + mBorderSize, mBounds.y, mButtonBounds.x - mBounds.x, mInsets.top);
+		paintTitleBar(aGraphics, mBounds.x, mBounds.y, mBounds.width, mInsets.top);
 
 		if (mBorderPainted)
 		{
 			aGraphics.setColor(mBorderInner.get(mWindowFocused));
-			aGraphics.fillRect(0, mBorderSize, mBorderSize, mBounds.height - mBorderSize - mBorderSize);
-			aGraphics.fillRect(0, mBounds.height - mBorderSize, mBounds.width, mBorderSize);
-			aGraphics.fillRect(mBounds.width - mBorderSize, mBorderSize, mBorderSize, mBounds.height - mBorderSize - mBorderSize);
+			aGraphics.fillRect(mBounds.x, mBounds.y + mInsets.top, mBorderSize, mBounds.height - mInsets.top);
+			aGraphics.fillRect(mBounds.x, mBounds.height - mBorderSize, mBounds.width, mBorderSize);
+			aGraphics.fillRect(mBounds.width - mBorderSize, mBounds.y + mInsets.top, mBorderSize, mBounds.height - mInsets.top);
 
 			aGraphics.setColor(mBorderOuter.get(mWindowFocused));
-			aGraphics.drawRect(0, 0, mBounds.width - 1, mBounds.height - 1);
+			aGraphics.drawLine(mBounds.x, mBounds.y + mInsets.top, mBounds.x, mBounds.y + mBounds.height - 1);
+			aGraphics.drawLine(mBounds.x, mBounds.y + mBounds.height - 1, mBounds.x + mBounds.width, mBounds.y + mBounds.height - 1);
+			aGraphics.drawLine(mBounds.x + mBounds.width - 1, mBounds.y + mInsets.top, mBounds.x + mBounds.width - 1, mBounds.y + mBounds.height - 1);
 		}
 
 		new TextBox(aWindow.getTitle())
@@ -119,6 +126,18 @@ public class FullScreenWindowTitlePainter
 
 			aGraphics.drawImage(mButtonTemplateImage, dx, dy, dx + mButtonWidth, dy + mButtonHeight, sx, sy, sx + mButtonWidth, sy + mButtonHeight, null);
 		}
+	}
+
+
+	private void paintTitleBar(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight)
+	{
+		aGraphics.setColor(mTitleBarBackground.get(mWindowFocused));
+		aGraphics.fillRect(aX, aY, aWidth, aHeight);
+
+		aGraphics.setColor(mBorderOuter.get(mWindowFocused));
+		aGraphics.drawLine(aX, aY, aX, aY + aHeight - 1);
+		aGraphics.drawLine(aX, aY, aX + aWidth - 1, aY);
+		aGraphics.drawLine(aX + aWidth - 1, aY, aX + aWidth - 1, aY + aHeight - 1);
 	}
 
 
@@ -203,8 +222,7 @@ public class FullScreenWindowTitlePainter
 
 	boolean intersectDragHandle(FullScreenWindow aWindow, Point aPoint)
 	{
-		return
-			    mBorderPainted && aPoint.x >= mBorderSize && aPoint.y >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < mInsets.top
+		return mBorderPainted && aPoint.x >= mBorderSize && aPoint.y >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < mInsets.top
 			|| !mBorderPainted && aPoint.x < mButtonBounds.x && aPoint.y < mInsets.top;
 	}
 }

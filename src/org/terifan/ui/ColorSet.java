@@ -8,7 +8,7 @@ public class ColorSet
 {
 	private HashMap<Integer, Color> mColors = new HashMap<>();
 	
-	public final static int DEFAULT = 0;
+	public final static int UNFOCUSED = 0;
 	public final static int FOCUSED = 1;
 	public final static int ARMED = 2;
 	public final static int PRESSED = 4;

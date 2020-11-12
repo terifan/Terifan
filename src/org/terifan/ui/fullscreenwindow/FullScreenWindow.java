@@ -33,7 +33,7 @@ import javax.swing.border.Border;
 
 public class FullScreenWindow
 {
-	private FullScreenWindowTitlePainter mWindowBorder;
+	private DefaultWindowBorder mWindowBorder;
 
 	protected JFrame mFrame;
 	protected JDialog mDialog;
@@ -60,6 +60,7 @@ public class FullScreenWindow
 	protected boolean mBorderPainted;
 
 	private Rectangle mStartBounds;
+	private Rectangle mWindowBounds;
 	private Point mClickPoint;
 	private Integer mCursor;
 	private boolean mWindowResizing;
@@ -79,7 +80,7 @@ public class FullScreenWindow
 		mResizeHor = true;
 		mBorderPainted = true;
 
-		mWindowBorder = new FullScreenWindowTitlePainter();
+		mWindowBorder = new DefaultWindowBorder();
 
 		mContentPanel = new JPanel(new BorderLayout());
 
@@ -248,7 +249,7 @@ public class FullScreenWindow
 
 	private void resizeBox(Point aPoint)
 	{
-		Rectangle b = new Rectangle(mStartBounds);
+		Rectangle b = new Rectangle(mWindowBounds);
 
 		switch (mCursor)
 		{
@@ -256,7 +257,7 @@ public class FullScreenWindow
 			case Cursor.NW_RESIZE_CURSOR:
 			case Cursor.SW_RESIZE_CURSOR:
 				int o = b.x;
-				b.x = Math.max(mStartBounds.x + mStartBounds.width - mMaxSize.width, Math.min(mStartBounds.x - mClickPoint.x + aPoint.x, mStartBounds.x + mStartBounds.width - mMinSize.width));
+				b.x = Math.max(mWindowBounds.x + mWindowBounds.width - mMaxSize.width, Math.min(mWindowBounds.x - mClickPoint.x + aPoint.x, mWindowBounds.x + mWindowBounds.width - mMinSize.width));
 				b.width += o - b.x;
 				break;
 		}
@@ -267,7 +268,7 @@ public class FullScreenWindow
 			case Cursor.NW_RESIZE_CURSOR:
 			case Cursor.NE_RESIZE_CURSOR:
 				int o = b.y;
-				b.y = Math.max(mStartBounds.y + mStartBounds.height - mMaxSize.height, Math.min(mStartBounds.y - mClickPoint.y + aPoint.y, mStartBounds.y + mStartBounds.height - mMinSize.height));
+				b.y = Math.max(mWindowBounds.y + mWindowBounds.height - mMaxSize.height, Math.min(mWindowBounds.y - mClickPoint.y + aPoint.y, mWindowBounds.y + mWindowBounds.height - mMinSize.height));
 				b.height += o - b.y;
 				break;
 		}
@@ -277,7 +278,7 @@ public class FullScreenWindow
 			case Cursor.SW_RESIZE_CURSOR:
 			case Cursor.S_RESIZE_CURSOR:
 			case Cursor.SE_RESIZE_CURSOR:
-				b.height = mStartBounds.height - mClickPoint.y + aPoint.y;
+				b.height = mWindowBounds.height - mClickPoint.y + aPoint.y;
 				break;
 		}
 
@@ -286,7 +287,7 @@ public class FullScreenWindow
 			case Cursor.E_RESIZE_CURSOR:
 			case Cursor.SE_RESIZE_CURSOR:
 			case Cursor.NE_RESIZE_CURSOR:
-				b.width = mStartBounds.width - mClickPoint.x + aPoint.x;
+				b.width = mWindowBounds.width - mClickPoint.x + aPoint.x;
 				break;
 		}
 
@@ -412,7 +413,8 @@ public class FullScreenWindow
 		{
 			mWindow.requestFocus();
 
-			mStartBounds = mWindow.getBounds();
+			mStartBounds = new Rectangle(mWindow.getBounds());
+			mWindowBounds = mWindow.getBounds();
 			mClickPoint = aEvent.getPoint();
 			mCursor = mWindowBorder.intersectBorder(FullScreenWindow.this, mClickPoint);
 			mWindowResizing = !mMaximized && mCursor != Cursor.DEFAULT_CURSOR;
@@ -464,7 +466,7 @@ public class FullScreenWindow
 
 				if (b != Cursor.DEFAULT_CURSOR)
 				{
-					mStartBounds = mWindow.getBounds();
+					mWindowBounds = mWindow.getBounds();
 					mWindow.setCursor(Cursor.getPredefinedCursor(b));
 				}
 				else
@@ -488,8 +490,8 @@ public class FullScreenWindow
 			if (mWindowResizing)
 			{
 				Point p = aEvent.getLocationOnScreen();
-				p.x -= mStartBounds.x;
-				p.y -= mStartBounds.y;
+				p.x -= mWindowBounds.x;
+				p.y -= mWindowBounds.y;
 				resizeBox(p);
 				return;
 			}
@@ -580,6 +582,7 @@ public class FullScreenWindow
 		@Override
 		public void windowGainedFocus(WindowEvent aEvent)
 		{
+			mWindowFocused = true;
 			updateBorder();
 			onWindowGainedFocus();
 		}
@@ -588,6 +591,7 @@ public class FullScreenWindow
 		@Override
 		public void windowLostFocus(WindowEvent aEvent)
 		{
+			mWindowFocused = false;
 			updateBorder();
 			onWindowLostFocus();
 		}
