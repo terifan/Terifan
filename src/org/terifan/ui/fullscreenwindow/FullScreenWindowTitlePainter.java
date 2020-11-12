@@ -81,6 +81,9 @@ public class FullScreenWindowTitlePainter
 		mBounds.setBounds(aX, aY, aWidth, aHeight);
 		mInsets.set(mButtonHeight + (aBorderPainted ? mBorderSize : 0), mBorderSize, mBorderSize, mBorderSize);
 
+		mButtonBounds.x = mBounds.x + mBounds.width - (mBorderPainted ? mBorderSize : 0) - mButtonBounds.width;
+		mButtonBounds.y = mBorderPainted ? 1 : 0;
+
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
@@ -105,11 +108,7 @@ public class FullScreenWindowTitlePainter
 			.setFont(mTitleBarFont)
 			.setAnchor(Anchor.WEST)
 			.setMaxLineCount(1)
-			.render(aGraphics)
-			.measure();
-
-		mButtonBounds.x = mBounds.x + mBounds.width - (mBorderPainted ? mBorderSize : 0) - mButtonBounds.width;
-		mButtonBounds.y = mBorderPainted ? 1 : 0;
+			.render(aGraphics);
 
 		for (int i = 0; i < mButtons.length; i++)
 		{
