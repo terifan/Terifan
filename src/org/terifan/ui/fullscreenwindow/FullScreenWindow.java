@@ -462,8 +462,6 @@ public class FullScreenWindow
 			{
 				int b = mWindowBorder.intersectBorder(FullScreenWindow.this, aEvent.getPoint());
 
-				System.out.println(b);
-
 				if (b != Cursor.DEFAULT_CURSOR)
 				{
 					mStartBounds = mWindow.getBounds();

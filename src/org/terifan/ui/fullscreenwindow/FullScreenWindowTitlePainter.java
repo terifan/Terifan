@@ -3,6 +3,7 @@ package org.terifan.ui.fullscreenwindow;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
@@ -84,20 +85,24 @@ public class FullScreenWindowTitlePainter
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-		paintBorder(aGraphics);
+		aGraphics.setColor(mBorderInner.get(mWindowFocused));
+		aGraphics.fillRect(mBounds.x + mBorderSize, mBounds.y, mButtonBounds.x - mBounds.x, mInsets.top);
 
-//		aGraphics.setColor(Color.BLUE);
-//		aGraphics.fillRect(0, 0, aWidth, aHeight);
+		if (mBorderPainted)
+		{
+			aGraphics.setColor(mBorderInner.get(mWindowFocused));
+			aGraphics.fillRect(0, mBorderSize, mBorderSize, mBounds.height - mBorderSize - mBorderSize);
+			aGraphics.fillRect(0, mBounds.height - mBorderSize, mBounds.width, mBorderSize);
+			aGraphics.fillRect(mBounds.width - mBorderSize, mBorderSize, mBorderSize, mBounds.height - mBorderSize - mBorderSize);
 
-//		aGraphics.setColor(mTitleBarBackground.get(aFocused));
-//		aGraphics.setColor(Color.RED);
-//		aGraphics.fillRect(sx + sw, sy, aButtonAreaWidth, aButtonAreaHeight);
+			aGraphics.setColor(mBorderOuter.get(mWindowFocused));
+			aGraphics.drawRect(0, 0, mBounds.width - 1, mBounds.height - 1);
+		}
 
 		new TextBox(aWindow.getTitle())
-			.setBounds(aX + mBorderSize, aY, aWidth, mButtonHeight + mBorderSize)
-			.setFont(mTitleBarFont)
+			.setBounds(aX + mBorderSize, aY + 1, mButtonBounds.x - mBorderSize, mButtonHeight + mBorderSize - 1)
 			.setForeground(mTitleBarForeground.get(aWindowFocused))
-//			.setBackground(Color.GREEN)
+			.setFont(mTitleBarFont)
 			.setAnchor(Anchor.WEST)
 			.setMaxLineCount(1)
 			.render(aGraphics)
@@ -202,22 +207,5 @@ public class FullScreenWindowTitlePainter
 		return
 			    mBorderPainted && aPoint.x >= mBorderSize && aPoint.y >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < mInsets.top
 			|| !mBorderPainted && aPoint.x < mButtonBounds.x && aPoint.y < mInsets.top;
-	}
-
-
-	private void paintBorder(Graphics2D aGraphics)
-	{
-		aGraphics.setColor(mBorderInner.get(mWindowFocused));
-		aGraphics.fillRect(mBounds.x, mBounds.y, mBounds.width, mInsets.top);
-
-		if (mBorderPainted)
-		{
-			aGraphics.fillRect(0, mBorderSize, mBorderSize, mBounds.height - mBorderSize - mBorderSize);
-			aGraphics.fillRect(0, mBounds.height - mBorderSize, mBounds.width, mBorderSize);
-			aGraphics.fillRect(mBounds.width - mBorderSize, mBorderSize, mBorderSize, mBounds.height - mBorderSize - mBorderSize);
-
-			aGraphics.setColor(mBorderOuter.get(mWindowFocused));
-			aGraphics.drawRect(0, 0, mBounds.width - 1, mBounds.height - 1);
-		}
 	}
 }
