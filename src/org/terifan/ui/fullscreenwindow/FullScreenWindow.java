@@ -37,7 +37,6 @@ import javax.swing.border.Border;
 import org.terifan.ui.Anchor;
 import org.terifan.ui.ColorSet;
 import org.terifan.ui.TextBox;
-import org.terifan.ui.Utilities;
 import static org.terifan.ui.ColorSet.*;
 
 
@@ -82,14 +81,6 @@ public class FullScreenWindow extends WindowAdapter implements Border, MouseList
 	private Integer mCursor;
 	private boolean mResize;
 
-	private OnClosedAction mOnClosedAction;
-	private OnClosingAction mOnClosingAction;
-	private OnResizeAction mOnResizeAction;
-	private OnMaximizeAction mOnMaximizeAction;
-	private OnMinimizeAction mOnMinimizeAction;
-	private OnRestoreAction mOnRestoreAction;
-	private OnGainedFocusAction mOnGainedFocusAction;
-	private OnLostFocusAction mOnLostFocusAction;
 	private BufferedImage mButtonTemplateImage;
 
 
@@ -546,12 +537,7 @@ public class FullScreenWindow extends WindowAdapter implements Border, MouseList
 
 	private boolean isMaximized()
 	{
-		if (mFrame != null)
-		{
-			return (mFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0;
-		}
-
-		return false;
+		return mFrame != null && (mFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0;
 	}
 
 
@@ -780,10 +766,7 @@ public class FullScreenWindow extends WindowAdapter implements Border, MouseList
 			updateBorder(JFrame.NORMAL, true);
 		}
 
-		if (mOnGainedFocusAction != null)
-		{
-			mOnGainedFocusAction.onWindowGainedFocus();
-		}
+		onWindowGainedFocus();
 	}
 
 
@@ -799,27 +782,20 @@ public class FullScreenWindow extends WindowAdapter implements Border, MouseList
 			updateBorder(JFrame.NORMAL, true);
 		}
 
-		if (mOnLostFocusAction != null)
-		{
-			mOnLostFocusAction.onWindowLostFocus();
-		}
+		onWindowLostFocus();
 	}
 
 
 	@Override
 	public void windowClosing(WindowEvent e)
 	{
-		if (mOnClosingAction != null && !mOnClosingAction.onWindowClosing())
+		if (!onWindowClosing())
 		{
 			return;
 		}
 
 		dispose();
-
-		if (mOnClosedAction != null)
-		{
-			mOnClosedAction.onWindowClosed();
-		}
+		onWindowClosed();
 	}
 
 
@@ -828,17 +804,17 @@ public class FullScreenWindow extends WindowAdapter implements Border, MouseList
 	{
 		updateBorder(aEvent.getNewState(), mWindow.isFocused());
 
-		if (aEvent.getNewState() == JFrame.MAXIMIZED_BOTH && mOnMaximizeAction != null)
+		switch (aEvent.getNewState())
 		{
-			mOnMaximizeAction.onWindowMaximize();
-		}
-		else if (aEvent.getNewState() == JFrame.NORMAL && mOnRestoreAction != null)
-		{
-			mOnRestoreAction.onWindowRestore();
-		}
-		else if (aEvent.getNewState() == JFrame.ICONIFIED && mOnMinimizeAction != null)
-		{
-			mOnMinimizeAction.onWindowMinimize();
+			case JFrame.MAXIMIZED_BOTH:
+				onWindowMaximized();
+				break;
+			case JFrame.NORMAL:
+				onWindowRestored();
+				break;
+			case JFrame.ICONIFIED:
+				onWindowMinimized();
+				break;
 		}
 	}
 
@@ -848,10 +824,7 @@ public class FullScreenWindow extends WindowAdapter implements Border, MouseList
 	{
 		revalidate();
 
-		if (mOnResizeAction != null)
-		{
-			mOnResizeAction.onWindowResize();
-		}
+		onWindowResized();
 	}
 
 
@@ -877,106 +850,43 @@ public class FullScreenWindow extends WindowAdapter implements Border, MouseList
 	}
 
 
-	public void setOnClosed(OnClosedAction aAction)
+	protected void onWindowClosed()
 	{
-		mOnClosedAction = aAction;
 	}
 
 
-	public void setOnClosing(OnClosingAction aAction)
+	protected boolean onWindowClosing()
 	{
-		mOnClosingAction = aAction;
+		return true;
 	}
 
 
-	public void setOnResize(OnResizeAction aAction)
+	protected void onWindowResized()
 	{
-		mOnResizeAction = aAction;
 	}
 
 
-	public void setOnMinizmie(OnMinimizeAction aAction)
+	protected void onWindowMinimized()
 	{
-		mOnMinimizeAction = aAction;
 	}
 
 
-	public void setOnMaximize(OnMaximizeAction aAction)
+	protected void onWindowMaximized()
 	{
-		mOnMaximizeAction = aAction;
 	}
 
 
-	public void setOnRestore(OnRestoreAction aAction)
+	protected void onWindowRestored()
 	{
-		mOnRestoreAction = aAction;
 	}
 
 
-	public void setOnGainedFocus(OnGainedFocusAction aAction)
+	protected void onWindowGainedFocus()
 	{
-		mOnGainedFocusAction = aAction;
 	}
 
 
-	public void setOnLostFocus(OnLostFocusAction aAction)
+	protected void onWindowLostFocus()
 	{
-		mOnLostFocusAction = aAction;
-	}
-
-
-	@FunctionalInterface
-	public interface OnClosedAction
-	{
-		void onWindowClosed();
-	}
-
-
-	@FunctionalInterface
-	public interface OnClosingAction
-	{
-		boolean onWindowClosing();
-	}
-
-
-	@FunctionalInterface
-	public interface OnResizeAction
-	{
-		void onWindowResize();
-	}
-
-
-	@FunctionalInterface
-	public interface OnMinimizeAction
-	{
-		void onWindowMinimize();
-	}
-
-
-	@FunctionalInterface
-	public interface OnMaximizeAction
-	{
-		void onWindowMaximize();
-	}
-
-
-	@FunctionalInterface
-	public interface OnRestoreAction
-	{
-		void onWindowRestore();
-	}
-
-
-	@FunctionalInterface
-	public interface OnGainedFocusAction
-	{
-		void onWindowGainedFocus();
-	}
-
-
-	@FunctionalInterface
-	public interface OnLostFocusAction
-	{
-		void onWindowLostFocus();
 	}
 }
