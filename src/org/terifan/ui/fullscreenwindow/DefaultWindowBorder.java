@@ -85,51 +85,71 @@ public class DefaultWindowBorder
 		mBounds.setBounds(aX, aY, aWidth, aHeight);
 		mInsets.set(mButtonHeight + (aBorderPainted ? mBorderSize : 0), mBorderSize, mBorderSize, mBorderSize);
 
-		System.out.println(mWindowFocused);
-
 		mButtonBounds.x = mBounds.x + mBounds.width - (mBorderPainted ? mBorderSize : 0) - mButtonBounds.width;
 		mButtonBounds.y = mBorderPainted ? 1 : 0;
-
-		Graphics2D g = (Graphics2D)aGraphics;
-		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
 		paintTitleBar(aGraphics, mBounds.x, mBounds.y, mBounds.width, mInsets.top);
 
 		if (mBorderPainted)
 		{
-			aGraphics.setColor(mBorderInner.get(mWindowFocused));
-			aGraphics.fillRect(mBounds.x, mBounds.y + mInsets.top, mBorderSize, mBounds.height - mInsets.top);
-			aGraphics.fillRect(mBounds.x, mBounds.height - mBorderSize, mBounds.width, mBorderSize);
-			aGraphics.fillRect(mBounds.width - mBorderSize, mBounds.y + mInsets.top, mBorderSize, mBounds.height - mInsets.top);
-
-			aGraphics.setColor(mBorderOuter.get(mWindowFocused));
-			aGraphics.drawLine(mBounds.x, mBounds.y + mInsets.top, mBounds.x, mBounds.y + mBounds.height - 1);
-			aGraphics.drawLine(mBounds.x, mBounds.y + mBounds.height - 1, mBounds.x + mBounds.width, mBounds.y + mBounds.height - 1);
-			aGraphics.drawLine(mBounds.x + mBounds.width - 1, mBounds.y + mInsets.top, mBounds.x + mBounds.width - 1, mBounds.y + mBounds.height - 1);
+			paintBorder(aGraphics, mBounds.x, mBounds.y + mInsets.top, mBounds.width, mBounds.height - mInsets.top);
 		}
 
-		new TextBox(aWindow.getTitle())
-			.setBounds(aX + mBorderSize, aY + 1, mButtonBounds.x - mBorderSize, mButtonHeight + mBorderSize - 1)
-			.setForeground(mTitleBarForeground.get(aWindowFocused))
-			.setFont(mTitleBarFont)
-			.setAnchor(Anchor.WEST)
-			.setMaxLineCount(1)
-			.render(aGraphics);
+		paintTitleText(aGraphics, aWindow, aX, aY, mButtonBounds.x, mInsets.top);
 
-		for (int i = 0; i < mButtons.length; i++)
+		paintButtons(aGraphics, aArmedButton, aHoverButton);
+	}
+
+
+	protected void paintButtons(Graphics2D aGraphics, WindowButtonType aArmedButton, WindowButtonType aHoverButton)
+	{
+		int dx = mButtonBounds.x;
+		int dy = mButtonBounds.y;
+
+		for (int i = 0; i < mButtons.length; i++, dx+=mButtonWidth)
 		{
 			int sx = mButtons[i].ordinal() * (mButtonWidth + 1);
 			int sy = (mButtonHeight + 1) * (aArmedButton == mButtons[i] ? aHoverButton == mButtons[i] ? 2 : 0 : aHoverButton == mButtons[i] ? 1 : 0);
-			int dx = mButtonBounds.x + i * mButtonWidth;
-			int dy = mButtonBounds.y;
 
 			aGraphics.drawImage(mButtonTemplateImage, dx, dy, dx + mButtonWidth, dy + mButtonHeight, sx, sy, sx + mButtonWidth, sy + mButtonHeight, null);
 		}
 	}
 
 
-	private void paintTitleBar(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight)
+	protected void paintTitleText(Graphics2D aGraphics, FullScreenWindow aWindow, int aX, int aY, int aWidth, int aHeight)
+	{
+		Graphics2D g = (Graphics2D)aGraphics;
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+		int s = mBorderSize;
+
+		new TextBox(aWindow.getTitle())
+			.setBounds(aX + s, aY + 1, aWidth - s, aHeight - 1)
+			.setForeground(mTitleBarForeground.get(mWindowFocused))
+			.setFont(mTitleBarFont)
+			.setAnchor(Anchor.WEST)
+			.setMaxLineCount(1)
+			.render(aGraphics);
+	}
+
+
+	protected void paintBorder(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight)
+	{
+		int s = mBorderSize;
+
+		aGraphics.setColor(mBorderInner.get(mWindowFocused));
+		aGraphics.fillRect(aX, aY, s, aHeight);
+		aGraphics.fillRect(aX, aY + aHeight - s, aWidth, s);
+		aGraphics.fillRect(aWidth - s, aY, s, aHeight);
+
+		aGraphics.setColor(mBorderOuter.get(mWindowFocused));
+		aGraphics.drawLine(aX, aY, aX, aY + aHeight - 1);
+		aGraphics.drawLine(aX, aY + aHeight - 1, aX + aWidth, aY + aHeight - 1);
+		aGraphics.drawLine(aX + aWidth - 1, aY, aX + aWidth - 1, aY + aHeight - 1);
+	}
+
+
+	protected void paintTitleBar(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight)
 	{
 		aGraphics.setColor(mTitleBarBackground.get(mWindowFocused));
 		aGraphics.fillRect(aX, aY, aWidth, aHeight);
