@@ -14,19 +14,14 @@ public class Test
 		{
 			FullScreenWindow wnd = new FullScreenWindow(null, "New window", false, true, 1)
 			{
-				protected boolean onWindowClosing()
-				{
-					System.out.println("closing");
-					return true;
-				}
-
-				protected void onWindowClosed(){System.out.println("closed");}
-				protected void onWindowResized(){System.out.println("resized");}
-				protected void onWindowMinizmied(){System.out.println("minimized");}
-				protected void onWindowMaximized(){System.out.println("maximized");}
-				protected void onWindowRestored(){System.out.println("restored");}
-				protected void onWindowGainedFocus(){System.out.println("focused");}
-				protected void onWindowLostFocus(){System.out.println("unfocused");}
+				@Override protected boolean onWindowClosing(){System.out.println("closing");return true;}
+				@Override protected void onWindowClosed(){System.out.println("closed");}
+				@Override protected void onWindowResized(){System.out.println("resized");}
+				@Override protected void onWindowMinimized(){System.out.println("minimized");}
+				@Override protected void onWindowMaximized(){System.out.println("maximized");}
+				@Override protected void onWindowRestored(){System.out.println("restored");}
+				@Override protected void onWindowGainedFocus(){System.out.println("focused");}
+				@Override protected void onWindowLostFocus(){System.out.println("unfocused");}
 			};
 			wnd.add(new JButton(new AbstractAction("undecorated")
 			{
@@ -41,7 +36,7 @@ public class Test
 				@Override
 				public void actionPerformed(ActionEvent aE)
 				{
-					wnd.setBorderVisible(!wnd.isBorderVisible());
+					wnd.setBorderPainted(!wnd.isBorderPainted());
 				}
 			}));
 			wnd.getContentPanel().setLayout(new GridLayout(1, 2));
