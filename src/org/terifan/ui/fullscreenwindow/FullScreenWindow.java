@@ -114,10 +114,10 @@ public class FullScreenWindow
 		mWindow.addWindowStateListener(handler);
 		mWindow.addWindowFocusListener(handler);
 
-		mMinSize = new Dimension(mWindowBorder.getBorderInsets().left + mWindowBorder.getBorderInsets().right, mWindowBorder.getBorderInsets().top + mWindowBorder.getBorderInsets().bottom);
-		mMaxSize = new Dimension(32000, 32000);
-
 		updateBorder();
+
+		mMinSize = new Dimension(200, 40);
+		mMaxSize = new Dimension(32000, 32000);
 	}
 
 

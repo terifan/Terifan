@@ -90,8 +90,8 @@ public class DefaultWindowBorder
 
 		int top = mButtonHeight + mBorderSize;
 
-		paintTitleBar(aGraphics, mBounds.x, mBounds.y, mBounds.width, top);
-		paintBorder(aGraphics, mBounds.x, mBounds.y + top, mBounds.width, mBounds.height - top);
+		paintTitleBar(aGraphics, aX, aY, aWidth, top);
+		paintBorder(aGraphics, aX, aY + top, aWidth, aHeight - top);
 		paintTitleText(aGraphics, aWindow, aX, aY, mButtonBounds.x, top);
 		paintButtons(aGraphics, aArmedButton, aHoverButton);
 	}
