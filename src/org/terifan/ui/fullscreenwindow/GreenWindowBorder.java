@@ -11,8 +11,14 @@ import static org.terifan.ui.ColorSet.UNFOCUSED;
 
 public class GreenWindowBorder extends DefaultWindowBorder
 {
+	public GreenWindowBorder() throws IOException
+	{
+		super();
+	}
+
+
 	@Override
-	protected void setupStyle()
+	protected void setupStyle() throws IOException
 	{
 		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 13);
 
@@ -29,14 +35,7 @@ public class GreenWindowBorder extends DefaultWindowBorder
 			.add(new Color(211, 211, 211), UNFOCUSED)
 			.add(new Color(118, 157, 47), FOCUSED);
 
-		try
-		{
-			mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_2.png"));
-		}
-		catch (IOException e)
-		{
-			throw new IllegalArgumentException(e);
-		}
+		mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_2.png"));
 
 		mButtonWidth = mButtonTemplateImage.getWidth() / 4;
 		mButtonHeight = mButtonTemplateImage.getHeight() / 4;

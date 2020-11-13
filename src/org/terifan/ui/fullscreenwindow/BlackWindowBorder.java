@@ -21,9 +21,18 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	protected NinePatchImage[] mTabsImages;
 	protected NinePatchImage[] mMenuImages;
 
+	protected String[] options = {"File", "Edit", "Window"};
+	protected String[] tabs = {"Modeling", "Character", "Layout", "Rendering"};
+
+
+	public BlackWindowBorder() throws IOException
+	{
+		super();
+	}
+
 
 	@Override
-	protected void setupStyle()
+	protected void setupStyle() throws IOException
 	{
 		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 13);
 
@@ -40,61 +49,27 @@ public class BlackWindowBorder extends DefaultWindowBorder
 			.add(new Color(35,35,35), UNFOCUSED)
 			.add(new Color(35,35,35), FOCUSED);
 
-//		mTitleBarBackground = new ColorSet()
-//			.add(new Color(235, 235, 235), UNFOCUSED)
-//			.add(new Color(154, 205, 61), FOCUSED);
-//		mTitleBarForeground = new ColorSet()
-//			.add(new Color(0, 0, 0), UNFOCUSED)
-//			.add(new Color(0, 0, 0), FOCUSED);
-//		mBorderInner = new ColorSet()
-//			.add(new Color(235, 235, 235), UNFOCUSED)
-//			.add(new Color(154, 205, 61), FOCUSED);
-//		mBorderOuter = new ColorSet()
-//			.add(new Color(211, 211, 211), UNFOCUSED)
-//			.add(new Color(118, 157, 47), FOCUSED);
+		mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_3.png"));
 
-		try
+		BufferedImage template = ImageIO.read(FullScreenWindow.class.getResource("tab_buttons_1.png"));
+		int h = template.getHeight() / 4;
+		mTabsImages = new NinePatchImage[]
 		{
-			mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_3.png"));
-		}
-		catch (IOException e)
-		{
-			throw new IllegalArgumentException(e);
-		}
+			new NinePatchImage(template.getSubimage(0, h*0, template.getWidth(), h)),
+			new NinePatchImage(template.getSubimage(0, h*1, template.getWidth(), h)),
+			new NinePatchImage(template.getSubimage(0, h*2, template.getWidth(), h)),
+			new NinePatchImage(template.getSubimage(0, h*3, template.getWidth(), h))
+		};
 
-		try
+		template = ImageIO.read(FullScreenWindow.class.getResource("menu_buttons_1.png"));
+		h = template.getHeight() / 4;
+		mMenuImages = new NinePatchImage[]
 		{
-			BufferedImage template = ImageIO.read(FullScreenWindow.class.getResource("tab_buttons_1.png"));
-			int h = template.getHeight() / 4;
-			mTabsImages = new NinePatchImage[]
-			{
-				new NinePatchImage(template.getSubimage(0, h*0, template.getWidth(), h)),
-				new NinePatchImage(template.getSubimage(0, h*1, template.getWidth(), h)),
-				new NinePatchImage(template.getSubimage(0, h*2, template.getWidth(), h)),
-				new NinePatchImage(template.getSubimage(0, h*3, template.getWidth(), h))
-			};
-		}
-		catch (IOException e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-
-		try
-		{
-			BufferedImage template = ImageIO.read(FullScreenWindow.class.getResource("menu_buttons_1.png"));
-			int h = template.getHeight() / 4;
-			mMenuImages = new NinePatchImage[]
-			{
-				new NinePatchImage(template.getSubimage(0, h*0, template.getWidth(), h)),
-				new NinePatchImage(template.getSubimage(0, h*1, template.getWidth(), h)),
-				new NinePatchImage(template.getSubimage(0, h*2, template.getWidth(), h)),
-				new NinePatchImage(template.getSubimage(0, h*3, template.getWidth(), h))
-			};
-		}
-		catch (IOException e)
-		{
-			throw new IllegalArgumentException(e);
-		}
+			new NinePatchImage(template.getSubimage(0, h*0, template.getWidth(), h)),
+			new NinePatchImage(template.getSubimage(0, h*1, template.getWidth(), h)),
+			new NinePatchImage(template.getSubimage(0, h*2, template.getWidth(), h)),
+			new NinePatchImage(template.getSubimage(0, h*3, template.getWidth(), h))
+		};
 
 		mButtonWidth = mButtonTemplateImage.getWidth() / 4;
 		mButtonHeight = mButtonTemplateImage.getHeight() / 4;
@@ -111,15 +86,6 @@ public class BlackWindowBorder extends DefaultWindowBorder
 
 		aX += mBorderSize;
 		aWidth -= mBorderSize;
-
-		String[] options =
-		{
-			"File", "Edit", "Window"
-		};
-		String[] tabs =
-		{
-			"Modeling", "Character", "Layout", "Rendering"
-		};
 
 		for (int i = 0; i < options.length; i++)
 		{

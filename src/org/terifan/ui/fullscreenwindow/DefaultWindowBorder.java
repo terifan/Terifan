@@ -38,7 +38,7 @@ public class DefaultWindowBorder
 	protected boolean mWindowFocused;
 
 
-	public DefaultWindowBorder()
+	public DefaultWindowBorder() throws IOException
 	{
 		mBounds = new Rectangle();
 		mButtonBounds = new Rectangle();
@@ -47,7 +47,7 @@ public class DefaultWindowBorder
 	}
 
 
-	protected void setupStyle()
+	protected void setupStyle() throws IOException
 	{
 		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 13);
 
@@ -64,14 +64,7 @@ public class DefaultWindowBorder
 			.add(new Color(204, 206, 219), UNFOCUSED)
 			.add(new Color(155, 159, 185), FOCUSED);
 
-		try
-		{
-			mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_1.png"));
-		}
-		catch (IOException e)
-		{
-			throw new IllegalArgumentException(e);
-		}
+		mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_1.png"));
 
 		mButtonWidth = mButtonTemplateImage.getWidth() / 4;
 		mButtonHeight = mButtonTemplateImage.getHeight() / 4;
