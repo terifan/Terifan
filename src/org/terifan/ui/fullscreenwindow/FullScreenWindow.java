@@ -69,19 +69,18 @@ public class FullScreenWindow
 
 	public FullScreenWindow(String aTitle) throws IOException
 	{
-		this(null, aTitle, false, false, 1);
+		this(null, aTitle, false, false, new DefaultWindowBorder());
 	}
 
 
-	public FullScreenWindow(Frame aParent, String aTitle, boolean aDialog, boolean aModal, int aStyle) throws IOException
+	public FullScreenWindow(Frame aParent, String aTitle, boolean aDialog, boolean aModal, DefaultWindowBorder aWindowBorder) throws IOException
 	{
 		mInitialSize = new Dimension(1024, 768);
 		mResizeVer = true;
 		mResizeHor = true;
 		mBorderPainted = true;
 
-		mWindowBorder = new DefaultWindowBorder();
-
+		mWindowBorder = aWindowBorder;
 		mContentPanel = new JPanel(new BorderLayout());
 
 		Handler handler = new Handler();

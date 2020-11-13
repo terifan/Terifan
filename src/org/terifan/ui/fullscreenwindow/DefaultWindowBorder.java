@@ -37,9 +37,19 @@ public class DefaultWindowBorder
 	protected boolean mWindowFocused;
 
 
-	public DefaultWindowBorder() throws IOException
+	public DefaultWindowBorder()
+	{
+		mBounds = new Rectangle();
+		mButtonBounds = new Rectangle();
+
+		setupStyle();
+	}
+
+
+	protected void setupStyle()
 	{
 		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 12);
+
 		mTitleBarBackground = new ColorSet()
 			.add(new Color(255, 255, 255), UNFOCUSED)
 			.add(new Color(238, 238, 242), FOCUSED);
@@ -53,14 +63,19 @@ public class DefaultWindowBorder
 			.add(new Color(204, 206, 219), UNFOCUSED)
 			.add(new Color(155, 159, 185), FOCUSED);
 
-		mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_light.png"));
+		try
+		{
+			mButtonTemplateImage = ImageIO.read(FullScreenWindow.class.getResource("window_buttons_1.png"));
+		}
+		catch (IOException e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+
 		mButtonWidth = mButtonTemplateImage.getWidth() / 4;
-		mButtonHeight = mButtonTemplateImage.getHeight() / 3;
+		mButtonHeight = mButtonTemplateImage.getHeight() / 4;
 
 		mBorderSize = 4;
-
-		mBounds = new Rectangle();
-		mButtonBounds = new Rectangle();
 	}
 
 
@@ -102,13 +117,23 @@ public class DefaultWindowBorder
 		int dx = mButtonBounds.x;
 		int dy = mButtonBounds.y;
 
-		for (int i = 0; i < mButtons.length; i++, dx+=mButtonWidth)
+		for (int i = 0; i < mButtons.length; i++)
 		{
-			int sx = mButtons[i].ordinal() * (mButtonWidth + 1);
-			int sy = (mButtonHeight + 1) * (aArmedButton == mButtons[i] ? aHoverButton == mButtons[i] ? 2 : 0 : aHoverButton == mButtons[i] ? 1 : 0);
-
-			aGraphics.drawImage(mButtonTemplateImage, dx, dy, dx + mButtonWidth, dy + mButtonHeight, sx, sy, sx + mButtonWidth, sy + mButtonHeight, null);
+			dx += paintButton(aGraphics, aArmedButton, aHoverButton, dx, dy, mButtons[i]);
 		}
+	}
+
+
+	protected int paintButton(Graphics2D aGraphics, WindowButtonType aArmedButton, WindowButtonType aHoverButton, int aDx, int aDy, WindowButtonType aButton)
+	{
+		int row = aArmedButton == aButton ? aHoverButton == aButton ? 2 : 1 : aHoverButton == aButton ? 1 : mWindowFocused ? 0 : 3;
+
+		int sx = (mButtonWidth + 1) * aButton.ordinal();
+		int sy = (mButtonHeight + 1) * row;
+
+		aGraphics.drawImage(mButtonTemplateImage, aDx, aDy, aDx + mButtonWidth, aDy + mButtonHeight, sx, sy, sx + mButtonWidth, sy + mButtonHeight, null);
+
+		return mButtonWidth;
 	}
 
 
@@ -184,8 +209,7 @@ public class DefaultWindowBorder
 	/**
 	 * Test whether or not the Point provided intersects the border and return the direction.
 	 *
-	 * @return
-	 *   Cursor.DEFAULT_CURSOR if no intersection occurs or one of the directional cursors e.g. Cursor.NW_RESIZE_CURSOR
+	 * @return Cursor.DEFAULT_CURSOR if no intersection occurs or one of the directional cursors e.g. Cursor.NW_RESIZE_CURSOR
 	 */
 	protected int intersectBorder(FullScreenWindow aWindow, Point aPoint)
 	{
