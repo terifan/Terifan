@@ -48,7 +48,7 @@ public class DefaultWindowBorder
 
 	protected void setupStyle()
 	{
-		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 12);
+		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 13);
 
 		mTitleBarBackground = new ColorSet()
 			.add(new Color(255, 255, 255), UNFOCUSED)

@@ -9,12 +9,12 @@ import static org.terifan.ui.ColorSet.FOCUSED;
 import static org.terifan.ui.ColorSet.UNFOCUSED;
 
 
-public class XWindowBorder extends DefaultWindowBorder
+public class GreenWindowBorder extends DefaultWindowBorder
 {
 	@Override
 	protected void setupStyle()
 	{
-		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 12);
+		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 13);
 
 		mTitleBarBackground = new ColorSet()
 			.add(new Color(235, 235, 235), UNFOCUSED)

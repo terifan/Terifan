@@ -12,7 +12,7 @@ public class Test
 	{
 		try
 		{
-			FullScreenWindow wnd = new FullScreenWindow(null, "New window", false, true, new DefaultWindowBorder())
+			FullScreenWindow wnd = new FullScreenWindow(null, "New window", false, true, new GreenWindowBorder())
 			{
 				@Override protected boolean onWindowClosing(){System.out.println("closing");return true;}
 				@Override protected void onWindowClosed(){System.out.println("closed");}

@@ -59,7 +59,6 @@ public class FullScreenWindow
 	protected boolean mUndecorated;
 	protected boolean mBorderPainted;
 
-	private Rectangle mStartBounds;
 	private Rectangle mWindowBounds;
 	private Point mClickPoint;
 	private Integer mCursor;
@@ -416,7 +415,6 @@ public class FullScreenWindow
 		{
 			mWindow.requestFocus();
 
-			mStartBounds = new Rectangle(mWindow.getBounds());
 			mWindowBounds = mWindow.getBounds();
 			mClickPoint = aEvent.getPoint();
 			mCursor = mWindowBorder.intersectBorder(FullScreenWindow.this, mClickPoint);
@@ -490,7 +488,7 @@ public class FullScreenWindow
 		@Override
 		public void mouseDragged(MouseEvent aEvent)
 		{
-			if (System.currentTimeMillis() - mExtendedStateTime < 100) // bug work-around, changing window state triggers drag
+			if (System.currentTimeMillis() - mExtendedStateTime < 100) // bug work-around, double clicking on the titlebar to maximize it triggers a mouse drag...
 			{
 				return;
 			}
