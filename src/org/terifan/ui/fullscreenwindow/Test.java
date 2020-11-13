@@ -23,6 +23,7 @@ public class Test
 				@Override protected void onWindowGainedFocus(){System.out.println("focused");}
 				@Override protected void onWindowLostFocus(){System.out.println("unfocused");}
 			};
+			wnd.getContentPanel().setLayout(new GridLayout(1, 2));
 			wnd.add(new JButton(new AbstractAction("undecorated")
 			{
 				@Override
@@ -39,7 +40,6 @@ public class Test
 					wnd.setBorderPainted(!wnd.isBorderPainted());
 				}
 			}));
-			wnd.getContentPanel().setLayout(new GridLayout(1, 2));
 			wnd.setVisible(true);
 		}
 		catch (Throwable e)

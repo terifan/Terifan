@@ -61,6 +61,7 @@ public class FullScreenWindow
 
 	private Rectangle mWindowBounds;
 	private Point mClickPoint;
+	private Point mMousePoint;
 	private Integer mCursor;
 	private boolean mWindowResizing;
 	private long mExtendedStateTime;
@@ -116,6 +117,7 @@ public class FullScreenWindow
 
 		mMinSize = new Dimension(200, 40);
 		mMaxSize = new Dimension(32000, 32000);
+		mMousePoint = new Point();
 	}
 
 
@@ -317,7 +319,7 @@ public class FullScreenWindow
 		{
 			if (!mUndecorated)
 			{
-				mWindowBorder.paintBorder(FullScreenWindow.this, (Graphics2D)aGraphics, aX, aY, aWidth, aHeight, mHoverButton, mArmedButton);
+				mWindowBorder.paintBorder(FullScreenWindow.this, (Graphics2D)aGraphics, aX, aY, aWidth, aHeight, mHoverButton, mArmedButton, mMousePoint);
 			}
 		}
 
@@ -442,6 +444,8 @@ public class FullScreenWindow
 		@Override
 		public void mouseEntered(MouseEvent aEvent)
 		{
+			mMousePoint = aEvent.getPoint();
+
 			mBorderPanel.repaint();
 		}
 
@@ -449,6 +453,13 @@ public class FullScreenWindow
 		@Override
 		public void mouseExited(MouseEvent aEvent)
 		{
+			mMousePoint = aEvent.getPoint();
+
+			if (mWindowBorder.onMouseMotion(mMousePoint))
+			{
+				mBorderPanel.repaint();
+			}
+
 			if (!mWindowMoving)
 			{
 				mHoverButton = null;
@@ -461,9 +472,11 @@ public class FullScreenWindow
 		@Override
 		public void mouseMoved(MouseEvent aEvent)
 		{
+			mMousePoint = aEvent.getPoint();
+
 			if (mBorderPainted)
 			{
-				int b = mWindowBorder.intersectBorder(FullScreenWindow.this, aEvent.getPoint());
+				int b = mWindowBorder.intersectBorder(FullScreenWindow.this, mMousePoint);
 
 				if (b != Cursor.DEFAULT_CURSOR)
 				{
@@ -476,11 +489,18 @@ public class FullScreenWindow
 				}
 			}
 
-			WindowButtonType old = mHoverButton;
-			mHoverButton = mWindowBorder.intersectButton(FullScreenWindow.this, aEvent.getPoint());
-			if (old != mHoverButton)
+			if (mWindowBorder.onMouseMotion(mMousePoint))
 			{
 				mBorderPanel.repaint();
+			}
+			else
+			{
+				WindowButtonType old = mHoverButton;
+				mHoverButton = mWindowBorder.intersectButton(FullScreenWindow.this, mMousePoint);
+				if (old != mHoverButton)
+				{
+					mBorderPanel.repaint();
+				}
 			}
 		}
 
@@ -492,6 +512,8 @@ public class FullScreenWindow
 			{
 				return;
 			}
+
+			mMousePoint = aEvent.getPoint();
 
 			if (mWindowResizing)
 			{

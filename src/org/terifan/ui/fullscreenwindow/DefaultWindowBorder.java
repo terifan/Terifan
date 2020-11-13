@@ -30,6 +30,7 @@ public class DefaultWindowBorder
 	protected int mButtonWidth;
 	protected int mButtonHeight;
 	protected int mBorderSize;
+	protected int mTitleBarHeight;
 	protected Rectangle mBounds;
 	protected boolean mMaximized;
 	protected boolean mBorderPainted;
@@ -93,38 +94,39 @@ public class DefaultWindowBorder
 		mMaximized = aMaximized;
 		mWindowFocused = aWindowFocused;
 		mBorderPainted = !aMaximized && aBorderPainted;
+		mTitleBarHeight = mButtonHeight + mBorderSize;
 	}
 
 
-	protected void paintBorder(FullScreenWindow aWindow, Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight, WindowButtonType aHoverButton, WindowButtonType aArmedButton)
+	protected void paintBorder(FullScreenWindow aWindow, Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight, WindowButtonType aHoverButton, WindowButtonType aArmedButton, Point aPointer)
 	{
 		mBounds.setBounds(aX, aY, aWidth, aHeight);
 
 		mButtonBounds.x = mBounds.x + mBounds.width - (mBorderPainted ? mBorderSize : 0) - mButtonBounds.width;
 		mButtonBounds.y = mBorderPainted ? 1 : 0;
 
-		int top = mButtonHeight + mBorderSize;
+		int top = mTitleBarHeight;
 
-		paintTitleBar(aGraphics, aX, aY, aWidth, top);
-		paintBorder(aGraphics, aX, aY + top, aWidth, aHeight - top);
-		paintTitleText(aGraphics, aWindow, aX, aY, mButtonBounds.x, top);
-		paintButtons(aGraphics, aArmedButton, aHoverButton);
+		paintTitleBar(aGraphics, aX, aY, aWidth, top, aPointer);
+		paintBorder(aGraphics, aX, aY + top, aWidth, aHeight - top, aPointer);
+		paintTitleText(aGraphics, aWindow, aX, aY, mButtonBounds.x, top, aPointer);
+		paintButtons(aGraphics, aArmedButton, aHoverButton, aPointer);
 	}
 
 
-	protected void paintButtons(Graphics2D aGraphics, WindowButtonType aArmedButton, WindowButtonType aHoverButton)
+	protected void paintButtons(Graphics2D aGraphics, WindowButtonType aArmedButton, WindowButtonType aHoverButton, Point aPointer)
 	{
 		int dx = mButtonBounds.x;
 		int dy = mButtonBounds.y;
 
 		for (int i = 0; i < mButtons.length; i++)
 		{
-			dx += paintButton(aGraphics, aArmedButton, aHoverButton, dx, dy, mButtons[i]);
+			dx += paintButton(aGraphics, aArmedButton, aHoverButton, dx, dy, mButtons[i], aPointer);
 		}
 	}
 
 
-	protected int paintButton(Graphics2D aGraphics, WindowButtonType aArmedButton, WindowButtonType aHoverButton, int aDx, int aDy, WindowButtonType aButton)
+	protected int paintButton(Graphics2D aGraphics, WindowButtonType aArmedButton, WindowButtonType aHoverButton, int aDx, int aDy, WindowButtonType aButton, Point aPointer)
 	{
 		int row = aArmedButton == aButton ? aHoverButton == aButton ? 2 : 1 : aHoverButton == aButton ? 1 : mWindowFocused ? 0 : 3;
 
@@ -137,7 +139,7 @@ public class DefaultWindowBorder
 	}
 
 
-	protected void paintTitleText(Graphics2D aGraphics, FullScreenWindow aWindow, int aX, int aY, int aWidth, int aHeight)
+	protected void paintTitleText(Graphics2D aGraphics, FullScreenWindow aWindow, int aX, int aY, int aWidth, int aHeight, Point aPointer)
 	{
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -154,7 +156,7 @@ public class DefaultWindowBorder
 	}
 
 
-	protected void paintBorder(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight)
+	protected void paintBorder(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight, Point aPointer)
 	{
 		if (mBorderPainted)
 		{
@@ -173,7 +175,7 @@ public class DefaultWindowBorder
 	}
 
 
-	protected void paintTitleBar(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight)
+	protected void paintTitleBar(Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight, Point aPointer)
 	{
 		aGraphics.setColor(mTitleBarBackground.get(mWindowFocused));
 		aGraphics.fillRect(aX, aY, aWidth, aHeight);
@@ -191,7 +193,13 @@ public class DefaultWindowBorder
 	protected Insets getBorderInsets()
 	{
 		int s = mBorderPainted ? mBorderSize : 0;
-		return new Insets(mButtonHeight + mBorderSize, s, s, s);
+		return new Insets(mTitleBarHeight, s, s, s);
+	}
+
+
+	protected boolean onMouseMotion(Point aMousePoint)
+	{
+		return true;
 	}
 
 
