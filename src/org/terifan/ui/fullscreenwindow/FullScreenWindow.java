@@ -489,18 +489,11 @@ public class FullScreenWindow
 				}
 			}
 
-			if (mWindowBorder.onMouseMotion(mMousePoint))
+			WindowButtonType old = mHoverButton;
+			mHoverButton = mWindowBorder.intersectButton(FullScreenWindow.this, mMousePoint);
+			if (old != mHoverButton || mWindowBorder.onMouseMotion(mMousePoint))
 			{
 				mBorderPanel.repaint();
-			}
-			else
-			{
-				WindowButtonType old = mHoverButton;
-				mHoverButton = mWindowBorder.intersectButton(FullScreenWindow.this, mMousePoint);
-				if (old != mHoverButton)
-				{
-					mBorderPanel.repaint();
-				}
 			}
 		}
 
