@@ -31,11 +31,11 @@ public class DefaultWindowBorder
 	protected int mButtonHeight;
 	protected int mBorderSize;
 	protected int mTitleBarHeight;
-	protected Rectangle mBounds;
 	protected boolean mMaximized;
 	protected boolean mBorderPainted;
-	protected Rectangle mButtonBounds;
 	protected boolean mWindowFocused;
+	protected final Rectangle mBounds;
+	protected final Rectangle mButtonBounds;
 
 
 	public DefaultWindowBorder() throws IOException
@@ -212,14 +212,14 @@ public class DefaultWindowBorder
 	 *
 	 * @return Cursor.DEFAULT_CURSOR if no intersection occurs or one of the directional cursors e.g. Cursor.NW_RESIZE_CURSOR
 	 */
-	protected int intersectBorder(FullScreenWindow aWindow, Point aPoint)
+	protected BorderIntersectionType intersectBorder(FullScreenWindow aWindow, Point aPoint)
 	{
 		boolean hor = aWindow.isResizeHorizontal();
 		boolean ver = aWindow.isResizeVertical();
 
 		if (!mBorderPainted)
 		{
-			return Cursor.DEFAULT_CURSOR;
+			return BorderIntersectionType.NONE;
 		}
 		if (ver)
 		{
@@ -229,18 +229,18 @@ public class DefaultWindowBorder
 				{
 					if (aPoint.x < mBorderSize)
 					{
-						return Cursor.NW_RESIZE_CURSOR;
+						return BorderIntersectionType.NORTHWEST;
 					}
 					if (aPoint.x >= mBounds.width - mBorderSize)
 					{
-						return Cursor.NE_RESIZE_CURSOR;
+						return BorderIntersectionType.NORTHEAST;
 					}
 				}
 				if (aPoint.y > 0 && aPoint.x > mButtonBounds.x)
 				{
-					return Cursor.DEFAULT_CURSOR;
+					return BorderIntersectionType.NONE;
 				}
-				return Cursor.N_RESIZE_CURSOR;
+				return BorderIntersectionType.NORTH;
 			}
 			if (aPoint.y >= mBounds.height - mBorderSize)
 			{
@@ -248,42 +248,28 @@ public class DefaultWindowBorder
 				{
 					if (aPoint.x < mBorderSize)
 					{
-						return Cursor.SW_RESIZE_CURSOR;
+						return BorderIntersectionType.SOUTHWEST;
 					}
 					if (aPoint.x >= mBounds.width - mBorderSize)
 					{
-						return Cursor.SE_RESIZE_CURSOR;
+						return BorderIntersectionType.SOUTHEAST;
 					}
 				}
-				return Cursor.S_RESIZE_CURSOR;
+				return BorderIntersectionType.SOUTH;
 			}
 		}
 		if (hor)
 		{
 			if (aPoint.x < mBorderSize)
 			{
-				return Cursor.W_RESIZE_CURSOR;
+				return BorderIntersectionType.WEST;
 			}
 			if (aPoint.x >= mBounds.width - mBorderSize)
 			{
-				return Cursor.E_RESIZE_CURSOR;
+				return BorderIntersectionType.EAST;
 			}
 		}
 
-		return Cursor.DEFAULT_CURSOR;
-	}
-
-
-	/**
-	 * Test whether or not the Point provided intersects the border allowing the window to be dragged.
-	 */
-	protected boolean intersectDragHandle(FullScreenWindow aWindow, Point aPoint)
-	{
-		int top = mButtonHeight + mBorderSize;
-		if (mBorderPainted)
-		{
-			return aPoint.x >= mBorderSize && aPoint.y >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < top;
-		}
-		return aPoint.x < mButtonBounds.x && aPoint.y < top;
+		return BorderIntersectionType.NONE;
 	}
 }
