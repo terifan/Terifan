@@ -1,7 +1,6 @@
 package org.terifan.ui.fullscreenwindow;
 
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -97,65 +96,32 @@ public class BlackWindowBorder extends DefaultWindowBorder
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-		aX += mBorderSize;
-		aWidth -= mBorderSize;
-
 		for (Element el : mOptions)
 		{
-			TextBox tb = new TextBox(el.getLabel())
-				.setBounds(aX, aY + 1, aWidth, aHeight - 1)
+			int mi = el.contains(aPointer) ? 2 : 0;
+
+			new TextBox(el.getLabel())
+				.setBounds(el.x, el.y + 4, el.width, el.height - 4)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
+				.setBackground(mMenuImages[mi])
 				.setFont(mTitleBarFont)
-				.setAnchor(Anchor.WEST)
-				.setMaxLineCount(1);
-
-			int m = tb.measure().width + 20;
-
-			int z = 0;
-			if (el.contains(aPointer))
-			{
-				z = 2;
-			}
-			else
-			{
-				z = 0;
-			}
-			mMenuImages[z].paintImage(aGraphics, aX, aY + 6, m, aHeight - 10);
-
-			tb.setPadding(0, 10, 0, 0).render(aGraphics);
-
-			aX += m;
+				.setAnchor(Anchor.CENTER)
+				.setMaxLineCount(1)
+				.render(aGraphics);
 		}
-
-		aX += 20;
-		aY += 10;
-		aHeight -= 10;
 
 		for (Element el : mTabs)
 		{
-			TextBox tb = new TextBox(el.getLabel())
-				.setBounds(aX, aY + 1, aWidth, aHeight - 1)
+			int mi = el.contains(aPointer) ? el.isSelected() ? 3 : 2 : el.isSelected() ? 1 : 0;
+
+			new TextBox(el.getLabel())
+				.setBounds(el.x, el.y + 4, el.width, el.height - 4)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
+				.setBackground(mTabsImages[mi])
 				.setFont(mTitleBarFont)
-				.setAnchor(Anchor.WEST)
-				.setMaxLineCount(1);
-
-			int m = tb.measure().width + 20;
-
-			int z = 0;
-			if (el.contains(aPointer))
-			{
-				z = el.isSelected() ? 3 : 2;
-			}
-			else
-			{
-				z = el.isSelected() ? 1 : 0;
-			}
-			mTabsImages[z].paintImage(aGraphics, aX, aY, m, aHeight);
-
-			tb.setPadding(0, 10, 0, 0).render(aGraphics);
-
-			aX += m + 5;
+				.setAnchor(Anchor.SOUTH)
+				.setMaxLineCount(1)
+				.render(aGraphics);
 		}
 	}
 
@@ -163,42 +129,45 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	protected void setup(int aX, int aY, int aWidth, int aHeight)
 	{
 		aX += mBorderSize;
-		aWidth -= mBorderSize;
+		aWidth -= mBorderSize * 2;
 
 		for (Element el : mOptions)
 		{
-			TextBox tb = new TextBox(el.getLabel())
-				.setBounds(aX, aY + 1, aWidth, aHeight - 1)
+			Rectangle r = new TextBox(el.getLabel())
+				.setBounds(aX, aY + 1, aWidth, mTitleBarHeight - 1)
+//				.setPadding(4, 0, 4, 20)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
+				.setBackground(mMenuImages[0])
 				.setFont(mTitleBarFont)
 				.setAnchor(Anchor.WEST)
-				.setMaxLineCount(1);
+				.setMaxLineCount(1)
+				.measure();
 
-			int m = tb.measure().width + 20;
+			el.setBounds(r);
 
-			el.setBounds(aX, aY + 6, m, aHeight - 10);
-
-			aX += m;
+			aX += el.width;
+			aWidth -= el.width;
 		}
 
 		aX += 20;
-		aY += 10;
-		aHeight -= 10;
+		aWidth -= 20;
 
 		for (Element el : mTabs)
 		{
-			TextBox tb = new TextBox(el.getLabel())
-				.setBounds(aX, aY + 1, aWidth, aHeight - 1)
+			Rectangle r = new TextBox(el.getLabel())
+				.setBounds(aX, aY + 1, aWidth, mTitleBarHeight - 1)
+//				.setPadding(8, 0, 0, 20)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
+				.setBackground(mTabsImages[0])
 				.setFont(mTitleBarFont)
-				.setAnchor(Anchor.WEST)
-				.setMaxLineCount(1);
+				.setAnchor(Anchor.SOUTH_WEST)
+				.setMaxLineCount(1)
+				.measure();
 
-			int m = tb.measure().width + 20;
+			el.setBounds(r);
 
-			el.setBounds(aX, aY, m, aHeight);
-
-			aX += m + 5;
+			aX += el.width + 5;
+			aWidth -= el.width + 5;
 		}
 	}
 
@@ -206,7 +175,7 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	@Override
 	protected BorderIntersectionType intersectBorder(FullScreenWindow aWindow, Point aPoint)
 	{
-		if (aPoint.x >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y >= mBorderSize && aPoint.y < mTitleBarHeight)
+		if (aPoint.x >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < mTitleBarHeight)
 		{
 			for (Element el : mOptions)
 			{
@@ -231,8 +200,9 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	}
 
 
-	private static class Element extends Rectangle
+	protected static class Element extends Rectangle
 	{
+		private final static long serialVersionUID = 1L;
 		private String mLabel;
 		private boolean mSelected;
 

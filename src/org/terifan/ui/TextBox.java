@@ -48,6 +48,8 @@ public class TextBox implements Cloneable, Serializable
 	protected boolean mDirty;
 	protected Color mShadowColor;
 	protected TextRenderCallback mRenderCallback;
+	private NinePatchImage mImage;
+	private NinePatchImage mBackgroundImage;
 
 
 	public TextBox()
@@ -169,6 +171,13 @@ public class TextBox implements Cloneable, Serializable
 	public TextBox setBackground(Color aBackground)
 	{
 		mBackground = aBackground;
+		return this;
+	}
+
+
+	public TextBox setBackground(NinePatchImage aImage)
+	{
+		mBackgroundImage = aImage;
 		return this;
 	}
 
@@ -499,6 +508,15 @@ public class TextBox implements Cloneable, Serializable
 			bounds.height += bi.top + bi.bottom;
 		}
 
+		if (mBackgroundImage != null)
+		{
+			Insets padding = mBackgroundImage.getPadding();
+			bounds.x -= padding.left;
+			bounds.y -= padding.top;
+			bounds.width += padding.left + padding.right;
+			bounds.height += padding.top + padding.bottom;
+		}
+
 		if (mTextBorder != null)
 		{
 			Insets bi = mTextBorder.getBorderInsets(null);
@@ -523,9 +541,9 @@ public class TextBox implements Cloneable, Serializable
 		try
 		{
 			TextBox textBox = (TextBox)super.clone();
-
 			textBox.mAnchor = this.mAnchor;
 			textBox.mBackground = this.mBackground;
+			textBox.mBackgroundImage = this.mBackgroundImage;
 			textBox.mBorder = this.mBorder;
 			textBox.mBounds.setBounds(this.mBounds);
 			textBox.mBreakChars = this.mBreakChars == DEFAULT_BREAK_CHARS ? DEFAULT_BREAK_CHARS : this.mBreakChars.clone();
@@ -604,6 +622,10 @@ public class TextBox implements Cloneable, Serializable
 			aGraphics.setColor(mBackground);
 			aGraphics.fillRect(boxX, boxY, boxW, boxH);
 		}
+		if (mBackgroundImage != null)
+		{
+			mBackgroundImage.paintSurrounding(aGraphics, boxX, boxY, boxW, boxH);
+		}
 
 		Insets ti = mTextBorder != null ? mTextBorder.getBorderInsets(null) : ZERO_INSETS;
 		LineMetrics lm = mFont.getLineMetrics("Adgj", aGraphics.getFontMetrics().getFontRenderContext());
@@ -675,6 +697,15 @@ public class TextBox implements Cloneable, Serializable
 		boxY += mMargins.top;
 		boxW -= mMargins.left + mMargins.right;
 		boxH -= mMargins.top + mMargins.bottom;
+
+		if (mBackgroundImage != null)
+		{
+			Insets padding = mBackgroundImage.getPadding();
+			boxX -= padding.left;
+			boxY -= padding.top;
+			boxW += padding.left + padding.right;
+			boxH += padding.top + padding.bottom;
+		}
 
 		int extraLineHeight = 0;
 		if (mTextBorder != null)

@@ -12,6 +12,8 @@ import javax.imageio.ImageIO;
 /**
  * Renders a scalable image.
  *
+ * Surround an image with white and black pixels, top & left sides represent stretchable region, bottom & right side represent content box.
+ *
  * http://developer.android.com/guide/topics/graphics/2d-graphics.html
  */
 public class NinePatchImage
