@@ -2,17 +2,11 @@ package org.terifan.ui.fullscreenwindow;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.AbstractBorder;
 
 
 public class Test
@@ -33,9 +27,9 @@ public class Test
 				@Override protected void onWindowLostFocus(){System.out.println("unfocused");}
 			};
 
-			JPanel panel = new BlackWindowPanel();
-			panel.setBackground(new Color(51,51,51));
-			panel.add(new JButton(new AbstractAction("undecorated")
+			JPanel panel1 = new BlackWindowPanel();
+			panel1.setBackground(new Color(51,51,51));
+			panel1.add(new JButton(new AbstractAction("undecorated")
 			{
 				@Override
 				public void actionPerformed(ActionEvent aE)
@@ -43,7 +37,7 @@ public class Test
 					wnd.setUndecorated(!wnd.isUndecorated());
 				}
 			}));
-			panel.add(new JButton(new AbstractAction("border")
+			panel1.add(new JButton(new AbstractAction("border")
 			{
 				@Override
 				public void actionPerformed(ActionEvent aE)
@@ -52,8 +46,19 @@ public class Test
 				}
 			}));
 
-			wnd.getContentPanel().setLayout(new BorderLayout());
-			wnd.add(panel);
+			JPanel panel2 = new BlackWindowPanel();
+			panel2.setBackground(new Color(51,51,51));
+			JLabel label = new JLabel("xxxxxxxxxxxxxxxxxx");
+			label.setForeground(Color.WHITE);
+			panel2.add(label);
+
+			JPanel panelX = new JPanel(new BorderLayout(2, 2));
+			panelX.setBackground(new Color(34, 34, 34));
+			panelX.add(panel1, BorderLayout.CENTER);
+			panelX.add(panel2, BorderLayout.EAST);
+
+			wnd.setLayout(new BorderLayout());
+			wnd.add(panelX);
 			wnd.setVisible(true);
 		}
 		catch (Throwable e)

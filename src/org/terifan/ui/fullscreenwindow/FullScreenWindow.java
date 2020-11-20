@@ -9,6 +9,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.LayoutManager2;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
@@ -409,6 +410,14 @@ public class FullScreenWindow
 
 
 	BorderIntersectionType mBorderIntersectionType;
+
+
+	public void setLayout(LayoutManager2 aLayout)
+	{
+		getContentPanel().setLayout(aLayout);
+	}
+
+
 	private class Handler extends WindowAdapter implements MouseListener, MouseMotionListener, WindowFocusListener, WindowStateListener, ComponentListener
 	{
 		@Override
