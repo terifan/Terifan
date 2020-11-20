@@ -4,8 +4,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
 import java.io.Serializable;
@@ -48,8 +50,8 @@ public class TextBox implements Cloneable, Serializable
 	protected boolean mDirty;
 	protected Color mShadowColor;
 	protected TextRenderCallback mRenderCallback;
-	private NinePatchImage mImage;
 	private NinePatchImage mBackgroundImage;
+	private boolean mBackgroundImageSurroundText;
 
 
 	public TextBox()
@@ -178,6 +180,13 @@ public class TextBox implements Cloneable, Serializable
 	public TextBox setBackground(NinePatchImage aImage)
 	{
 		mBackgroundImage = aImage;
+		return this;
+	}
+
+
+	public TextBox setBackgroundSurroundText(boolean aBackgroundSurroundText)
+	{
+		mBackgroundImageSurroundText = aBackgroundSurroundText;
 		return this;
 	}
 
@@ -511,8 +520,8 @@ public class TextBox implements Cloneable, Serializable
 		if (mBackgroundImage != null)
 		{
 			Insets padding = mBackgroundImage.getPadding();
-			bounds.x -= padding.left;
-			bounds.y -= padding.top;
+			bounds.x += padding.left;
+			bounds.y += padding.top;
 			bounds.width += padding.left + padding.right;
 			bounds.height += padding.top + padding.bottom;
 		}
@@ -624,7 +633,14 @@ public class TextBox implements Cloneable, Serializable
 		}
 		if (mBackgroundImage != null)
 		{
-			mBackgroundImage.paintSurrounding(aGraphics, boxX, boxY, boxW, boxH);
+			if (mBackgroundImageSurroundText)
+			{
+				mBackgroundImage.paintSurrounding(aGraphics, boxX, boxY, boxW, boxH + 1);
+			}
+			else
+			{
+				mBackgroundImage.paintImage(aGraphics, boxX, boxY, boxW, boxH + 1);
+			}
 		}
 
 		Insets ti = mTextBorder != null ? mTextBorder.getBorderInsets(null) : ZERO_INSETS;
@@ -636,6 +652,13 @@ public class TextBox implements Cloneable, Serializable
 		for (int i = 0, sz = mTextBounds.size(); i < sz; i++)
 		{
 			Rectangle r = mTextBounds.get(i);
+
+//			if (mBackgroundImage != null)
+//			{
+//				Insets padding = mBackgroundImage.getPadding();
+//				r.x -= padding.left;
+//				r.y -= padding.top;
+//			}
 
 			if (mTextBorder != null)
 			{
@@ -718,7 +741,7 @@ public class TextBox implements Cloneable, Serializable
 			extraLineHeight = bi.top + bi.bottom;
 		}
 
-		LineMetrics lm = mFont.getLineMetrics("Adgj", aFontRenderContext);
+		LineMetrics lm = mFont.getLineMetrics("Adgjy", aFontRenderContext);
 		int lineHeight = (int)lm.getHeight() + mPadding.top + mPadding.bottom;
 
 		if (boxH < lineHeight)
@@ -1038,5 +1061,12 @@ public class TextBox implements Cloneable, Serializable
 	public String toString()
 	{
 		return getText();
+	}
+
+
+	public static void enableAntialiasing(Graphics aGraphics)
+	{
+		Graphics2D g = (Graphics2D)aGraphics;
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 	}
 }

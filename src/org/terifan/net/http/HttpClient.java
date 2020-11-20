@@ -172,13 +172,13 @@ public class HttpClient
 			HttpClient client = new HttpClient();
 
 			HttpResponse response = client
-				.get("http://dips.surikat.net/Login")
+				.get("https://dips.surikat.net/Login")
 				.execute();
 
 			System.out.println(response.getHeaders());
 
 			response = client
-				.get("http://dips.surikat.net/Login")
+				.get("https://dips.surikat.net/Login")
 				.execute();
 
 			System.out.println(response.getHeaders());

@@ -5,7 +5,6 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +24,8 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	protected NinePatchImage[] mMenuImages;
 
 	protected ArrayList<Element> mOptions = new ArrayList<>(Arrays.asList(new Element("File"), new Element("Edit"), new Element("Window")));
-	protected ArrayList<Element> mTabs = new ArrayList<>(Arrays.asList(new Element("Modeling"), new Element("Character", true), new Element("Layout"), new Element("Rendering")));
+	protected ArrayList<Element> mTabs = new ArrayList<>(Arrays.asList(new Element("Modeling"), new Element("Character"), new Element("Layout"), new Element("Rendering")));
+	protected Element mSelectedTab = mTabs.get(1);
 
 
 	public BlackWindowBorder() throws IOException
@@ -93,17 +93,17 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	@Override
 	protected void paintTitleText(Graphics2D aGraphics, FullScreenWindow aWindow, int aX, int aY, int aWidth, int aHeight, Point aPointer)
 	{
-		Graphics2D g = (Graphics2D)aGraphics;
-		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		TextBox.enableAntialiasing(aGraphics);
 
 		for (Element el : mOptions)
 		{
 			int mi = el.contains(aPointer) ? 2 : 0;
 
 			new TextBox(el.getLabel())
-				.setBounds(el.x, el.y + 4, el.width, el.height - 4)
+				.setBounds(el)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
 				.setBackground(mMenuImages[mi])
+				.setPadding(2, 0, 0, 0)
 				.setFont(mTitleBarFont)
 				.setAnchor(Anchor.CENTER)
 				.setMaxLineCount(1)
@@ -112,16 +112,34 @@ public class BlackWindowBorder extends DefaultWindowBorder
 
 		for (Element el : mTabs)
 		{
-			int mi = el.contains(aPointer) ? el.isSelected() ? 3 : 2 : el.isSelected() ? 1 : 0;
+			int mi = el.contains(aPointer) ? mSelectedTab == el ? 3 : 2 : mSelectedTab == el ? 1 : 0;
 
 			new TextBox(el.getLabel())
-				.setBounds(el.x, el.y + 4, el.width, el.height - 4)
+				.setBounds(el)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
 				.setBackground(mTabsImages[mi])
+//				.setPadding(0, 20, 4, 40)
+				.setPadding(0, 0, 4, 0)
 				.setFont(mTitleBarFont)
 				.setAnchor(Anchor.SOUTH)
 				.setMaxLineCount(1)
 				.render(aGraphics);
+
+//			aGraphics.setColor(Color.YELLOW);
+//			aGraphics.drawRect(el.x+2, el.y+2, 16, 16);
+//			aGraphics.drawRect(el.x+el.width-2-20-20, el.y+2, 16, 16);
+//			aGraphics.drawRect(el.x+el.width-2-20, el.y+2, 16, 16);
+
+//try
+//{
+//				int x = el.x+el.width-2-20;
+//				int y = el.y+2;
+//			aGraphics.drawImage(ImageIO.read(BlackWindowBorder.class.getResource("tab_inner_buttons_1.png")), x, y, x+16,y+16,0,0,16,16, null);
+//}
+//catch (Exception e)
+//{
+//	e.printStackTrace(System.out);
+//}
 		}
 	}
 
@@ -129,45 +147,38 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	protected void setup(int aX, int aY, int aWidth, int aHeight)
 	{
 		aX += mBorderSize;
-		aWidth -= mBorderSize * 2;
 
 		for (Element el : mOptions)
 		{
 			Rectangle r = new TextBox(el.getLabel())
-				.setBounds(aX, aY + 1, aWidth, mTitleBarHeight - 1)
-//				.setPadding(4, 0, 4, 20)
+				.setBounds(aX, aY, aWidth, mTitleBarHeight - aY)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
 				.setBackground(mMenuImages[0])
 				.setFont(mTitleBarFont)
-				.setAnchor(Anchor.WEST)
 				.setMaxLineCount(1)
 				.measure();
 
-			el.setBounds(r);
+			el.setBounds(r.x, aY + mBorderSize, r.width, mTitleBarHeight - aY - mBorderSize - mBorderSize);
 
 			aX += el.width;
-			aWidth -= el.width;
 		}
 
 		aX += 20;
-		aWidth -= 20;
 
 		for (Element el : mTabs)
 		{
 			Rectangle r = new TextBox(el.getLabel())
-				.setBounds(aX, aY + 1, aWidth, mTitleBarHeight - 1)
-//				.setPadding(8, 0, 0, 20)
+				.setBounds(aX, aY, aWidth, mTitleBarHeight - aY)
 				.setForeground(mTitleBarForeground.get(mWindowFocused))
 				.setBackground(mTabsImages[0])
 				.setFont(mTitleBarFont)
-				.setAnchor(Anchor.SOUTH_WEST)
 				.setMaxLineCount(1)
 				.measure();
 
-			el.setBounds(r);
+//			el.setBounds(r.x, mTitleBarHeight - r.height, r.width + 60, r.height);
+			el.setBounds(r.x, mTitleBarHeight - r.height, r.width, r.height);
 
 			aX += el.width + 5;
-			aWidth -= el.width + 5;
 		}
 	}
 
@@ -202,9 +213,8 @@ public class BlackWindowBorder extends DefaultWindowBorder
 
 	protected static class Element extends Rectangle
 	{
-		private final static long serialVersionUID = 1L;
 		private String mLabel;
-		private boolean mSelected;
+		private ArrayList<Element> mChildren;
 
 
 		public Element(String aLabel)
@@ -213,22 +223,15 @@ public class BlackWindowBorder extends DefaultWindowBorder
 		}
 
 
-		public Element(String aLabel, boolean aSelected)
+		public ArrayList<Element> getChildren()
 		{
-			mLabel = aLabel;
-			mSelected = aSelected;
+			return mChildren;
 		}
 
 
 		private String getLabel()
 		{
 			return mLabel;
-		}
-
-
-		public boolean isSelected()
-		{
-			return mSelected;
 		}
 	}
 }
