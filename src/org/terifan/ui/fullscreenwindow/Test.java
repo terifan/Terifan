@@ -1,9 +1,18 @@
 package org.terifan.ui.fullscreenwindow;
 
-import java.awt.GridLayout;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.border.AbstractBorder;
 
 
 public class Test
@@ -23,8 +32,10 @@ public class Test
 				@Override protected void onWindowGainedFocus(){System.out.println("focused");}
 				@Override protected void onWindowLostFocus(){System.out.println("unfocused");}
 			};
-			wnd.getContentPanel().setLayout(new GridLayout(1, 2));
-			wnd.add(new JButton(new AbstractAction("undecorated")
+
+			JPanel panel = new BlackWindowPanel();
+			panel.setBackground(new Color(51,51,51));
+			panel.add(new JButton(new AbstractAction("undecorated")
 			{
 				@Override
 				public void actionPerformed(ActionEvent aE)
@@ -32,7 +43,7 @@ public class Test
 					wnd.setUndecorated(!wnd.isUndecorated());
 				}
 			}));
-			wnd.add(new JButton(new AbstractAction("border")
+			panel.add(new JButton(new AbstractAction("border")
 			{
 				@Override
 				public void actionPerformed(ActionEvent aE)
@@ -40,6 +51,9 @@ public class Test
 					wnd.setBorderPainted(!wnd.isBorderPainted());
 				}
 			}));
+
+			wnd.getContentPanel().setLayout(new BorderLayout());
+			wnd.add(panel);
 			wnd.setVisible(true);
 		}
 		catch (Throwable e)

@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
@@ -49,6 +50,7 @@ public class TextBox implements Cloneable, Serializable
 	protected String mSuffix;
 	protected boolean mDirty;
 	protected Color mShadowColor;
+	protected Point mShadowOffset;
 	protected TextRenderCallback mRenderCallback;
 	private NinePatchImage mBackgroundImage;
 	private boolean mBackgroundImageSurroundText;
@@ -592,7 +594,7 @@ public class TextBox implements Cloneable, Serializable
 
 		if (mShadowColor != null)
 		{
-			renderImpl(aGraphics, aTranslateX - 1, aTranslateY + 1, hasShadow, true);
+			renderImpl(aGraphics, aTranslateX + mShadowOffset.x, aTranslateY + mShadowOffset.y, hasShadow, true);
 		}
 		return renderImpl(aGraphics, aTranslateX, aTranslateY, hasShadow, false);
 	}
@@ -631,7 +633,7 @@ public class TextBox implements Cloneable, Serializable
 			aGraphics.setColor(mBackground);
 			aGraphics.fillRect(boxX, boxY, boxW, boxH);
 		}
-		if (mBackgroundImage != null)
+		if (mBackgroundImage != null && (aShadow || !aHasShadow))
 		{
 			if (mBackgroundImageSurroundText)
 			{
@@ -988,9 +990,10 @@ public class TextBox implements Cloneable, Serializable
 	}
 
 
-	public TextBox setShadow(Color aColor)
+	public TextBox setShadow(Color aColor, int aX, int aY)
 	{
 		mShadowColor = aColor;
+		mShadowOffset = new Point(aX, aY);
 		return this;
 	}
 

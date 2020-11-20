@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,8 +24,8 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	protected NinePatchImage[] mTabsImages;
 	protected NinePatchImage[] mMenuImages;
 
-	protected ArrayList<Element> mOptions = new ArrayList<>(Arrays.asList(new Element("File"), new Element("Edit"), new Element("Window")));
-	protected ArrayList<Element> mTabs = new ArrayList<>(Arrays.asList(new Element("Modeling"), new Element("Character"), new Element("Layout"), new Element("Rendering")));
+	protected ArrayList<Element> mOptions = new ArrayList<>(Arrays.asList(new Element("File"), new Element("Edit"), new Element("Render"), new Element("Window"), new Element("Help")));
+	protected ArrayList<Element> mTabs = new ArrayList<>(Arrays.asList(new Element("Layout"), new Element("Modeling"), new Element("Scultping"), new Element("UV Editing"), new Element("Texture Paint"), new Element("Shading"), new Element("Animation"), new Element("Rendering"), new Element("Compositing"), new Element("Scripting")));
 	protected Element mSelectedTab = mTabs.get(1);
 
 
@@ -46,14 +47,14 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	@Override
 	protected void setupStyle() throws IOException
 	{
-		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 13);
+		mTitleBarFont = new Font("segoe ui", Font.PLAIN, 12);
 
 		mTitleBarBackground = new ColorSet()
 			.add(new Color(35,35,35), UNFOCUSED)
 			.add(new Color(35,35,35), FOCUSED);
 		mTitleBarForeground = new ColorSet()
-			.add(new Color(255,255,255), UNFOCUSED)
-			.add(new Color(255,255,255), FOCUSED);
+			.add(new Color(201,201,201), UNFOCUSED)
+			.add(new Color(201,201,201), FOCUSED);
 		mBorderInner = new ColorSet()
 			.add(new Color(35,35,35), UNFOCUSED)
 			.add(new Color(35,35,35), FOCUSED);
@@ -93,7 +94,8 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	@Override
 	protected void paintTitleText(Graphics2D aGraphics, FullScreenWindow aWindow, int aX, int aY, int aWidth, int aHeight, Point aPointer)
 	{
-		TextBox.enableAntialiasing(aGraphics);
+		Graphics2D g = (Graphics2D)aGraphics.create(aX,aY,aWidth,aHeight);
+		TextBox.enableAntialiasing(g);
 
 		for (Element el : mOptions)
 		{
@@ -101,13 +103,14 @@ public class BlackWindowBorder extends DefaultWindowBorder
 
 			new TextBox(el.getLabel())
 				.setBounds(el)
-				.setForeground(mTitleBarForeground.get(mWindowFocused))
+				.setShadow(new Color(0,0,0), 1, 1)
+				.setForeground(el.contains(aPointer) ? new Color(255,255,255) : new Color(201,201,201))
 				.setBackground(mMenuImages[mi])
-				.setPadding(2, 0, 0, 0)
+				.setPadding((mTitleBarHeight-el.height)/2, 0, 0, 0)
 				.setFont(mTitleBarFont)
 				.setAnchor(Anchor.CENTER)
 				.setMaxLineCount(1)
-				.render(aGraphics);
+				.render(g);
 		}
 
 		for (Element el : mTabs)
@@ -116,14 +119,15 @@ public class BlackWindowBorder extends DefaultWindowBorder
 
 			new TextBox(el.getLabel())
 				.setBounds(el)
-				.setForeground(mTitleBarForeground.get(mWindowFocused))
+				.setShadow(new Color(43,43,43), 1, 1)
+				.setForeground(mSelectedTab == el ? el.contains(aPointer) ? new Color(255,255,255) : new Color(238,238,238) : el.contains(aPointer) ? new Color(170,170,170) : new Color(147,147,147))
 				.setBackground(mTabsImages[mi])
 //				.setPadding(0, 20, 4, 40)
 				.setPadding(0, 0, 4, 0)
 				.setFont(mTitleBarFont)
 				.setAnchor(Anchor.SOUTH)
 				.setMaxLineCount(1)
-				.render(aGraphics);
+				.render(g);
 
 //			aGraphics.setColor(Color.YELLOW);
 //			aGraphics.drawRect(el.x+2, el.y+2, 16, 16);
@@ -176,7 +180,7 @@ public class BlackWindowBorder extends DefaultWindowBorder
 				.measure();
 
 //			el.setBounds(r.x, mTitleBarHeight - r.height, r.width + 60, r.height);
-			el.setBounds(r.x, mTitleBarHeight - r.height, r.width, r.height);
+			el.setBounds(r.x, mTitleBarHeight - r.height - 4, r.width, r.height + 4);
 
 			aX += el.width + 5;
 		}
