@@ -3,6 +3,7 @@ package org.terifan.ui.fullscreenwindow;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -15,7 +16,18 @@ public class Test
 	{
 		try
 		{
-			FullScreenWindow wnd = new FullScreenWindow(null, "New window", false, true, new BlackWindowBorder())
+			DefaultWindowBorder windowBorder = new BlackWindowBorder();
+
+			WindowMenuBar menuBar = new WindowMenuBar();
+			menuBar.add(new WindowMenuItem("File"), new WindowMenuItem("Edit"), new WindowMenuItem("Render"), new WindowMenuItem("Window"), new WindowMenuItem("Help"));
+			windowBorder.setMenuBar(menuBar);
+
+			WindowTabBar tabBar = new WindowTabBar();
+			tabBar.add(new WindowTabItem("Layout"), new WindowTabItem("Modeling"), new WindowTabItem("Scultping"), new WindowTabItem("UV Editing"), new WindowTabItem("Texture Paint"), new WindowTabItem("Shading"), new WindowTabItem("Animation"), new WindowTabItem("Rendering"), new WindowTabItem("Compositing"), new WindowTabItem("Scripting"));
+			tabBar.setSelectedIndex(1);
+			windowBorder.setTabBar(tabBar);
+
+			FullScreenWindow wnd = new FullScreenWindow(null, "New window", false, true, windowBorder)
 			{
 				@Override protected boolean onWindowClosing(){System.out.println("closing");return true;}
 				@Override protected void onWindowClosed(){System.out.println("closed");}

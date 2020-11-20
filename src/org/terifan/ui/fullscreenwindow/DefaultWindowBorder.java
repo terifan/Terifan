@@ -1,7 +1,6 @@
 package org.terifan.ui.fullscreenwindow;
 
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -10,6 +9,8 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import javax.imageio.ImageIO;
 import org.terifan.ui.Anchor;
 import org.terifan.ui.ColorSet;
@@ -36,6 +37,8 @@ public class DefaultWindowBorder
 	protected boolean mWindowFocused;
 	protected final Rectangle mBounds;
 	protected final Rectangle mButtonBounds;
+	protected WindowMenuBar mMenuBar;
+	protected WindowTabBar mTabBar;
 
 
 	public DefaultWindowBorder() throws IOException
@@ -271,5 +274,31 @@ public class DefaultWindowBorder
 		}
 
 		return BorderIntersectionType.NONE;
+	}
+
+
+	public WindowMenuBar getMenuBar()
+	{
+		return mMenuBar;
+	}
+
+
+	public DefaultWindowBorder setMenuBar(WindowMenuBar aMenuBar)
+	{
+		mMenuBar = aMenuBar;
+		return this;
+	}
+
+
+	public WindowTabBar getTabBar()
+	{
+		return mTabBar;
+	}
+
+
+	public DefaultWindowBorder setTabBar(WindowTabBar aTabBar)
+	{
+		mTabBar = aTabBar;
+		return this;
 	}
 }
