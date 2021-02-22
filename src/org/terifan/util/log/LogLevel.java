@@ -8,3 +8,10 @@ public enum LogLevel
 	WARN,
 	ERROR
 }
+//DEBUG
+//INFO
+//WARN
+//ERROR
+//FATAL
+//TRACE
+//OFF
