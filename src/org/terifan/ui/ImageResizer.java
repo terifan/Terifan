@@ -31,6 +31,11 @@ public class ImageResizer
 		int dw = (int)Math.round(aSource.getWidth() * aScale);
 		int dh = (int)Math.round(aSource.getHeight() * aScale);
 
+		if (dw < 1 || dh < 1)
+		{
+			return aSource;
+		}
+
 		// make sure one direction has specified dimension
 		if (dw != aWidth && dh != aHeight)
 		{
@@ -97,7 +102,7 @@ public class ImageResizer
 			{
 				aSource.flush();
 			}
-			
+
 			aSource = tmp;
 			flush = true;
 		}
@@ -141,7 +146,7 @@ public class ImageResizer
 
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, aQuality ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		
+
 		aGraphics.drawImage(aImage, aPositionX, aPositionY, aPositionX + aFrameLeft, aPositionY + aFrameTop, 0, 0, aFrameLeft, aFrameTop, null);
 		aGraphics.drawImage(aImage, aPositionX + aFrameLeft, aPositionY, aPositionX + aWidth - aFrameRight, aPositionY + aFrameTop, aFrameLeft, 0, tw - aFrameRight, aFrameTop, null);
 		aGraphics.drawImage(aImage, aPositionX + aWidth - aFrameRight, aPositionY, aPositionX + aWidth, aPositionY + aFrameTop, tw - aFrameRight, 0, tw, aFrameTop, null);
