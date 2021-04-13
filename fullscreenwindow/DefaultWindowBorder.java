@@ -41,19 +41,12 @@ public class DefaultWindowBorder
 	protected WindowTabBar mTabBar;
 
 
-	public DefaultWindowBorder()
+	public DefaultWindowBorder() throws IOException
 	{
-		try
-		{
-			mBounds = new Rectangle();
-			mButtonBounds = new Rectangle();
+		mBounds = new Rectangle();
+		mButtonBounds = new Rectangle();
 
-			setupStyle();
-		}
-		catch (IOException e)
-		{
-			throw new IllegalStateException(e);
-		}
+		setupStyle();
 	}
 
 

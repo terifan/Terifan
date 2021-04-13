@@ -23,7 +23,7 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	protected NinePatchImage[] mMenuImages;
 
 
-	public BlackWindowBorder()
+	public BlackWindowBorder() throws IOException
 	{
 		super();
 	}

@@ -65,16 +65,14 @@ public class FullScreenWindow
 	private Integer mCursor;
 	private long mExtendedStateTime;
 
-	private Runnable mOnClosed;
 
-
-	public FullScreenWindow(String aTitle)
+	public FullScreenWindow(String aTitle) throws IOException
 	{
 		this(null, aTitle, false, false, new DefaultWindowBorder());
 	}
 
 
-	public FullScreenWindow(Frame aParent, String aTitle, boolean aDialog, boolean aModal, DefaultWindowBorder aWindowBorder)
+	public FullScreenWindow(Frame aParent, String aTitle, boolean aDialog, boolean aModal, DefaultWindowBorder aWindowBorder) throws IOException
 	{
 		mInitialSize = new Dimension(1024, 768);
 		mResizeVer = true;
@@ -690,54 +688,43 @@ public class FullScreenWindow
 		}
 	};
 
-
-	public void setOnClosed(Runnable aRunnable)
+	protected void onWindowClosed()
 	{
-		mOnClosed = aRunnable;
 	}
 
 
-	private void onWindowClosed()
-	{
-		if (mOnClosed != null)
-		{
-			mOnClosed.run();
-		}
-	}
-
-
-	private boolean onWindowClosing()
+	protected boolean onWindowClosing()
 	{
 		return true;
 	}
 
 
-	private void onWindowResized()
+	protected void onWindowResized()
 	{
 	}
 
 
-	private void onWindowMinimized()
+	protected void onWindowMinimized()
 	{
 	}
 
 
-	private void onWindowMaximized()
+	protected void onWindowMaximized()
 	{
 	}
 
 
-	private void onWindowRestored()
+	protected void onWindowRestored()
 	{
 	}
 
 
-	private void onWindowGainedFocus()
+	protected void onWindowGainedFocus()
 	{
 	}
 
 
-	private void onWindowLostFocus()
+	protected void onWindowLostFocus()
 	{
 	}
 }

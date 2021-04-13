@@ -1,14 +1,15 @@
 package org.terifan.util.cache;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 
 /**
- * The Cache class is an implementation of a MRU cache with a specified
+ * The Cache class is an implementation of a LRU cache with a specified
  * capacity. When the size of the Cache exceeds the capacity, items will be
  * removed to accommodate the new items. Adding one item may result in
  * multiple items being removed.<p>
@@ -29,9 +30,8 @@ public class Cache<K,V> implements Iterable<K>
 {
 	private long mCapacity;
 	private long mUsedSize;
-	private LinkedList<K> mCacheOrder;
-	private HashMap<K,Entry<K,V>> mKeyValueMap;
 	private int mExpireTime;
+	private LinkedHashMap<K,Entry<K,V>> mMap;
 
 
 	public class Entry<K,V>
@@ -52,10 +52,19 @@ public class Cache<K,V> implements Iterable<K>
 	public Cache(long aCapacity)
 	{
 		mCapacity = aCapacity;
-		mKeyValueMap = new HashMap<>();
-		mCacheOrder = new LinkedList<>();
 		mExpireTime = Integer.MAX_VALUE;
+		mMap = new LinkedHashMapImpl<K, Entry<K, V>>();
 	}
+
+
+	private class LinkedHashMapImpl<K,V> extends LinkedHashMap<K,V>
+	{
+//		@Override
+//		protected boolean removeEldestEntry(Map.Entry<K, V> aEldest)
+//		{
+//			return mUsedSize > mCapacity && mMap.size() > 0;
+//		}
+	};
 
 
 	public int getExpireTime()
@@ -129,12 +138,10 @@ public class Cache<K,V> implements Iterable<K>
 
 		V prevValue;
 
-		if (mKeyValueMap.containsKey(aKey))
+		if (mMap.containsKey(aKey))
 		{
-			mCacheOrder.remove(aKey);
-			mCacheOrder.addFirst(aKey);
-
-			Entry<K,V> entry = mKeyValueMap.get(aKey);
+			Entry<K,V> entry = mMap.remove(aKey);
+			mMap.put(aKey, entry);
 
 			prevValue = entry.value;
 
@@ -154,8 +161,7 @@ public class Cache<K,V> implements Iterable<K>
 			entry.time = System.currentTimeMillis();
 
 			mUsedSize += aItemSize;
-			mCacheOrder.addFirst(aKey);
-			mKeyValueMap.put(aKey, entry);
+			mMap.put(aKey, entry);
 		}
 
 		shrink();
@@ -166,19 +172,19 @@ public class Cache<K,V> implements Iterable<K>
 
 	private void shrink()
 	{
-		while (mUsedSize > mCapacity && mKeyValueMap.size() > 0)
+		while (mUsedSize > mCapacity && mMap.size() > 0)
 		{
-			removeImpl(mCacheOrder.getLast(), true);
+			removeImpl(oldestKey(), true);
 		}
 
 		if (mExpireTime < Integer.MAX_VALUE)
 		{
 			long threshold = System.currentTimeMillis() - mExpireTime;
 
-			while (mKeyValueMap.size() > 0)
+			while (mMap.size() > 0)
 			{
-				K last = mCacheOrder.getLast();
-				Entry entry = mKeyValueMap.get(last);
+				K last = oldestKey();
+				Entry entry = mMap.get(last);
 				if (entry == null || entry.time > threshold)
 				{
 					break;
@@ -209,12 +215,11 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized V get(K aKey)
 	{
-		Entry<K, V> entry = mKeyValueMap.get(aKey);
+		Entry<K, V> entry = mMap.remove(aKey);
 
 		if (entry != null)
 		{
-			mCacheOrder.remove(aKey);
-			mCacheOrder.addFirst(aKey);
+			mMap.put(aKey, entry);
 
 			return entry.value;
 		}
@@ -225,12 +230,11 @@ public class Cache<K,V> implements Iterable<K>
 
 	public synchronized V get(K aKey, Provider<K,V> aProvider)
 	{
-		Entry<K, V> entry = mKeyValueMap.get(aKey);
+		Entry<K, V> entry = mMap.get(aKey);
 
 		if (entry != null)
 		{
-			mCacheOrder.remove(aKey);
-			mCacheOrder.addFirst(aKey);
+			mMap.put(aKey, mMap.remove(aKey));
 
 			return entry.value;
 		}
@@ -284,7 +288,7 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized V peek(K aKey)
 	{
-		Entry<K,V> entry = mKeyValueMap.get(aKey);
+		Entry<K,V> entry = mMap.get(aKey);
 		if (entry == null)
 		{
 			return null;
@@ -303,12 +307,11 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized boolean containsKey(K aKey)
 	{
-		boolean b = mKeyValueMap.containsKey(aKey);
+		boolean b = mMap.containsKey(aKey);
 
 		if (b)
 		{
-			mCacheOrder.remove(aKey);
-			mCacheOrder.addFirst(aKey);
+			mMap.put(aKey, mMap.remove(aKey));
 		}
 
 		return b;
@@ -326,9 +329,10 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized boolean bump(K aKey)
 	{
-		if (mCacheOrder.remove(aKey))
+		Entry<K, V> old = mMap.remove(aKey);
+		if (old != null)
 		{
-			mCacheOrder.addFirst(aKey);
+			mMap.put(aKey, old);
 			return true;
 		}
 		return false;
@@ -361,14 +365,13 @@ public class Cache<K,V> implements Iterable<K>
 
 	private synchronized V removeImpl(K aKey, boolean aDropped)
 	{
-		Entry<K,V> entry = mKeyValueMap.remove(aKey);
+		Entry<K,V> entry = mMap.remove(aKey);
 
 		if (entry == null)
 		{
-			return null;
+			throw new NoSuchElementException();
 		}
 
-		mCacheOrder.remove(aKey);
 		mUsedSize -= entry.size;
 
 		return entry.value;
@@ -383,7 +386,7 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized int size()
 	{
-		return mKeyValueMap.size();
+		return mMap.size();
 	}
 
 
@@ -406,14 +409,19 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized void clear()
 	{
-		while (mCacheOrder.size() > 0)
+		while (mMap.size() > 0)
 		{
-			remove(mCacheOrder.getLast());
+			remove(oldestKey());
 		}
 
 		mUsedSize = 0;
-		mKeyValueMap.clear();
-		mCacheOrder.clear();
+		mMap.clear();
+	}
+
+
+	private K oldestKey()
+	{
+		return mMap.keySet().iterator().next();
 	}
 
 
@@ -424,8 +432,7 @@ public class Cache<K,V> implements Iterable<K>
 	public synchronized void clearQuiet()
 	{
 		mUsedSize = 0;
-		mKeyValueMap.clear();
-		mCacheOrder.clear();
+		mMap.clear();
 	}
 
 
@@ -437,7 +444,7 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized boolean isEmpty()
 	{
-		return mKeyValueMap.isEmpty();
+		return mMap.isEmpty();
 	}
 
 
@@ -449,7 +456,7 @@ public class Cache<K,V> implements Iterable<K>
 	 */
 	public synchronized Set<K> keySet()
 	{
-		return mKeyValueMap.keySet();
+		return mMap.keySet();
 	}
 
 
@@ -463,6 +470,26 @@ public class Cache<K,V> implements Iterable<K>
 	@Override
 	public synchronized Iterator<K> iterator()
 	{
-		return mCacheOrder.iterator();
+		return mMap.keySet().iterator();
 	}
+
+
+//	public static void main(String ... args)
+//	{
+//		try
+//		{
+//			Cache<Integer,String> cache = new Cache<>(3);
+//			cache.put(1, "a", 1);
+//			cache.put(2, "b", 1);
+//			cache.put(1, "A", 1);
+//			cache.put(3, "c", 1);
+//			cache.put(4, "d", 1);
+//
+//			System.out.println(cache.keySet());
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }
