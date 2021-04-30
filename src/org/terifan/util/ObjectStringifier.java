@@ -9,12 +9,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
-import org.terifan.util.log.Log;
 
 
 public class ObjectStringifier
 {
+	private static final String INTENT = "   ";
+
 	private String mStatementTerminator;
 	private boolean mStatementTerminatorOnLast;
 	private boolean mSimpleClassNames;
@@ -22,7 +24,7 @@ public class ObjectStringifier
 	private boolean mShortKnownTypes;
 	private boolean mIndent;
 	private int mArrayLimit;
-	private HashMap<Object,Integer> mVisitedObjects;
+	private HashMap<Object, Integer> mVisitedObjects;
 	private String mArrayLimitSymbol;
 
 
@@ -33,8 +35,8 @@ public class ObjectStringifier
 		mStatementTerminatorOnLast = true;
 		mFieldTypes = true;
 		mShortKnownTypes = true;
-		mArrayLimit = 1000;
-		mArrayLimitSymbol = " ...";
+		mArrayLimit = 100;
+		mArrayLimitSymbol = "...";
 		mVisitedObjects = new HashMap<>();
 		mIndent = true;
 	}
@@ -42,13 +44,29 @@ public class ObjectStringifier
 
 	public static String toString(Object aObject)
 	{
+		if (aObject == null)
+		{
+			return null;
+		}
+
+		return new ObjectStringifier().asString(aObject);
+	}
+
+
+	public static String toShortString(Object aObject)
+	{
+		if (aObject == null)
+		{
+			return null;
+		}
+
 		return new ObjectStringifier()
-			.setFieldTypes(false)
-			.setSimpleClassNames(true)
 			.setShortKnownTypes(true)
+			.setIndent(false)
+			.setFieldTypes(false)
+			.setArrayLimit(10)
 			.setStatementTerminator(", ")
 			.setStatementTerminatorOnLast(false)
-			.setIndent(true)
 			.asString(aObject);
 	}
 
@@ -159,25 +177,29 @@ public class ObjectStringifier
 
 	public String asString(Object aObject)
 	{
+		if (aObject == null)
+		{
+			return null;
+		}
+
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (PrintStream ps = new PrintStream(baos))
 		{
 			printObject(aObject, aObject.getClass(), ps, 0, true);
 		}
+
 		if (mIndent)
 		{
 			return new String(baos.toByteArray());
 		}
-		else
-		{
-			return new String(baos.toByteArray()).replace("\r", "").replace("\n", "").replace("   ", "");
-		}
+
+		return new String(baos.toByteArray()).replace("\r", "").replace("\n", "").replace(INTENT, "");
 	}
 
 
 	public void print(Object aObject)
 	{
-		print(aObject, Log.out);
+		print(aObject, System.out);
 	}
 
 
@@ -190,7 +212,7 @@ public class ObjectStringifier
 
 	private void printObject(Object aObject, Class aClass, PrintStream aPrintStream, int aLevel, boolean aLast)
 	{
-		String indent = new String(new byte[3 * aLevel]).replace('\0',' ');
+		String indent = Strings.repeat(INTENT, INTENT.length() * aLevel);
 
 		if (printValue(aObject, aClass, aPrintStream, mVisitedObjects, indent))
 		{
@@ -199,7 +221,7 @@ public class ObjectStringifier
 
 		if (aClass.isArray())
 		{
-			String typeName = mSimpleClassNames ? aClass.getSimpleName() : aClass.getCanonicalName();
+			String typeName = getTypeName(aClass);
 			if (typeName.startsWith("class "))
 			{
 				typeName = typeName.substring(6);
@@ -215,18 +237,13 @@ public class ObjectStringifier
 
 			printObjectClass(aObject, aClass, aPrintStream, aLevel + 1, aLast);
 
-			printArray(aObject, aClass, aPrintStream, indent, aLevel, mVisitedObjects, aLast);
+			printArray(aObject, aClass.getComponentType(), aPrintStream, indent, aLevel, mVisitedObjects, aLast);
 		}
 		else
 		{
 			if (true)
 			{
-				String typeName = mSimpleClassNames ? aClass.getSimpleName() : aClass.toString();
-				if (typeName.startsWith("class "))
-				{
-					typeName = typeName.substring(6);
-				}
-
+				String typeName = getTypeName(aClass);
 				aPrintStream.println(indent + typeName + "{");
 			}
 			else
@@ -247,10 +264,21 @@ public class ObjectStringifier
 	}
 
 
+	private String getTypeName(Class aClass)
+	{
+		if (Number.class.isAssignableFrom(aClass) || aClass == String.class)
+		{
+			return aClass.getSimpleName();
+		}
+
+		return mSimpleClassNames ? aClass.getSimpleName() : aClass.getTypeName();
+	}
+
+
 	private void printObjectClass(Object aObject, Class aClass, PrintStream aPrintStream, int aLevel, boolean aLast)
 	{
 		int level = aLevel;
-		String indent = new String(new byte[3*level]).replace('\0',' ');
+		String indent = Strings.repeat(INTENT, INTENT.length() * aLevel);
 
 		if (printValue(aObject, aClass, aPrintStream, mVisitedObjects, indent))
 		{
@@ -269,16 +297,12 @@ public class ObjectStringifier
 
 		for (Field field : fields)
 		{
-			boolean last = field == fields.get(fields.size()-1);
+			boolean last = field == fields.get(fields.size() - 1);
 			Object value = getValue(aObject, field);
 			Class type = field.getType();
 
 			String typeName;
-			if (Number.class.isAssignableFrom(type) || type == String.class)
-			{
-				typeName = field.getType().getSimpleName();
-			}
-			else if (type.isArray())
+			if (type.isArray())
 			{
 				Class tmp = type.getComponentType();
 				StringBuilder suffix = new StringBuilder("[]");
@@ -287,20 +311,16 @@ public class ObjectStringifier
 					tmp = tmp.getComponentType();
 					suffix.append("[]");
 				}
-				typeName = tmp.getSimpleName() + suffix;
+				typeName = getTypeName(tmp) + suffix;
 			}
 			else
 			{
-				typeName = field.getType().toString();
-				if (typeName.startsWith("class "))
-				{
-					typeName = typeName.substring(6);
-				}
+				typeName = getTypeName(field.getType());
 			}
 
 			if (mFieldTypes)
 			{
-				aPrintStream.print(indent + typeName + " "+field.getName() + "=");
+				aPrintStream.print(indent + typeName + " " + field.getName() + "=");
 			}
 			else
 			{
@@ -309,7 +329,7 @@ public class ObjectStringifier
 
 			if (type.isArray())
 			{
-				printArray(value, type, aPrintStream, indent, level, mVisitedObjects, true);
+				printArray(value, type.getComponentType(), aPrintStream, indent, level, mVisitedObjects, true);
 				if (!last || mStatementTerminatorOnLast)
 				{
 					aPrintStream.print(mStatementTerminator);
@@ -327,11 +347,12 @@ public class ObjectStringifier
 				Integer ref = mVisitedObjects.get(value);
 				if (ref != null)
 				{
-					aPrintStream.print("#ref" + ref + " ("+value.getClass()+")");
+					printRef(aPrintStream, ref, value);
 				}
 				else
 				{
-					mVisitedObjects.put(value, mVisitedObjects.size()+1);
+					mVisitedObjects.put(value, mVisitedObjects.size() + 1);
+
 					aPrintStream.println();
 					printObject(value, value.getClass(), aPrintStream, aLevel + 1, last);
 					aPrintStream.println();
@@ -342,7 +363,13 @@ public class ObjectStringifier
 	}
 
 
-	private void printArray(Object aValue, Class aType, PrintStream aPrintStream, String aIndent, int aLevel, HashMap<Object,Integer> aVisitedObjects, boolean aLast)
+	private void printRef(PrintStream aPrintStream, Integer aRef, Object aValue)
+	{
+		aPrintStream.print("#ref" + aRef + "[" + getTypeName(aValue.getClass()) + "]");
+	}
+
+
+	private void printArray(Object aValue, Class aComponentType, PrintStream aPrintStream, String aIndent, int aLevel, HashMap<Object, Integer> aVisitedObjects, boolean aLast)
 	{
 		if (aValue == null)
 		{
@@ -350,22 +377,22 @@ public class ObjectStringifier
 			return;
 		}
 
-		if (Number.class.isAssignableFrom(aType.getComponentType()) || aType.getComponentType().isPrimitive())
+		if (Number.class.isAssignableFrom(aComponentType) || aComponentType.isPrimitive())
 		{
 			aPrintStream.println("{");
-			aPrintStream.print(aIndent + "   ");
+			aPrintStream.print(aIndent + INTENT);
 			for (int i = 0; i < Array.getLength(aValue); i++)
 			{
 				if (i > 0)
 				{
 					aPrintStream.print(", ");
 				}
-				aPrintStream.print(Array.get(aValue, i));
 				if (i >= mArrayLimit)
 				{
-					aPrintStream.println(aIndent + mArrayLimitSymbol);
+					aPrintStream.print(mArrayLimitSymbol);
 					break;
 				}
+				aPrintStream.print(Array.get(aValue, i));
 			}
 			aPrintStream.println();
 			aPrintStream.print(aIndent + "}");
@@ -373,7 +400,7 @@ public class ObjectStringifier
 		else
 		{
 			aPrintStream.print("{");
-			aPrintStream.println(aIndent + "   ");
+			aPrintStream.println(aIndent + INTENT);
 			int len = Array.getLength(aValue);
 			for (int i = 0; i < len; i++)
 			{
@@ -381,14 +408,14 @@ public class ObjectStringifier
 				Object value = Array.get(aValue, i);
 				if (value == null)
 				{
-					aPrintStream.print(aIndent + "   ");
+					aPrintStream.print(aIndent + INTENT);
 					aPrintStream.print("null");
 					aPrintStream.println(last ? "" : ",");
 				}
 				else if (value.getClass().isArray())
 				{
-					aPrintStream.print(aIndent + "   ");
-					printArray(value, value.getClass(), aPrintStream, aIndent + "   ", aLevel + 1, aVisitedObjects, last);
+					aPrintStream.print(aIndent + INTENT);
+					printArray(value, value.getClass().getComponentType(), aPrintStream, aIndent + INTENT, aLevel + 1, aVisitedObjects, last);
 					aPrintStream.println(last ? "" : ",");
 				}
 				else
@@ -398,7 +425,7 @@ public class ObjectStringifier
 				}
 				if (i >= mArrayLimit)
 				{
-					aPrintStream.println(aIndent + mArrayLimitSymbol);
+					aPrintStream.println(mArrayLimitSymbol);
 					break;
 				}
 			}
@@ -407,7 +434,7 @@ public class ObjectStringifier
 	}
 
 
-	private boolean printValue(Object aValue, Class aType, PrintStream aPrintStream, HashMap<Object,Integer> aVisitedObjects, String aIndent)
+	private boolean printValue(Object aValue, Class aType, PrintStream aPrintStream, HashMap<Object, Integer> aVisitedObjects, String aIndent)
 	{
 		if (aValue == null || aType.isPrimitive() || Number.class.isAssignableFrom(aType) || Enum.class.isAssignableFrom(aType) || aType == Boolean.class || aType == Character.class)
 		{
@@ -415,32 +442,38 @@ public class ObjectStringifier
 		}
 		else if (aType == String.class)
 		{
-			aPrintStream.print(aIndent + "\""+aValue+"\"");
+			aPrintStream.print(aIndent + "\"" + aValue.toString().replace("\"","\\\"").replace("\t","\\\t").replace("\n","\\\n").replace("\r","\\\r") + "\"");
 		}
 		else
 		{
-			Integer ref = aVisitedObjects.get(aValue);
-			if (ref != null)
-			{
-				aPrintStream.print("#ref" + ref + " ("+aValue.getClass()+")");
-			}
-			else if (mShortKnownTypes)
+//			Integer ref = aVisitedObjects.get(aValue);
+//			if (ref != null)
+//			{
+//				printRef(aPrintStream, ref, aValue);
+//			}
+//			else
+				if (mShortKnownTypes)
 			{
 				if (java.util.Date.class.isAssignableFrom(aType))
 				{
-					aPrintStream.print(aIndent + (mSimpleClassNames ? "Date":"java.util.Date") + "(\""+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format((Date)aValue)+"\")");
+					aPrintStream.print(aIndent + (mSimpleClassNames ? "Date" : "java.util.Date") + "(\"" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format((Date)aValue) + "\")");
 				}
 				else if (java.util.Calendar.class.isAssignableFrom(aType))
 				{
-					aPrintStream.print(aIndent + (mSimpleClassNames ? "Calendar":"java.util.Calendar") + "(\""+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(((java.util.Calendar)aValue).getTimeInMillis()))+"\")");
+					aPrintStream.print(aIndent + (mSimpleClassNames ? "Calendar" : "java.util.Calendar") + "(\"" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(((java.util.Calendar)aValue).getTimeInMillis())) + "\")");
 				}
 				else if (Calendar.class.isAssignableFrom(aType))
 				{
-					aPrintStream.print(aIndent + (mSimpleClassNames ? "Calendar":"org.terifan.util.Calendar") + "(\"" + ((Calendar)aValue).format("yyyy-MM-dd HH:mm:ss.SSS")+"\")");
+					aPrintStream.print(aIndent + (mSimpleClassNames ? "Calendar" : "org.terifan.util.Calendar") + "(\"" + ((Calendar)aValue).format("yyyy-MM-dd HH:mm:ss.SSS") + "\")");
 				}
 				else if (UUID.class.isAssignableFrom(aType))
 				{
-					aPrintStream.print(aIndent + (mSimpleClassNames ? "UUID":"java.util.UUID") + "(\"" + aValue + "\")");
+					aPrintStream.print(aIndent + (mSimpleClassNames ? "UUID" : "java.util.UUID") + "(\"" + aValue + "\")");
+				}
+				else if (List.class.isAssignableFrom(aType))
+				{
+					aPrintStream.print(aIndent);
+					printArray(((List)aValue).toArray(), Object.class, aPrintStream, aIndent + INTENT, 1, aVisitedObjects, true);
 				}
 				else
 				{
@@ -474,19 +507,54 @@ public class ObjectStringifier
 	}
 
 
-	public static void main(String ... args)
+	private static class RecTest1
+	{
+		RecTest2 recTest2;
+	}
+
+
+	private static class RecTest2
+	{
+		RecTest3 recTest3;
+	}
+
+
+	private static class RecTest3
+	{
+		RecTest1 recTest1;
+	}
+
+
+	public static void main(String... args)
 	{
 		try
 		{
+			RecTest1 recTest1 = new RecTest1();
+			recTest1.recTest2 = new RecTest2();
+			recTest1.recTest2.recTest3 = new RecTest3();
+			recTest1.recTest2.recTest3.recTest1 = recTest1;
+
 			String s = new ObjectStringifier()
-				.setFieldTypes(false)
-				.setSimpleClassNames(true)
-				.setStatementTerminator(", ")
-				.setStatementTerminatorOnLast(false)
+//				.setFieldTypes(false)
+//				.setSimpleClassNames(true)
 				.setArrayLimit(10)
 				.setShortKnownTypes(false)
 //				.setIndent(false)
-				.asString(new Calendar[]{new Calendar(),new Calendar().roll("day", 1),new Calendar().roll("day", 2)});
+				.asString(recTest1);
+
+			System.out.println(s);
+
+			s = new ObjectStringifier()
+//				.setFieldTypes(false)
+//				.setSimpleClassNames(true)
+				.setArrayLimit(10)
+				.setShortKnownTypes(false)
+//				.setIndent(false)
+				.asString(new Calendar[]
+				{
+					new Calendar(), new Calendar().roll("day", 1), new Calendar().roll("day", 2)
+				}
+			);
 
 			System.out.println(s);
 		}

@@ -21,10 +21,8 @@ public abstract class Pool<E> implements AutoCloseable
 	/**
 	 * Create a new Pool
 	 *
-	 * @param aCapacity
-	 *   number of items to maintain in the Pool.
-	 * @param aExpireTimeSeconds
-	 *   maximum age of an item in seconds. If zero or negative then items will never expire.
+	 * @param aCapacity number of items to maintain in the Pool.
+	 * @param aExpireTimeSeconds maximum age of an item in seconds. If zero or negative then items will never expire.
 	 */
 	public Pool(int aCapacity, int aExpireTimeSeconds)
 	{
@@ -47,8 +45,7 @@ public abstract class Pool<E> implements AutoCloseable
 	/**
 	 * Creates a new instance.
 	 *
-	 * @return
-	 *  a new instance
+	 * @return a new instance
 	 */
 	protected abstract E create();
 
@@ -58,10 +55,10 @@ public abstract class Pool<E> implements AutoCloseable
 	 *
 	 * This implementation does nothing.
 	 *
-	 * @param aItem
-	 *   the item being destroyed
+	 * @param aItem the item being destroyed
+	 * @param aReason a short description of the cause for the item being destroyed
 	 */
-	protected void destroy(E aItem)
+	protected void destroy(E aItem, String aReason)
 	{
 	}
 
@@ -71,11 +68,8 @@ public abstract class Pool<E> implements AutoCloseable
 	 *
 	 * This implementation always return true.
 	 *
-	 * @param aItem
-	 *   the item being pooled
-	 * @return
-	 *   true if the item is usable. If not, the item will be destroyed with a
-	 *   call to the destroy method.
+	 * @param aItem the item being pooled
+	 * @return true if the item is usable. If not, the item will be destroyed with a call to the destroy method.
 	 */
 	protected boolean reset(E aItem)
 	{
@@ -84,15 +78,13 @@ public abstract class Pool<E> implements AutoCloseable
 
 
 	/**
-	 * Optional method that decides if an item should be reused or destroyed. The cleanUp method calls this for any item about to be destroyed.
-	 * This method is not called for items when the size of the pool exceed the maximum size.
+	 * Optional method that decides if an item should be reused or destroyed. The cleanUp method calls this for any item about to be
+	 * destroyed. This method is not called for items when the size of the pool exceed the maximum size.
 	 *
 	 * This implementation always return false.
 	 *
-	 * @param aItem
-	 *   the item being pooled
-	 * @return
-	 *   true if the item is still usable and should be added to the pool. If not, the item will be destroyed.
+	 * @param aItem the item being pooled
+	 * @return true if the item is still usable and should be added to the pool. If not, the item will be destroyed.
 	 */
 	protected boolean reuse(E aItem)
 	{
@@ -101,20 +93,17 @@ public abstract class Pool<E> implements AutoCloseable
 
 
 	/**
-	 * Optional method that prepares an item for use or reuse. Called after
-	 * an item has been created or is about to be used after being pooled.
+	 * Optional method that prepares an item for use or reuse. Called after an item has been created or is about to be used after being
+	 * pooled.
 	 *
 	 * This implementation always return true.
 	 *
-	 * Note: if the prepare method return false for an item that has just been
-	 * created using the create method then an exception will be thrown in the
-	 * claim method.
+	 * Note: if the prepare method return false for an item that has just been created using the create method then an exception will be
+	 * thrown in the claim method.
 	 *
-	 * @param aItem
-	 *   the item about to be used
-	 * @return
-	 *   true if the item is usable. If not, the item will be destroyed with
-	 *   a call to the destroy method and the pool with claim another instance.
+	 * @param aItem the item about to be used
+	 * @return true if the item is usable. If not, the item will be destroyed with a call to the destroy method and the pool with claim
+	 * another instance.
 	 */
 	protected boolean prepare(E aItem)
 	{
@@ -127,11 +116,9 @@ public abstract class Pool<E> implements AutoCloseable
 	 * <p>
 	 * This method calls the create method when the pool is empty. The prepare method is always called on each instance.
 	 *
-	 * @return
-	 *   an item
-	 * @throws IllegalStateException
-	 *   if the Pool is closed
- 	 */
+	 * @return an item
+	 * @throws IllegalStateException if the Pool is closed
+	 */
 	public synchronized E claim() throws IllegalStateException
 	{
 		if (!mOpen)
@@ -141,18 +128,18 @@ public abstract class Pool<E> implements AutoCloseable
 
 		for (;;)
 		{
-			Entry<Long,E> e;
+			Entry<Long, E> entry;
 
 			if (mYoungFirst)
 			{
-				e = mPool.pollLastEntry();
+				entry = mPool.pollLastEntry();
 			}
 			else
 			{
-				e = mPool.pollFirstEntry();
+				entry = mPool.pollFirstEntry();
 			}
 
-			if (e == null)
+			if (entry == null)
 			{
 				E item = create();
 				if (!prepare(item))
@@ -162,25 +149,25 @@ public abstract class Pool<E> implements AutoCloseable
 				return item;
 			}
 
-			E item = e.getValue();
+			E item = entry.getValue();
 
-			if (System.currentTimeMillis() - e.getKey() < mExpireTime && prepare(item))
+			boolean fresh = System.currentTimeMillis() - entry.getKey() < mExpireTime;
+
+			if (fresh && prepare(item))
 			{
 				return item;
 			}
-			else
-			{
-				destroy(item);
-			}
+
+			destroy(item, fresh ? "claim/broken" : "claim/expired");
 		}
 	}
 
 
 	/**
-	 * Call this method when an instance is no longer used. The instance provided will either be destroyed or added to the pool for later reuse.
+	 * Call this method when an instance is no longer used. The instance provided will either be destroyed or added to the pool for later
+	 * reuse.
 	 *
-	 * @param aItem
-	 *   the item that is no longer used.
+	 * @param aItem the item that is no longer used.
 	 */
 	public synchronized void release(E aItem)
 	{
@@ -190,12 +177,12 @@ public abstract class Pool<E> implements AutoCloseable
 		}
 		else
 		{
-			destroy(aItem);
+			destroy(aItem, "release/capacity");
 		}
 	}
 
 
-	private void add(E aItem)
+	private synchronized void add(E aItem)
 	{
 		for (;;)
 		{
@@ -203,6 +190,8 @@ public abstract class Pool<E> implements AutoCloseable
 
 			if (!mPool.containsKey(key)) // handle cases where multiple instances are released the same millisecond.
 			{
+//				System.out.println("ConnectionPool: Adding connection to pool");
+
 				mPool.put(key, aItem);
 				return;
 			}
@@ -211,8 +200,7 @@ public abstract class Pool<E> implements AutoCloseable
 
 
 	/**
-	 * Clears all items from the pool. The destroy method will be called for
-	 * each item in the pool.
+	 * Clears all items from the pool. The destroy method will be called for each item in the pool.
 	 */
 	public synchronized void clear()
 	{
@@ -222,7 +210,7 @@ public abstract class Pool<E> implements AutoCloseable
 		{
 			try
 			{
-				destroy(item);
+				destroy(item, "clear");
 			}
 			catch (Exception e)
 			{
@@ -255,15 +243,17 @@ public abstract class Pool<E> implements AutoCloseable
 				break;
 			}
 
+			boolean full = mPool.size() >= mCapacity;
+
 			E item = mPool.remove(key);
 
-			if (mPool.size() < mCapacity - 1 && reuse(item))
+			if (!full && reuse(item))
 			{
 				add(item);
 			}
 			else
 			{
-				destroy(item);
+				destroy(item, full ? "cleanup/capacity" : "cleanup/reuse");
 			}
 		}
 	}
@@ -316,8 +306,8 @@ public abstract class Pool<E> implements AutoCloseable
 
 
 	/**
-	 * Sets the capacity to zero and destroys and pooled instance. Any future attempts to claim instances will fail.
-	 * It's still possible to release instances to a closed Pool.
+	 * Sets the capacity to zero and destroys and pooled instance. Any future attempts to claim instances will fail. It's still possible to
+	 * release instances to a closed Pool.
 	 */
 	@Override
 	public void close()
@@ -343,8 +333,7 @@ public abstract class Pool<E> implements AutoCloseable
 	 * A young-first pool will reuse a smaller set of items and remove unused items quicker. An old-first pool will act in a round-robin
 	 * fashion returning items a fair amount of times.
 	 *
-	 * @param aYoungFirst
-	 *   if true the youngest entries will be claimed from the pool first
+	 * @param aYoungFirst if true the youngest entries will be claimed from the pool first
 	 */
 	public void setYoungFirst(boolean aYoungFirst)
 	{

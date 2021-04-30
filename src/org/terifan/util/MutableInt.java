@@ -1,9 +1,20 @@
 package org.terifan.util;
 
 
-public class MutableInt 
+public class MutableInt
 {
 	public int value;
+
+
+	public MutableInt()
+	{
+	}
+
+
+	public MutableInt(int aValue)
+	{
+		value = aValue;
+	}
 
 
 	@Override

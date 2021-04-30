@@ -300,7 +300,7 @@ public class Strings
 			}
 			return sb.append("]").toString();
 		}
-		
+
 		return asString(aArray);
 	}
 
@@ -390,9 +390,9 @@ public class Strings
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
-		for (String s : aStrings)
+		for (Object s : aStrings)
 		{
-			if (s != null && (aIncludeEmptyParts || !s.isEmpty()))
+			if (s != null && (aIncludeEmptyParts || !s.toString().isEmpty()))
 			{
 				if (sb.length() > 0)
 				{
@@ -405,9 +405,33 @@ public class Strings
 	}
 
 
-	public static String replaceNull(Object aString, String aReplacedWith)
+	public static String join(String aSeparator, int aFirstIndex, int aLastIndex, FunctionEx<Integer,String> aProducer)
 	{
-		return aString == null ? aReplacedWith : aString.toString();
+		try
+		{
+			StringBuilder err = new StringBuilder();
+
+			for (int i = aFirstIndex; i <= aLastIndex; i++)
+			{
+				if (err.length() > 0)
+				{
+					err.append(aSeparator);
+				}
+				err.append(aProducer.apply(i));
+			}
+
+			return err.toString();
+		}
+		catch (Exception e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+
+	public static String replaceNull(String aString, String aReplacedWith)
+	{
+		return aString == null ? aReplacedWith : aString;
 	}
 
 
@@ -531,5 +555,12 @@ public class Strings
 		}
 
 		return sb.toString();
+	}
+
+
+	@FunctionalInterface
+	public interface FunctionEx<T,R>
+	{
+		R apply(T aParam) throws Exception;
 	}
 }
