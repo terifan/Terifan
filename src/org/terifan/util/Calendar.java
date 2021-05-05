@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.terifan.util.log.Log;
 
 
@@ -24,6 +26,23 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	public final static String[] SHORT_DAY_NAMES =
 	{
 		"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+	};
+
+	private final static Object[][] REGEX_PATTERNS = {
+		{Pattern.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2})$"), "YMD"},
+		{Pattern.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$"), "YMDhm"},
+		{Pattern.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})$"), "YMDhms"},
+		{Pattern.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})\\.([0-9]{1,3})$"), "YMDhmsz"},
+		{Pattern.compile("^([0-9]{2}):([0-9]{2})$"), "hm"},
+		{Pattern.compile("^([0-9]{2}):([0-9]{2}):([0-9]{2})$"), "hms"},
+		{Pattern.compile("^([0-9]{2}):([0-9]{2}):([0-9]{2})\\.([0-9]{1,3})$"), "hmsz"},
+		{Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})$"), "YMD"},
+		{Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "YMDhm"},
+		{Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "YMDhms"},
+		{Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{1,3})$"), "YMDhmsz"},
+		{Pattern.compile("^([0-9]{2})([0-9]{2})$"), "hm"},
+		{Pattern.compile("^([0-9]{2})([0-9]{2})([0-9]{2})$"), "hms"},
+		{Pattern.compile("^([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{1,3})$"), "hmsz"}
 	};
 
 	private final static long serialVersionUID = 1;
@@ -206,70 +225,63 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	 *    <li>15:50:40.11</li>
 	 *    </ul>
 	 */
-	@Deprecated
 	public void set(String aDateTime)
 	{
 		if (Strings.isEmptyOrNull(aDateTime))
 		{
-			throw new IllegalDateTimeFormatException("Zero length datetime value.");
+			throw new IllegalArgumentException("Zero length datetime value.");
 		}
 
-		String[] data = aDateTime.split(" ");
+		mYear = 1970;
+		mMonth = mDay = 1;
+		mHour = mMinute = mSecond = mMilliSecond = 0;
 
-		int index = 0;
-		if (aDateTime.contains("-"))
+		for (Object[] format : REGEX_PATTERNS)
 		{
-			String[] date = data[0].split("-");
-			if (date.length != 3)
+			if (parseRegex((Pattern)format[0], aDateTime, (String)format[1]))
 			{
-				throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
+				return;
 			}
-			setYear(Integer.parseInt(date[0]));
-			setMonth(Integer.parseInt(date[1]));
-			setDay(Integer.parseInt(date[2]));
-			index = 1;
 		}
 
-		if (data.length == 1 && index == 1)
+		throw new IllegalArgumentException("Failed to parse: " + aDateTime);
+	}
+
+
+	private boolean parseRegex(Pattern aRegex, String aDateTime, String aFormat)
+	{
+		try
 		{
-		}
-		else
-		{
-			if (data.length <= 2)
+			Matcher matcher = aRegex.matcher(aDateTime);
+
+			if (matcher.find())
 			{
-				String[] time = data[index].split(":");
-				if (time.length != 2 && time.length != 3)
+				for (int i = 0; i < aFormat.length(); i++)
 				{
-					throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
-				}
+					int v = Integer.parseInt(matcher.group(1 + i));
 
-				mHour = Integer.parseInt(time[0]);
-				mMinute = Integer.parseInt(time[1]);
-
-				if (time.length == 3)
-				{
-					if (time[2].contains("."))
+					switch (aFormat.charAt(i))
 					{
-						String[] sec = time[2].split("\\.");
-						if (sec.length != 2)
-						{
-							throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
-						}
-						mSecond = Integer.parseInt(sec[0]);
-						mMilliSecond = Integer.parseInt(sec[1]);
-					}
-					else
-					{
-						mSecond = Integer.parseInt(time[2]);
-						mMilliSecond = 0;
+						case 'Y': mYear = v; break;
+						case 'M': mMonth = v; break;
+						case 'D': mDay = v; break;
+						case 'h': mHour = v; break;
+						case 'm': mMinute = v; break;
+						case 's': mSecond = v; break;
+						case 'z': mMilliSecond = v; break;
+						default: throw new IllegalArgumentException();
 					}
 				}
-			}
-			else
-			{
-				throw new IllegalDateTimeFormatException("Failed to parse date/time string: " + aDateTime);
+
+				return true;
 			}
 		}
+		catch (Exception e)
+		{
+			// ignore
+		}
+
+		return false;
 	}
 
 
@@ -1116,4 +1128,30 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	{
 		return new Date(get());
 	}
+
+
+//	public static void main(String ... args)
+//	{
+//		try
+//		{
+//			System.out.println(new Calendar("2021-05-01").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("2021-05-01 12:30").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("2021-05-01 12:30:45").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("2021-05-01 12:30:45.870").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("12:30").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("12:30:45").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("12:30:45.870").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("20210501").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("202105011230").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("20210501123045").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("20210501123045870").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("1230").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("123045").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//			System.out.println(new Calendar("123045870").format("yyyy-MM-dd HH:mm:ss.SSS"));
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }
