@@ -228,7 +228,7 @@ public class Cache<K,V> implements Iterable<K>
 	}
 
 
-	public synchronized V get(K aKey, Provider<K,V> aProvider)
+	public synchronized V computeIfAbsent(K aKey, Provider<K,V> aProvider)
 	{
 		Entry<K, V> entry = mMap.get(aKey);
 
