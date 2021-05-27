@@ -11,21 +11,16 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import org.terifan.util.PriorityThreadExecutor.PriorityRunnableTask;
+import org.terifan.util.PrioritizedFixedThreadExecutor.PriorityRunnableTask;
 
 
-/**
- * Helper class replacing Executors.newFixedThreadPool()
- */
-public class PriorityThreadExecutor<T> implements AutoCloseable
+public class PrioritizedFixedThreadExecutor<T> implements AutoCloseable
 {
-	private PriorityBlockingQueue<T> mBlockingQueue;
-	private HashMap<RunnableTask, Future> mFutures;
-	private HashMap<Future, RunnableTask> mRunnables;
+	private PrioritizedQueue<T> mQueue;
+	private HashMap<Runnable, Future> mFutures;
+	private HashMap<Future, Runnable> mRunnables;
 	private ExecutorService mExecutorService;
-	private OnCompletion mOnCompletion;
 	private int mThreads;
-	private int mQueueSizeLimit;
 
 
 	/**
@@ -33,8 +28,10 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 	 *
 	 * @param aNumThreads a positive number equals number of threads to use, zero or a negative number results in total available processors
 	 * minus provided number.
+	 * @param aComparator a Function evaluating a task and returning it's priority, lower numbers are executed first. This Function is
+	 * called for each task when a task is acquired from the internal queue.
 	 */
-	public PriorityThreadExecutor(int aNumThreads, Function<T, Integer> aComparator)
+	public PrioritizedFixedThreadExecutor(int aNumThreads, Function<T, Integer> aComparator)
 	{
 		if (aNumThreads > 0)
 		{
@@ -45,8 +42,7 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 			mThreads = Math.max(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors() + aNumThreads);
 		}
 
-		mBlockingQueue = new PriorityBlockingQueue(this, aComparator);
-		mQueueSizeLimit = Integer.MAX_VALUE;
+		mQueue = new PrioritizedQueue(this, aComparator);
 		mRunnables = new HashMap<>();
 		mFutures = new HashMap<>();
 	}
@@ -56,8 +52,10 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 	 * Create a new executor
 	 *
 	 * @param aThreads number of threads expressed as a number between 0 and 1 out of total available CPUs
+	 * @param aComparator a Function evaluating a task and returning it's priority, lower numbers are executed first. This Function is
+	 * called for each task when a task is acquired from the internal queue.
 	 */
-	public PriorityThreadExecutor(float aThreads, Function<T, Integer> aComparator)
+	public PrioritizedFixedThreadExecutor(float aThreads, Function<T, Integer> aComparator)
 	{
 		if (aThreads < 0 || aThreads > 1)
 		{
@@ -67,8 +65,7 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
 
-		mBlockingQueue = new PriorityBlockingQueue(this, aComparator);
-		mQueueSizeLimit = Integer.MAX_VALUE;
+		mQueue = new PrioritizedQueue(this, aComparator);
 		mRunnables = new HashMap<>();
 		mFutures = new HashMap<>();
 	}
@@ -105,38 +102,9 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 	 *
 	 * @see java.util.concurrent.ExecutorService#submit
 	 */
-	public Future<?> submit(RunnableTask aRunnable)
+	public Future<?> submit(Runnable aRunnable)
 	{
-		try
-		{
-			synchronized (PriorityThreadExecutor.class)
-			{
-				while (mBlockingQueue.size() >= mQueueSizeLimit)
-				{
-					PriorityThreadExecutor.class.wait();
-				}
-			}
-		}
-		catch (InterruptedException e)
-		{
-		}
-
-		Runnable runnable = new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					aRunnable.run();
-				}
-				catch (Exception e)
-				{
-				}
-			}
-		};
-
-		Future<?> future = init().submit(runnable);
+		Future<?> future = init().submit(aRunnable);
 
 		mRunnables.put(future, aRunnable);
 		mFutures.put(aRunnable, future);
@@ -182,21 +150,16 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 	{
 		if (mExecutorService == null)
 		{
-			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)mBlockingQueue)
+			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)mQueue)
 			{
 				@Override
 				protected void afterExecute(Runnable aRunnable, Throwable aThrowable)
 				{
 					super.afterExecute(aRunnable, aThrowable);
 
-					synchronized (PriorityThreadExecutor.class)
+					synchronized (PrioritizedFixedThreadExecutor.class)
 					{
-						PriorityThreadExecutor.class.notify();
-					}
-
-					if (mOnCompletion != null)
-					{
-						mOnCompletion.onCompletion((Future)aRunnable);
+						PrioritizedFixedThreadExecutor.class.notify();
 					}
 
 					if (aThrowable != null)
@@ -219,49 +182,6 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 	}
 
 
-	public int getQueueSizeLimit()
-	{
-		return mQueueSizeLimit;
-	}
-
-
-	/**
-	 * Sets how many items the blocking queue will contain before the submit methods start blocking.
-	 */
-	public PriorityThreadExecutor<T> setQueueSizeLimit(int aQueueSizeLimit)
-	{
-		mQueueSizeLimit = aQueueSizeLimit;
-		return this;
-	}
-
-
-	public OnCompletion getOnCompletion()
-	{
-		return mOnCompletion;
-	}
-
-
-	public PriorityThreadExecutor<T> setOnCompletion(OnCompletion aOnCompletion)
-	{
-		mOnCompletion = aOnCompletion;
-		return this;
-	}
-
-
-	@FunctionalInterface
-	public interface RunnableTask
-	{
-		void run() throws Exception;
-	}
-
-
-	@FunctionalInterface
-	public interface OnCompletion<T>
-	{
-		void onCompletion(T aItem);
-	}
-
-
 	public static void main(String ... args)
 	{
 		try
@@ -270,17 +190,24 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 
 			Function<PriorityRunnableTask, Integer> comparator = task -> task.mValue - 50;
 
-			try (PriorityThreadExecutor<PriorityRunnableTask> executor = new PriorityThreadExecutor(1, comparator))
+			try (PrioritizedFixedThreadExecutor<PriorityRunnableTask> executor = new PrioritizedFixedThreadExecutor(1, comparator))
 			{
-				for (int i = 0; i < 10; i++)
+				for (int i = 0; i < 20; i++)
 				{
 					PriorityRunnableTask task = new PriorityRunnableTask(rnd.nextInt(100))
 					{
 						@Override
-						public void run() throws Exception
+						public void run()
 						{
-							System.out.println("consuming " + mValue);
-							Thread.sleep(100);
+							try
+							{
+								System.out.println("consuming " + mValue);
+								Thread.sleep(100);
+							}
+							catch (Exception e)
+							{
+								e.printStackTrace(System.out);
+							}
 						}
 					};
 
@@ -297,7 +224,7 @@ public class PriorityThreadExecutor<T> implements AutoCloseable
 		}
 	}
 
-	static abstract class PriorityRunnableTask implements RunnableTask
+	static abstract class PriorityRunnableTask implements Runnable
 	{
 		int mValue;
 

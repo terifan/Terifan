@@ -9,14 +9,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 
-class PriorityBlockingQueue<E> implements BlockingQueue<E>
+class PrioritizedQueue<E> implements BlockingQueue<E>
 {
 	private LinkedList<E> mQueue;
 	private Function<E,Integer> mComparable;
-	private PriorityThreadExecutor<E> mExecutor;
+	private PrioritizedFixedThreadExecutor<E> mExecutor;
 
 
-	public PriorityBlockingQueue(PriorityThreadExecutor aExecutor, Function<E,Integer> aComparator)
+	public PrioritizedQueue(PrioritizedFixedThreadExecutor aExecutor, Function<E,Integer> aComparator)
 	{
 		mQueue = new LinkedList<>();
 		mComparable = aComparator;
@@ -27,7 +27,7 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 	@Override
 	public boolean add(E aElement)
 	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return mQueue.add(aElement);
 	}
 
 
@@ -39,16 +39,16 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 
 
 	@Override
-	public void put(E aE) throws InterruptedException
+	public void put(E aElement) throws InterruptedException
 	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		mQueue.add(aElement);
 	}
 
 
 	@Override
-	public boolean offer(E aE, long aTimeout, TimeUnit aUnit) throws InterruptedException
+	public boolean offer(E aElement, long aTimeout, TimeUnit aUnit) throws InterruptedException
 	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return mQueue.add(aElement);
 	}
 
 
@@ -57,8 +57,14 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 	{
 		int closest = 0;
 		int distance = Integer.MAX_VALUE;
+		int sz = size();
 
-		for (int i = 0, sz = size(); i < sz; i++)
+		if (sz == 0)
+		{
+			return null;
+		}
+
+		for (int i = 0; i < sz; i++)
 		{
 			E task = mExecutor.getTask((Future)mQueue.get(i));
 
@@ -83,14 +89,14 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 	@Override
 	public E poll(long aTimeout, TimeUnit aUnit) throws InterruptedException
 	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return take();
 	}
 
 
 	@Override
 	public int remainingCapacity()
 	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return Integer.MAX_VALUE;
 	}
 
 
@@ -109,6 +115,55 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 
 
 	@Override
+	public E remove()
+	{
+		return mQueue.remove();
+	}
+
+
+	@Override
+	public int size()
+	{
+		return mQueue.size();
+	}
+
+
+	@Override
+	public boolean isEmpty()
+	{
+		return mQueue.isEmpty();
+	}
+
+
+	@Override
+	public Iterator<E> iterator()
+	{
+		return mQueue.iterator();
+	}
+
+
+	@Override
+	public Object[] toArray()
+	{
+		return mQueue.toArray();
+	}
+
+
+	@Override
+	public <T> T[] toArray(T[] a)
+	{
+		return mQueue.toArray(a);
+	}
+
+
+	@Override
+	public void clear()
+	{
+		mQueue.clear();
+	}
+
+
+	@Override
 	public int drainTo(Collection<? super E> aC)
 	{
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -117,13 +172,6 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 
 	@Override
 	public int drainTo(Collection<? super E> aC, int aMaxElements)
-	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
-
-
-	@Override
-	public E remove()
 	{
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
@@ -145,41 +193,6 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 
 	@Override
 	public E peek()
-	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
-
-
-	@Override
-	public int size()
-	{
-		return mQueue.size();
-	}
-
-
-	@Override
-	public boolean isEmpty()
-	{
-		return mQueue.isEmpty();
-	}
-
-
-	@Override
-	public Iterator<E> iterator()
-	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
-
-
-	@Override
-	public Object[] toArray()
-	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
-
-
-	@Override
-	public <T> T[] toArray(T[] a)
 	{
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
@@ -210,12 +223,5 @@ class PriorityBlockingQueue<E> implements BlockingQueue<E>
 	public boolean retainAll(Collection<?> aC)
 	{
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
-
-
-	@Override
-	public void clear()
-	{
-		mQueue.clear();
 	}
 }
