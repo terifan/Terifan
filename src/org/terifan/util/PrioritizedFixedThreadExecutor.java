@@ -1,26 +1,19 @@
 package org.terifan.util;
 
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.terifan.util.PrioritizedFixedThreadExecutor.PriorityRunnableTask;
 
 
-public class PrioritizedFixedThreadExecutor<T> implements AutoCloseable
+public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoCloseable
 {
-	private PrioritizedQueue<T> mQueue;
-	private HashMap<Runnable, Future> mFutures;
-	private HashMap<Future, Runnable> mRunnables;
-	private ExecutorService mExecutorService;
-	private int mThreads;
+	private Function<T, Integer> mComparator;
+	private List<T> mQueue;
+	private Worker mWorker;
+	private boolean mClose;
 
 
 	/**
@@ -33,18 +26,9 @@ public class PrioritizedFixedThreadExecutor<T> implements AutoCloseable
 	 */
 	public PrioritizedFixedThreadExecutor(int aNumThreads, Function<T, Integer> aComparator)
 	{
-		if (aNumThreads > 0)
-		{
-			mThreads = aNumThreads;
-		}
-		else
-		{
-			mThreads = Math.max(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors() + aNumThreads);
-		}
+		int threads = aNumThreads > 0 ? aNumThreads : Math.max(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors() + aNumThreads);
 
-		mQueue = new PrioritizedQueue(this, aComparator);
-		mRunnables = new HashMap<>();
-		mFutures = new HashMap<>();
+		init(aComparator, threads);
 	}
 
 
@@ -57,128 +41,107 @@ public class PrioritizedFixedThreadExecutor<T> implements AutoCloseable
 	 */
 	public PrioritizedFixedThreadExecutor(float aThreads, Function<T, Integer> aComparator)
 	{
-		if (aThreads < 0 || aThreads > 1)
-		{
-			throw new IllegalArgumentException();
-		}
+		int threads = (int)Math.max(1, aThreads * Math.min(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors()));
 
-		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
-		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
-
-		mQueue = new PrioritizedQueue(this, aComparator);
-		mRunnables = new HashMap<>();
-		mFutures = new HashMap<>();
+		init(aComparator, threads);
 	}
 
 
-	/**
-	 * @see java.util.concurrent.ExecutorService#shutdown
-	 */
-	public void shutdown()
+	private void init(Function<T, Integer> aComparator, int aThreads)
 	{
-		if (mExecutorService != null)
+		mComparator = aComparator;
+		mQueue = new LinkedList<T>();
+
+		mWorker = new Worker();
+		mWorker.start();
+	}
+
+
+	private class Worker extends Thread
+	{
+		@Override
+		public void run()
 		{
-			mExecutorService.shutdown();
+			while (!mClose)
+			{
+				try
+				{
+					synchronized (PrioritizedFixedThreadExecutor.class)
+					{
+						PrioritizedFixedThreadExecutor.class.wait();
+					}
+				}
+				catch (InterruptedException e)
+				{
+				}
+
+				while (!mQueue.isEmpty())
+				{
+					take().run();
+				}
+			}
 		}
 	}
 
 
-	/**
-	 * @see java.util.concurrent.ExecutorService#shutdownNow
-	 */
-	public List<Runnable> shutdownNow()
+	public void submit(T aElement)
 	{
-		if (mExecutorService != null)
+		mQueue.add(aElement);
+
+		synchronized (PrioritizedFixedThreadExecutor.class)
 		{
-			return mExecutorService.shutdownNow();
+			PrioritizedFixedThreadExecutor.class.notifyAll();
 		}
-
-		return new ArrayList<>();
-	}
-
-
-	/**
-	 * Submit a task, this method may block if the queue size exceeds the limit.
-	 *
-	 * @see java.util.concurrent.ExecutorService#submit
-	 */
-	public Future<?> submit(Runnable aRunnable)
-	{
-		Future<?> future = init().submit(aRunnable);
-
-		mRunnables.put(future, aRunnable);
-		mFutures.put(aRunnable, future);
-
-		return future;
 	}
 
 
 	@Override
 	public void close()
 	{
-		close(Long.MAX_VALUE);
+		mClose = true;
+
+		synchronized (PrioritizedFixedThreadExecutor.class)
+		{
+			PrioritizedFixedThreadExecutor.class.notifyAll();
+		}
 	}
 
 
-	private synchronized boolean close(long aWaitMillis)
+	private T take()
 	{
-		if (mExecutorService != null)
+		T closest = null;
+		int distance = Integer.MAX_VALUE;
+
+		for (int i = 0; i < mQueue.size(); i++)
 		{
+			T task;
+
 			try
 			{
-				mExecutorService.shutdown();
-
-				mExecutorService.awaitTermination(aWaitMillis, TimeUnit.MILLISECONDS);
-
-				return false;
+				task = mQueue.get(i);
 			}
-			catch (InterruptedException e)
+			catch (Exception e)
 			{
-				return true;
+				break;
 			}
-			finally
+
+			int d = Math.abs(mComparator.apply(task));
+
+			if (d < distance)
 			{
-				mExecutorService = null;
-			}
-		}
+				distance = d;
+				closest = task;
 
-		return false;
-	}
-
-
-	private synchronized ExecutorService init()
-	{
-		if (mExecutorService == null)
-		{
-			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)mQueue)
-			{
-				@Override
-				protected void afterExecute(Runnable aRunnable, Throwable aThrowable)
+				if (distance == 0)
 				{
-					super.afterExecute(aRunnable, aThrowable);
-
-					synchronized (PrioritizedFixedThreadExecutor.class)
-					{
-						PrioritizedFixedThreadExecutor.class.notify();
-					}
-
-					if (aThrowable != null)
-					{
-						aThrowable.printStackTrace(System.err);
-					}
-
-					mFutures.remove(aRunnable);
+					break;
 				}
-			};
+			}
 		}
 
-		return mExecutorService;
-	}
+		mQueue.remove(closest);
 
-
-	T getTask(Future aFuture)
-	{
-		return (T)mRunnables.get(aFuture);
+		return closest;
 	}
 
 
