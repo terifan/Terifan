@@ -2,7 +2,6 @@ package org.terifan.util;
 
 import java.lang.management.ManagementFactory;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 import org.terifan.util.PrioritizedFixedThreadExecutor.PriorityRunnableTask;
@@ -10,8 +9,8 @@ import org.terifan.util.PrioritizedFixedThreadExecutor.PriorityRunnableTask;
 
 public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoCloseable
 {
-	private Function<T, Integer> mComparator;
-	private List<T> mQueue;
+	private Function<T, Double> mComparator;
+	private LinkedList<T> mQueue;
 	private Worker mWorker;
 	private boolean mClose;
 
@@ -24,7 +23,7 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 	 * @param aComparator a Function evaluating a task and returning it's priority, lower numbers are executed first. This Function is
 	 * called for each task when a task is acquired from the internal queue.
 	 */
-	public PrioritizedFixedThreadExecutor(int aNumThreads, Function<T, Integer> aComparator)
+	public PrioritizedFixedThreadExecutor(int aNumThreads, Function<T, Double> aComparator)
 	{
 		int threads = aNumThreads > 0 ? aNumThreads : Math.max(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors() + aNumThreads);
 
@@ -39,7 +38,7 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 	 * @param aComparator a Function evaluating a task and returning it's priority, lower numbers are executed first. This Function is
 	 * called for each task when a task is acquired from the internal queue.
 	 */
-	public PrioritizedFixedThreadExecutor(float aThreads, Function<T, Integer> aComparator)
+	public PrioritizedFixedThreadExecutor(float aThreads, Function<T, Double> aComparator)
 	{
 		int threads = (int)Math.max(1, aThreads * Math.min(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors()));
 
@@ -47,10 +46,10 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 	}
 
 
-	private void init(Function<T, Integer> aComparator, int aThreads)
+	private void init(Function<T, Double> aComparator, int aThreads)
 	{
 		mComparator = aComparator;
-		mQueue = new LinkedList<T>();
+		mQueue = new LinkedList<>();
 
 		mWorker = new Worker();
 		mWorker.start();
@@ -64,20 +63,29 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 		{
 			while (!mClose)
 			{
-				try
+				boolean b;
+				synchronized (mQueue)
 				{
-					synchronized (PrioritizedFixedThreadExecutor.class)
-					{
-						PrioritizedFixedThreadExecutor.class.wait();
-					}
-				}
-				catch (InterruptedException e)
-				{
+					b = mQueue.isEmpty();
 				}
 
-				while (!mQueue.isEmpty())
+				if (b)
 				{
-					take().run();
+					try
+					{
+						synchronized (PrioritizedFixedThreadExecutor.class)
+						{
+							PrioritizedFixedThreadExecutor.class.wait();
+						}
+					}
+					catch (InterruptedException e)
+					{
+					}
+				}
+
+				for (T next; (next = take()) != null;)
+				{
+					next.run();
 				}
 			}
 		}
@@ -86,7 +94,23 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 
 	public void submit(T aElement)
 	{
-		mQueue.add(aElement);
+		if (aElement == null)
+		{
+			throw new IllegalArgumentException();
+		}
+
+		synchronized (mQueue)
+		{
+			for (int i = 0; i < mQueue.size(); i++)
+			{
+				if (mQueue.get(i).equals(aElement))
+				{
+					return;
+				}
+			}
+
+			mQueue.add(aElement);
+		}
 
 		synchronized (PrioritizedFixedThreadExecutor.class)
 		{
@@ -110,22 +134,24 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 	private T take()
 	{
 		T closest = null;
-		int distance = Integer.MAX_VALUE;
+		double distance = Integer.MAX_VALUE;
 
-		for (int i = 0; i < mQueue.size(); i++)
+		int size;
+		synchronized (mQueue)
+		{
+			size = mQueue.size();
+		}
+
+		for (int i = 0; i < size; i++)
 		{
 			T task;
 
-			try
+			synchronized (mQueue)
 			{
 				task = mQueue.get(i);
 			}
-			catch (Exception e)
-			{
-				break;
-			}
 
-			int d = Math.abs(mComparator.apply(task));
+			double d = Math.abs(mComparator.apply(task));
 
 			if (d < distance)
 			{
@@ -139,7 +165,13 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 			}
 		}
 
-		mQueue.remove(closest);
+		if (closest != null)
+		{
+			synchronized (mQueue)
+			{
+				mQueue.remove(closest);
+			}
+		}
 
 		return closest;
 	}
@@ -151,13 +183,13 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 		{
 			Random rnd = new Random(21);
 
-			Function<PriorityRunnableTask, Integer> comparator = task -> task.mValue - 50;
+			Function<PriorityRunnableTask, Double> comparator = task -> task.mValue - 0.5;
 
 			try (PrioritizedFixedThreadExecutor<PriorityRunnableTask> executor = new PrioritizedFixedThreadExecutor(1, comparator))
 			{
 				for (int i = 0; i < 20; i++)
 				{
-					PriorityRunnableTask task = new PriorityRunnableTask(rnd.nextInt(100))
+					PriorityRunnableTask task = new PriorityRunnableTask(rnd.nextDouble())
 					{
 						@Override
 						public void run()
@@ -189,9 +221,9 @@ public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoC
 
 	static abstract class PriorityRunnableTask implements Runnable
 	{
-		int mValue;
+		double mValue;
 
-		PriorityRunnableTask(int aValue)
+		PriorityRunnableTask(double aValue)
 		{
 			mValue = aValue;
 		}
