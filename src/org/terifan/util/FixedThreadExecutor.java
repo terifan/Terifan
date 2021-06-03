@@ -115,53 +115,15 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	}
 
 
-//	public void submit(Callable aCallable)
-//	{
-//		doSubmit(init(), aCallable);
-//	}
-
-
-//	/**
-//	 * Submit a task, this method may block if the queue size exceeds the limit.
-//	 *
-//	 * @see java.util.concurrent.ExecutorService#submit
-//	 */
-//	public void submit(T... aRunnables)
-//	{
-//		ExecutorService service = init();
-//
-//		for (T r : aRunnables)
-//		{
-//			doSubmit(service, r);
-//		}
-//	}
-//
-//
-//	/**
-//	 * Submit a task, this method may block if the queue size exceeds the limit.
-//	 *
-//	 * @see java.util.concurrent.ExecutorService#submit
-//	 */
-//	public void submit(Iterable<? extends T> aRunnables)
-//	{
-//		ExecutorService service = init();
-//
-//		for (T r : aRunnables)
-//		{
-//			doSubmit(service, r);
-//		}
-//	}
-
-
 	private void doSubmit(ExecutorService aService, Object aRunnable)
 	{
 		try
 		{
-			synchronized (FixedThreadExecutor.class)
+			synchronized (this)
 			{
 				while (mBlockingQueue.size() >= mQueueSizeLimit)
 				{
-					FixedThreadExecutor.class.wait();
+					wait();
 				}
 
 				if (aRunnable instanceof RunnableTask)
@@ -251,9 +213,9 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 				{
 					super.afterExecute(aRunnable, aThrowable);
 
-					synchronized (FixedThreadExecutor.class)
+					synchronized (this)
 					{
-						FixedThreadExecutor.class.notify();
+						notify();
 					}
 
 					if (mOnCompletion != null)
