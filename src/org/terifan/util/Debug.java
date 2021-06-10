@@ -21,6 +21,12 @@ public class Debug
 	}
 
 
+	public static void hexDump(int aWidth, byte [] aBuffer)
+	{
+		hexDump(aWidth, aBuffer, 0, aBuffer.length);
+	}
+
+
 	public static void hexDump(byte [] aBuffer, int aLength)
 	{
 		hexDump(aBuffer, 0, aLength);
@@ -33,10 +39,20 @@ public class Debug
 	}
 
 
+	public static void hexDump(int aWidth, byte [] aBuffer, int aOffset, int aLength)
+	{
+		hexDump(aWidth, new ByteArrayInputStream(aBuffer, aOffset, aLength), aLength);
+	}
+
+
 	public static void hexDump(InputStream aInputStream, int aLength)
 	{
-		int LW = 32;
+		hexDump(32, aInputStream, aLength);
+	}
 
+
+	public static void hexDump(int aWidth, InputStream aInputStream, int aLength)
+	{
 		try
 		{
 			StringBuilder binText = new StringBuilder("");
@@ -44,11 +60,11 @@ public class Debug
 
 			for (int row = 0; row == 0 || aLength > 0; row++)
 			{
-				hexText.append(String.format("%04d: ", row * LW));
+				hexText.append(String.format("%04d: ", row * aWidth));
 
-				int padding = 3 * LW + LW / 8;
+				int padding = 3 * aWidth + aWidth / 8;
 
-				for (int i = 0; i < LW && aLength > 0; i++)
+				for (int i = 0; i < aWidth && aLength > 0; i++)
 				{
 					int c = aInputStream.read();
 
