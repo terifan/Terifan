@@ -10,38 +10,31 @@ import java.io.InputStream;
 
 public class ImageDimensionUtil
 {
-	public static Dimension getImageDimension(byte[] aBuffer)
+	public static Dimension getImageDimension(byte[] aBuffer) throws IOException
 	{
 		return getImageDimension(new ByteArrayInputStream(aBuffer));
 	}
 
 
-	public static Dimension getImageDimension(InputStream aInputStream)
+	public static Dimension getImageDimension(InputStream aInputStream) throws IOException
 	{
-		try
-		{
-			DataInput buffer = new DataInputStream(aInputStream);
+		DataInput buffer = new DataInputStream(aInputStream);
 
-			switch (0xFFFF & buffer.readShort())
-			{
-				case 0xFFD8:
-					return getImageDimensionsJPEG(buffer);
-				case 0x8950:
-					return getImageDimensionsPNG(buffer);
-				case 0x4749:
-					return getImageDimensionsGIF(buffer);
-				case 0x4241:
-				case 0x424d:
-				case 0x4349:
-				case 0x4350:
-				case 0x4943:
-				case 0x5054:
-					return getImageDimensionsBMP(buffer);
-			}
-		}
-		catch (Exception e)
+		switch (0xFFFF & buffer.readShort())
 		{
-			e.printStackTrace(System.err);
+			case 0xFFD8:
+				return getImageDimensionsJPEG(buffer);
+			case 0x8950:
+				return getImageDimensionsPNG(buffer);
+			case 0x4749:
+				return getImageDimensionsGIF(buffer);
+			case 0x4241:
+			case 0x424d:
+			case 0x4349:
+			case 0x4350:
+			case 0x4943:
+			case 0x5054:
+				return getImageDimensionsBMP(buffer);
 		}
 
 		return null;

@@ -6,6 +6,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
 
 
 public class ImageResizer
@@ -194,5 +196,22 @@ public class ImageResizer
 		}
 
 		return new Dimension(dw, dh);
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			BufferedImage image = ImageIO.read(new File("D:\\Pictures\\Wallpapers 4K\\4k-3840-x-2160-wallpapers-themefoxx (23).jpg"));
+
+			BufferedImage thumbnail = getScaledImageAspect(image, 600, 300, true);
+
+
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }

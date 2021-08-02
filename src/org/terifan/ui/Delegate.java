@@ -40,17 +40,19 @@ public class Delegate extends AbstractAction
 	 * <p>
 	 * Note: this constructor will use a DelegateTarget annotation on the method if available to initialize the AbstractAction.
 	 * </p>
-	 * 
+	 *
 	 * @param aObject
 	 *   a single Object to invoke the method on.
 	 * @param aMethod
 	 *   the name of the method to invoke
-	 * @param aParameters 
+	 * @param aParameters
 	 *   parameters sent to the method when invoking it
 	 */
 	public Delegate(Object aObject, String aMethod, Object ... aParameters)
 	{
 		this(()->aObject, aMethod, aParameters);
+
+		if (aObject == null) throw new IllegalArgumentException("Object is null");
 
 		initAction(aObject, findMethod(aObject));
 	}
@@ -61,12 +63,12 @@ public class Delegate extends AbstractAction
 	 * <p>
 	 * Note: DelegateTarget annotations aren't processed with this method.
 	 * </p>
-	 * 
+	 *
 	 * @param aSupplier
 	 *   supplier that provide a single Object, an array or List of objects to invoke the method on.
 	 * @param aMethod
 	 *   the name of the method to invoke
-	 * @param aParameters 
+	 * @param aParameters
 	 *   parameters sent to the method when invoking it
 	 */
 	public Delegate(Supplier aSupplier, String aMethod, Object ... aParameters)
@@ -254,14 +256,14 @@ public class Delegate extends AbstractAction
 		mRunAfter.add(aRunnable);
 		return this;
 	}
-	
+
 
 	@Override
 	public void actionPerformed(ActionEvent aEvent)
 	{
 		Object object = mSupplier.get();
 		Object[] objects;
-		
+
 		if (object == null)
 		{
 			return;
@@ -324,12 +326,12 @@ public class Delegate extends AbstractAction
 			}
 		}).start();
 	}
-	
-	
+
+
 	private Method findMethod(Object aObject)
 	{
 		Method method = null;
-		
+
 		try
 		{
 			Class [] providedTypes = new Class[mParameters.length];
@@ -395,11 +397,11 @@ public class Delegate extends AbstractAction
 
 			throw new IllegalArgumentException("Failed to locate the method specified: class: " + aObject.getClass()+", name: " + mMethodName + ", parameters: " + types, e);
 		}
-		
+
 		return method;
 	}
-	
-	
+
+
 	private void initAction(Object aObject, Method aMethod)
 	{
 		DelegateTarget params = aMethod.getAnnotation(DelegateTarget.class);

@@ -18,6 +18,7 @@ import java.util.HashMap;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -43,6 +44,7 @@ public class ConsoleOutputWindow implements AutoCloseable
 	private boolean mDisposeOnClose;
 	private boolean mMinimizeToTray;
 	private int mTextLimit;
+	private JPanel mContentPanel;
 
 
 	public ConsoleOutputWindow()
@@ -52,13 +54,16 @@ public class ConsoleOutputWindow implements AutoCloseable
 
 		mDefaultFont = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
 		StyleConstants.setFontFamily(mDefaultFont, "Arial");
-		
+
 		setTextLimit(100_000);
 
 		mTabbedPane = new JTabbedPane();
 
+		mContentPanel = new JPanel(new BorderLayout());
+		mContentPanel.add(mTabbedPane, BorderLayout.CENTER);
+
 		mFrame = new JFrame();
-		mFrame.add(mTabbedPane, BorderLayout.CENTER);
+		mFrame.add(mContentPanel);
 		mFrame.setSize(1024, 600);
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -85,6 +90,13 @@ public class ConsoleOutputWindow implements AutoCloseable
 			});
 		}
 	}
+
+
+	public JPanel getContentPanel()
+	{
+		return mContentPanel;
+	}
+
 
 
 	public int getTextLimit()
@@ -407,7 +419,7 @@ public class ConsoleOutputWindow implements AutoCloseable
 			mTextArea.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 
 			mDocument = mTextArea.getStyledDocument();
-			
+
 			mScrollPane = new JScrollPane();
 			mScrollPane.setViewportView(mTextArea);
 			mScrollPane.setBorder(null);
@@ -420,14 +432,14 @@ public class ConsoleOutputWindow implements AutoCloseable
 		{
 			return mTextArea;
 		}
-		
-		
+
+
 		public boolean isEditable()
 		{
 			return mTextArea.isEditable();
 		}
 
-		
+
 		public Output setEditable(boolean aEditable)
 		{
 			mTextArea.setEditable(aEditable);
@@ -489,7 +501,7 @@ public class ConsoleOutputWindow implements AutoCloseable
 			try (ConsoleOutputWindow cow = new ConsoleOutputWindow().show())
 			{
 				cow.addTab("dummy");
-				
+
 				for (int j = 0, n = 0; j < 1000; j++)
 				{
 					for (int i = 0; i < 10; i++, n++)
