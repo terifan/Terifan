@@ -26,27 +26,32 @@ public class VolatileResourceTest
 	}
 
 
-	public static void test(String... args)
+	private static class XX extends HashMap<String, Integer>
+	{
+	}
+
+
+	public static void test()
 	{
 		try
 		{
-			VolatileResourceSupplier<HashMap<String, Integer>> supplier = new VolatileResourceSupplier<HashMap<String, Integer>>()
+			VolatileResourceSupplier<XX> supplier = new VolatileResourceSupplier<XX>()
 			{
 				byte[] mBuffer;
 
 				@Override
-				public HashMap<String, Integer> create() throws Exception
+				public XX create() throws Exception
 				{
 					System.out.println("create");
 					if (mBuffer == null)
 					{
-						return new HashMap<>();
+						return new XX();
 					}
-					return (HashMap<String, Integer>)new ObjectInputStream(new ByteArrayInputStream(mBuffer)).readObject();
+					return (XX)new ObjectInputStream(new ByteArrayInputStream(mBuffer)).readObject();
 				}
 
 				@Override
-				public void release(HashMap<String, Integer> aInstance) throws Exception
+				public void release(XX aInstance) throws Exception
 				{
 					System.out.println("destroy");
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -66,9 +71,9 @@ public class VolatileResourceTest
 					int _i = i;
 					ex.submit(() ->
 					{
-						try (VolatileResource<HashMap<String, Integer>> lock = supplier.lock())
+						try (VolatileResource<XX> res = supplier.lock())
 						{
-							lock.get().put(Character.toString('n' + new Random().nextInt(13)), _i);
+							res.get().put(Character.toString('n' + new Random().nextInt(13)), _i);
 						}
 					});
 				}
@@ -83,15 +88,15 @@ public class VolatileResourceTest
 					int _i = i;
 					ex.submit(() ->
 					{
-						try (VolatileResource<HashMap<String, Integer>> lock = supplier.lock())
+						try (VolatileResource<XX> res = supplier.lock())
 						{
-							lock.get().put(Character.toString('a' + new Random().nextInt(13)), _i);
+							res.get().put(Character.toString('a' + new Random().nextInt(13)), _i);
 						}
 					});
 				}
 			}
 
-			try (VolatileResource<HashMap<String, Integer>> lock = supplier.aquire())
+			try (VolatileResource<XX> lock = supplier.aquire())
 			{
 				System.out.println(lock.get());
 			}
