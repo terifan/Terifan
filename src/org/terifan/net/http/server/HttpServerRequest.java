@@ -1,9 +1,12 @@
 package org.terifan.net.http.server;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
+import org.terifan.io.Streams;
 
 
 public class HttpServerRequest
@@ -73,6 +76,20 @@ public class HttpServerRequest
 	public Integer getContentLength()
 	{
 		return mContentLength;
+	}
+
+
+	/**
+	 * Reads all bytes from the InputStream provided by the getInputStream method.
+	 */
+	public byte[] getContent() throws IOException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (InputStream in = getInputStream())
+		{
+			Streams.transfer(in, baos);
+		}
+		return baos.toByteArray();
 	}
 
 
