@@ -336,7 +336,7 @@ public abstract class HttpRequest<E extends HttpRequest>
 	{
 		InputStream in;
 
-		if (aConnection.getResponseCode() > 400)
+		if (aConnection.getResponseCode() >= 400)
 		{
 			in = aConnection.getErrorStream();
 		}

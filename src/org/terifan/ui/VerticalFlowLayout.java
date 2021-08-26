@@ -136,6 +136,7 @@ public class VerticalFlowLayout implements LayoutManager
 	/**
 	 * Lays out the container.
 	 */
+	@Override
 	public void layoutContainer(Container parent)
 	{
 		Insets insets = parent.getInsets();
@@ -149,6 +150,7 @@ public class VerticalFlowLayout implements LayoutManager
 			{
 				Component c = parent.getComponent(i);
 				Dimension d = c.getPreferredSize();
+				System.out.println(c);
 				y += d.height + vgap;
 			}
 			y -= vgap; //otherwise there's a vgap too many
