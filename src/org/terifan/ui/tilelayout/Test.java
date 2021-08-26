@@ -7,6 +7,8 @@ import java.util.Arrays;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import org.terifan.ui.ImageResizer;
 
 
@@ -19,21 +21,25 @@ public class Test
 			JPanel contentPanel = new JPanel(new TileLayout(100));
 			contentPanel.setBackground(Color.BLACK);
 
-			File[] files = new File("D:\\Pictures\\Wallpapers\\High Quality").listFiles();
+			File[] files = new File("D:\\tmp\\test_images").listFiles();
 			Arrays.sort(files);
 
 			String prefix = "";
-			for (Object file : files)
+			for (File file : files)
 			{
-				String name = ((File)file).getName();
+				String name = file.getName();
 
 				String p = name.substring(0, 1).toUpperCase();
-				String label = "";
-				if (p.matches("[0-9]")) {p = "0"; label = "0-9";}
+				String label;
+				while (!p.isEmpty() && !(Character.isLetter(p.charAt(0)) || Character.isDigit(p.charAt(0)))) p = p.substring(1);
+
 				if (p.matches("[A-D]")) {p = "A"; label = "A-D";}
-				if (p.matches("[E-H]")) {p = "E"; label = "E-H";}
-				if (p.matches("[I-R]")) {p = "I"; label = "I-R";}
-				if (p.matches("[Q-Z]")) {p = "Q"; label = "Q-Z";}
+				else if (p.matches("[E-H]")) {p = "E"; label = "E-H";}
+				else if (p.matches("[I-L]")) {p = "I"; label = "I-L";}
+				else if (p.matches("[M-P]")) {p = "M"; label = "M-P";}
+				else if (p.matches("[Q-T]")) {p = "Q"; label = "Q-T";}
+				else if (p.matches("[U-Z]")) {p = "U"; label = "U-Z";}
+				else {p = "0"; label = "0-9";}
 				if (!p.equals(prefix))
 				{
 					prefix = p;
@@ -41,7 +47,8 @@ public class Test
 				}
 
 				BufferedImage image;
-				File thumbFile = new File("D:\\temp\\thumbs", name);
+				File thumbFile = new File("D:\\tmp\\thumbs" + file.getAbsolutePath().substring(2));
+				thumbFile.getParentFile().mkdirs();
 				if (thumbFile.exists())
 				{
 					image = ImageResizer.getScaledImageAspect(ImageIO.read(thumbFile), 2048, 100, false);
@@ -56,9 +63,13 @@ public class Test
 //				contentPanel.add(new TileLayoutItem(name, 0.25f, image));
 			}
 
+			JScrollPane scrollPane = new JScrollPane(contentPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+			scrollPane.getVerticalScrollBar().setUnitIncrement(108);
+			scrollPane.getVerticalScrollBar().setBlockIncrement(1000);
+
 			JFrame frame = new JFrame();
-			frame.add(contentPanel);
-			frame.setSize(1024, 768);
+			frame.add(scrollPane);
+			frame.setSize(1600, 1200);
 			frame.setLocationRelativeTo(null);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setVisible(true);

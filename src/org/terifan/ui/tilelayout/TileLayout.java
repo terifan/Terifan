@@ -3,13 +3,13 @@ package org.terifan.ui.tilelayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.LayoutManager2;
+import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.util.ArrayList;
 
 
-public class TileLayout implements LayoutManager2
+public class TileLayout implements LayoutManager
 {
-	private Dimension mPreferredLayoutSize;
 	private int mRowHeight;
 	private int mPaddingX;
 	private int mPaddingY;
@@ -44,7 +44,7 @@ public class TileLayout implements LayoutManager2
 
 	public TileLayout setPaddingX(int aPaddingX)
 	{
-		this.mPaddingX = aPaddingX;
+		mPaddingX = aPaddingX;
 		return this;
 	}
 
@@ -57,41 +57,8 @@ public class TileLayout implements LayoutManager2
 
 	public TileLayout setPaddingY(int aPaddingY)
 	{
-		this.mPaddingY = aPaddingY;
+		mPaddingY = aPaddingY;
 		return this;
-	}
-
-
-	@Override
-	public void addLayoutComponent(Component aComp, Object aConstraints)
-	{
-	}
-
-
-	@Override
-	public Dimension maximumLayoutSize(Container aTarget)
-	{
-		return new Dimension(32767, 32767);
-	}
-
-
-	@Override
-	public float getLayoutAlignmentX(Container aTarget)
-	{
-		return 0f;
-	}
-
-
-	@Override
-	public float getLayoutAlignmentY(Container aTarget)
-	{
-		return 0f;
-	}
-
-
-	@Override
-	public void invalidateLayout(Container aTarget)
-	{
 	}
 
 
@@ -110,101 +77,126 @@ public class TileLayout implements LayoutManager2
 	@Override
 	public Dimension preferredLayoutSize(Container aParent)
 	{
-		return mPreferredLayoutSize;
+		return layout(aParent, false);
 	}
 
 
 	@Override
 	public Dimension minimumLayoutSize(Container aParent)
 	{
-		return new Dimension(1, 1);
+//		return layout(aParent, false);
+		return new Dimension(1,1);
 	}
 
 
 	@Override
 	public void layoutContainer(Container aParent)
 	{
-		int layoutWidth = aParent.getWidth();
+		layout(aParent, true);
+	}
 
-		ArrayList<ArrayList<Component>> rows = new ArrayList<>();
-		ArrayList<Integer> rowWidths = new ArrayList<>();
 
+	private Dimension layout(Container aParent, boolean aUpdateBounds)
+	{
+		Insets insets = aParent.getInsets();
+
+		synchronized (aParent.getTreeLock())
 		{
-			ArrayList<Component> row = new ArrayList<>();
+			Dimension parentSize = aParent.getSize();
+			int n = aParent.getComponentCount();
 
-			int rowWidth = 0;
-			for (Component item : aParent.getComponents())
+			parentSize.width -= insets.left + insets.right;
+
+			ArrayList<ArrayList<Component>> rowComponents = new ArrayList<>();
+			ArrayList<Integer> rowWidths = new ArrayList<>();
+
 			{
-				boolean singleItem = (item instanceof TileLayoutItem) && ((TileLayoutItem)item).getPreferredWidthWeight() < 0;
+				ArrayList<Component> components = new ArrayList<>();
 
-				if (!row.isEmpty() && singleItem)
+				int rowWidth = 0;
+				for (int i = 0; i < n; i++)
 				{
-					rows.add(row);
+					Component c = aParent.getComponent(i);
+					boolean singleItem = (c instanceof TileLayoutItem) && ((TileLayoutItem)c).getPreferredWidthWeight() < 0;
+
+					if (singleItem && !components.isEmpty())
+					{
+						rowComponents.add(components);
+						rowWidths.add(rowWidth);
+						components = new ArrayList<>();
+						rowWidth = 0;
+					}
+
+					int pw = getPreferredWidth(c, parentSize.width);
+					rowWidth += pw + 2 * mPaddingX;
+
+					components.add(c);
+
+					if (rowWidth > parentSize.width || singleItem)
+					{
+						rowComponents.add(components);
+						rowWidths.add(rowWidth);
+						components = new ArrayList<>();
+						rowWidth = 0;
+					}
+				}
+
+				if (rowWidth > 0)
+				{
+					rowComponents.add(components);
 					rowWidths.add(rowWidth);
-					row = new ArrayList<>();
-					rowWidth = 0;
-				}
-
-				int pw = getPreferredWidth(item, layoutWidth);
-				rowWidth += pw + 2 * mPaddingX;
-
-				row.add(item);
-
-				if (rowWidth > layoutWidth || singleItem)
-				{
-					rows.add(row);
-					rowWidths.add(rowWidth);
-					row = new ArrayList<>();
-					rowWidth = 0;
 				}
 			}
 
-			if (rowWidth > 0)
+			int rowY = 0;
+			int rowIndex = 0;
+			for (ArrayList<Component> row : rowComponents)
 			{
-				rows.add(row);
-				rowWidths.add(rowWidth);
-			}
-		}
+				double rowX = 0;
 
-		int rowY = 0;
-		int rowIndex = 0;
-		for (ArrayList<Component> row : rows)
-		{
-			double rowX = 0;
-
-			for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
-			{
-				Component item = row.get(columnIndex);
-
-				int pw = getPreferredWidth(item, layoutWidth);
-				pw += 2 * mPaddingX;
-
-				double w;
-				if (layoutWidth > rowWidths.get(rowIndex))
+				for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
 				{
-					w = pw;
-				}
-				else if (columnIndex + 1 == row.size())
-				{
-					w = layoutWidth - rowX;
-				}
-				else
-				{
-					w = pw * layoutWidth / rowWidths.get(rowIndex);
+					Component c = row.get(columnIndex);
+
+					int pw = getPreferredWidth(c, parentSize.width) + 2 * mPaddingX;
+
+					double w;
+					if (parentSize.width > rowWidths.get(rowIndex))
+					{
+						w = pw;
+					}
+					else if (columnIndex + 1 == row.size())
+					{
+						w = parentSize.width - rowX;
+					}
+					else
+					{
+						w = pw * parentSize.width / rowWidths.get(rowIndex);
+					}
+
+					if (aUpdateBounds)
+					{
+						c.setBounds((int)rowX, rowY, (int)w, mRowHeight + 2 * mPaddingY);
+					}
+
+					rowX += w;
 				}
 
-				item.setBounds((int)rowX, rowY, (int)w, mRowHeight + 2 * mPaddingY);
-
-				rowX += w;
+				rowY += mRowHeight + 2 * mPaddingY;
+				rowIndex++;
 			}
 
-			rowY += mRowHeight + 2 * mPaddingY;
-			rowIndex++;
+			Dimension dim = new Dimension(parentSize.width, rowY);
+			dim.height += insets.top + insets.bottom;
+
+			System.out.println(dim);
+
+			return dim;
 		}
 	}
 
 
-	public static int getPreferredWidth(Component aItem, int aLayoutWidth)
+	private int getPreferredWidth(Component aItem, int aLayoutWidth)
 	{
 		if (aItem instanceof TileLayoutItem)
 		{
