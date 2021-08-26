@@ -4,11 +4,12 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Insets;
-import java.awt.LayoutManager;
+import java.awt.LayoutManager2;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
-public class TileLayout implements LayoutManager
+public class TileLayout implements LayoutManager2
 {
 	private int mRowHeight;
 	private int mPaddingX;
@@ -61,6 +62,41 @@ public class TileLayout implements LayoutManager
 		return this;
 	}
 
+	private HashMap<Component, Object> mConstraints = new HashMap<>();
+
+	@Override
+	public void addLayoutComponent(Component aComp, Object aConstraints)
+	{
+		mConstraints.put(aComp, aConstraints);
+	}
+
+
+	@Override
+	public Dimension maximumLayoutSize(Container aTarget)
+	{
+		return preferredLayoutSize(aTarget);
+	}
+
+
+	@Override
+	public float getLayoutAlignmentX(Container aTarget)
+	{
+		return 0f;
+	}
+
+
+	@Override
+	public float getLayoutAlignmentY(Container aTarget)
+	{
+		return 0f;
+	}
+
+
+	@Override
+	public void invalidateLayout(Container aTarget)
+	{
+	}
+
 
 	@Override
 	public void addLayoutComponent(String aName, Component aComp)
@@ -71,6 +107,7 @@ public class TileLayout implements LayoutManager
 	@Override
 	public void removeLayoutComponent(Component aComp)
 	{
+		mConstraints.remove(aComp);
 	}
 
 
@@ -85,8 +122,7 @@ public class TileLayout implements LayoutManager
 	@Override
 	public Dimension minimumLayoutSize(Container aParent)
 	{
-		Dimension dim = layout(aParent, false);
-		return new Dimension(1, dim.height);
+		return preferredLayoutSize(aParent);
 	}
 
 

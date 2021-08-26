@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
@@ -18,9 +19,13 @@ public class Test
 	{
 		try
 		{
-			TileLayout layout = new TileLayout(500);
+			TileLayout layout = new TileLayout(300);
 			JPanel contentPanel = new JPanel(layout);
 			contentPanel.setBackground(Color.BLACK);
+
+			contentPanel.add(new JLabel("header"), -1);
+			contentPanel.add(new JLabel("hello world"));
+			contentPanel.add(new JLabel("hello world"), 0.5f);
 
 			File[] files = new File("D:\\tmp\\test_images").listFiles();
 			Arrays.sort(files);
