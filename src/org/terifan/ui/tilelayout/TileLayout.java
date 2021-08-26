@@ -18,8 +18,8 @@ public class TileLayout implements LayoutManager
 	public TileLayout(int aRowHeight)
 	{
 		mRowHeight = aRowHeight;
-		mPaddingX = 4;
-		mPaddingY = 4;
+		mPaddingX = 2;
+		mPaddingY = 2;
 	}
 
 
@@ -77,15 +77,16 @@ public class TileLayout implements LayoutManager
 	@Override
 	public Dimension preferredLayoutSize(Container aParent)
 	{
-		return layout(aParent, false);
+		Dimension dim = layout(aParent, false);
+		return new Dimension(1, dim.height);
 	}
 
 
 	@Override
 	public Dimension minimumLayoutSize(Container aParent)
 	{
-//		return layout(aParent, false);
-		return new Dimension(1,1);
+		Dimension dim = layout(aParent, false);
+		return new Dimension(1, dim.height);
 	}
 
 
@@ -127,8 +128,7 @@ public class TileLayout implements LayoutManager
 						rowWidth = 0;
 					}
 
-					int pw = getPreferredWidth(c, parentSize.width);
-					rowWidth += pw + 2 * mPaddingX;
+					rowWidth += getPreferredWidth(c, parentSize.width) + 2 * mPaddingX;
 
 					components.add(c);
 
@@ -152,6 +152,7 @@ public class TileLayout implements LayoutManager
 			int rowIndex = 0;
 			for (ArrayList<Component> row : rowComponents)
 			{
+				int rowWidth = rowWidths.get(rowIndex);
 				double rowX = 0;
 
 				for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
@@ -161,7 +162,7 @@ public class TileLayout implements LayoutManager
 					int pw = getPreferredWidth(c, parentSize.width) + 2 * mPaddingX;
 
 					double w;
-					if (parentSize.width > rowWidths.get(rowIndex))
+					if (parentSize.width > rowWidth)
 					{
 						w = pw;
 					}
@@ -171,12 +172,12 @@ public class TileLayout implements LayoutManager
 					}
 					else
 					{
-						w = pw * parentSize.width / rowWidths.get(rowIndex);
+						w = pw * parentSize.width / (double)rowWidth;
 					}
 
 					if (aUpdateBounds)
 					{
-						c.setBounds((int)rowX, rowY, (int)w, mRowHeight + 2 * mPaddingY);
+						c.setBounds((int)rowX, rowY, (int)(rowX+w)-(int)rowX, mRowHeight + 2 * mPaddingY);
 					}
 
 					rowX += w;

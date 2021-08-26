@@ -6,8 +6,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import javax.imageio.ImageIO;
 
 
 public class ImageResizer
@@ -199,19 +197,14 @@ public class ImageResizer
 	}
 
 
-	public static void main(String ... args)
+	public static BufferedImage convertToRGB(BufferedImage aSource)
 	{
-		try
-		{
-			BufferedImage image = ImageIO.read(new File("D:\\Pictures\\Wallpapers 4K\\4k-3840-x-2160-wallpapers-themefoxx (23).jpg"));
+		BufferedImage output = new BufferedImage(aSource.getWidth(), aSource.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-			BufferedImage thumbnail = getScaledImageAspect(image, 600, 300, true);
+		Graphics2D g = output.createGraphics();
+		g.drawImage(aSource, 0, 0, null);
+		g.dispose();
 
-
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
+		return output;
 	}
 }

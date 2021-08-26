@@ -18,7 +18,8 @@ public class Test
 	{
 		try
 		{
-			JPanel contentPanel = new JPanel(new TileLayout(100));
+			TileLayout layout = new TileLayout(500);
+			JPanel contentPanel = new JPanel(layout);
 			contentPanel.setBackground(Color.BLACK);
 
 			File[] files = new File("D:\\tmp\\test_images").listFiles();
@@ -51,11 +52,12 @@ public class Test
 				thumbFile.getParentFile().mkdirs();
 				if (thumbFile.exists())
 				{
-					image = ImageResizer.getScaledImageAspect(ImageIO.read(thumbFile), 2048, 100, false);
+					image = ImageResizer.getScaledImageAspect(ImageIO.read(thumbFile), 2048, layout.getRowHeight(), false);
+//					image = ImageIO.read(thumbFile);
 				}
 				else
 				{
-					image = ImageResizer.getScaledImageAspect(ImageIO.read((File)file), 1024, 300, false);
+					image = ImageResizer.getScaledImageAspect(ImageResizer.convertToRGB(ImageIO.read(file)), 1024, 300, false);
 					ImageIO.write(image, "jpeg", thumbFile);
 				}
 

@@ -60,7 +60,8 @@ public class TileLayoutItem extends JComponent
 		int padY = layout.getPaddingY();
 
 		Graphics2D g = (Graphics2D)aGraphics;
-		g.setColor(new Color(new Random(hashCode()).nextInt(0xffffff)));
+//		g.setColor(new Color(new Random(hashCode()).nextInt(0xffffff)));
+		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, w, h);
 
 		if (mThumbnail != null)
@@ -68,17 +69,19 @@ public class TileLayoutItem extends JComponent
 			paintThumbnail(g, padX, padY, w - 2 * padX, h - 2 * padY);
 		}
 
+		Graphics gt = g.create(5, 5, w-10, h-10);
 		if (mPreferredWidthWeight < 0)
 		{
-			g.setFont(new Font("arial", Font.PLAIN, 48));
-			g.setColor(Color.WHITE);
-			g.drawString(mLabel, 5, 65);
+			gt.setFont(new Font("arial", Font.PLAIN, 48));
+			gt.setColor(Color.WHITE);
+			gt.drawString(mLabel, 0, 65);
 		}
 		else
 		{
-			g.setColor(Color.WHITE);
-			g.drawString(mLabel, 5, 15);
+			gt.setColor(Color.WHITE);
+			gt.drawString(mLabel, 0, 10);
 		}
+		gt.dispose();
 	}
 
 
@@ -95,7 +98,7 @@ public class TileLayoutItem extends JComponent
 		int ow = iw * h / ih;
 		int crop = (ow - w) / 2;
 
-		aGraphics.drawImage(mThumbnail, x, y, x + w, y + h, crop, 0, iw - crop, ih, null);
+		aGraphics.drawImage(mThumbnail, x, y, x + w, y + h, crop, 0, crop + w, ih, null);
 	}
 
 
