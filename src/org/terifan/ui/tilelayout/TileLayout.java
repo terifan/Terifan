@@ -213,7 +213,7 @@ public class TileLayout implements LayoutManager2
 
 					if (aUpdateBounds)
 					{
-						c.setBounds((int)rowX, rowY, (int)(rowX+w)-(int)rowX, mRowHeight + 2 * mPaddingY);
+						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, mRowHeight + 2 * mPaddingY);
 					}
 
 					rowX += w;
@@ -225,8 +225,6 @@ public class TileLayout implements LayoutManager2
 
 			Dimension dim = new Dimension(parentSize.width, rowY);
 			dim.height += insets.top + insets.bottom;
-
-			System.out.println(dim);
 
 			return dim;
 		}

@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 import javax.swing.JComponent;
+import org.terifan.ui.Utilities;
 
 
 public class TileLayoutItem extends JComponent
@@ -61,7 +62,7 @@ public class TileLayoutItem extends JComponent
 
 		Graphics2D g = (Graphics2D)aGraphics;
 //		g.setColor(new Color(new Random(hashCode()).nextInt(0xffffff)));
-		g.setColor(Color.BLACK);
+		g.setColor(getBackground());
 		g.fillRect(0, 0, w, h);
 
 		if (mThumbnail != null)
@@ -69,19 +70,20 @@ public class TileLayoutItem extends JComponent
 			paintThumbnail(g, padX, padY, w - 2 * padX, h - 2 * padY);
 		}
 
-		Graphics gt = g.create(5, 5, w-10, h-10);
 		if (mPreferredWidthWeight < 0)
 		{
+			Graphics gt = g.create(5, 5, w-10, h-10);
+			Utilities.enableTextAntialiasing(gt);
 			gt.setFont(new Font("arial", Font.PLAIN, 48));
 			gt.setColor(Color.WHITE);
-			gt.drawString(mLabel, 0, 65);
+			gt.drawString(mLabel, 0, h/2);
+			gt.dispose();
 		}
-		else
-		{
-			gt.setColor(Color.WHITE);
-			gt.drawString(mLabel, 0, 10);
-		}
-		gt.dispose();
+//		else
+//		{
+//			gt.setColor(Color.WHITE);
+//			gt.drawString(mLabel, 0, 10);
+//		}
 	}
 
 

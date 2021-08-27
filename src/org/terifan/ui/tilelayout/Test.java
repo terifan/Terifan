@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -19,9 +20,10 @@ public class Test
 	{
 		try
 		{
-			TileLayout layout = new TileLayout(300);
+			TileLayout layout = new TileLayout(130).setPaddingX(5).setPaddingY(5);
 			JPanel contentPanel = new JPanel(layout);
-			contentPanel.setBackground(Color.BLACK);
+			contentPanel.setBackground(new Color(29, 29, 29));
+			contentPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
 			contentPanel.add(new JLabel("header"), -1);
 			contentPanel.add(new JLabel("hello world"));
