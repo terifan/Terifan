@@ -50,10 +50,10 @@ public class TileLayoutItem extends JComponent
 
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setColor(getBackground());
-		g.setColor(new Color(new java.util.Random(hashCode()).nextInt(0xffffff)));
+//		g.setColor(new Color(new java.util.Random(hashCode()).nextInt(0xffffff)));
 		g.fillRect(0, 0, w, h);
 
-		Point pad = new Point(2, 2);
+		Point pad = new Point(0, 0);
 
 		if (mThumbnail != null)
 		{

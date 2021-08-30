@@ -29,7 +29,7 @@ public class Test
 		{
 			int height = 150;
 
-			TileLayout layout = new TileLayout(0, 0);
+			TileLayout layout = new TileLayout(5, 5);
 
 			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles());
 			Collections.shuffle(files, new Random(1));
