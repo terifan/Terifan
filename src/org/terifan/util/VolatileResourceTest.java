@@ -73,7 +73,7 @@ public class VolatileResourceTest
 					{
 						try (VolatileResource<XX> res = supplier.lock())
 						{
-							res.get().put(Character.toString('n' + new Random().nextInt(13)), _i);
+							res.get().put(Character.toString((char)('n' + new Random().nextInt(13))), _i);
 						}
 					});
 				}
@@ -90,7 +90,7 @@ public class VolatileResourceTest
 					{
 						try (VolatileResource<XX> res = supplier.lock())
 						{
-							res.get().put(Character.toString('a' + new Random().nextInt(13)), _i);
+							res.get().put(Character.toString((char)('a' + new Random().nextInt(13))), _i);
 						}
 					});
 				}
