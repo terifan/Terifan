@@ -5,9 +5,11 @@ import java.awt.Font;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -25,7 +27,15 @@ public class Test
 	{
 		try
 		{
-			TileLayout layout = new TileLayout(300).setPadding(new Point(5, 5));
+			int height = 150;
+
+			TileLayout layout = new TileLayout().setPadding(new Point(5, 5));
+
+			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles());
+			Collections.shuffle(files, new Random(0));
+			files = files.subList(0, 100);
+			Collections.sort(files);
+
 			JPanel contentPanel = new JPanel(layout);
 			contentPanel.setBackground(new Color(29, 29, 29));
 			contentPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
@@ -33,19 +43,23 @@ public class Test
 			JLabel header = new JLabel("header");
 			header.setFont(new Font("arial", Font.PLAIN, 48));
 			header.setForeground(Color.WHITE);
-			contentPanel.add(header, -1, -1);
-			contentPanel.add(new JLabel("hello world"));
-			contentPanel.add(new JLabel("hello world"), 0.5f, -1);
+//			contentPanel.add(header, -1, -1);
+//			contentPanel.add(new JLabel("hello world"));
+//			contentPanel.add(new JLabel("hello world"), 0.5f, -1);
 
-			List<File> files = Arrays.asList(new File("D:\\tmp\\test_images").listFiles());
-			Collections.shuffle(files);
-			files = files.subList(0, 100);
-			Collections.sort(files);
+			for (int i = 0; i < 10; i++)
+			{
+				String name = files.get(i).getName();
+
+				BufferedImage image = loadImage(files, i, 600);
+
+				contentPanel.add(new TileLayoutItem(name, image));
+			}
 
 			String prefix = "";
-			for (File file : files)
+			for (int i = 10; i < files.size(); i++)
 			{
-				String name = file.getName();
+				String name = files.get(i).getName();
 
 				String p = name.substring(0, 1).toUpperCase();
 				String label;
@@ -67,19 +81,7 @@ public class Test
 					contentPanel.add(groupHeader, -1, -1);
 				}
 
-				BufferedImage image;
-				File thumbFile = new File("D:\\tmp\\thumbs" + file.getAbsolutePath().substring(2));
-				thumbFile.getParentFile().mkdirs();
-				if (thumbFile.exists())
-				{
-					image = ImageResizer.getScaledImageAspect(ImageIO.read(thumbFile), 2048, layout.getRowHeight(), false);
-//					image = ImageIO.read(thumbFile);
-				}
-				else
-				{
-					image = ImageResizer.getScaledImageAspect(ImageResizer.convertToRGB(ImageIO.read(file)), 1024, 300, false);
-					ImageIO.write(image, "jpeg", thumbFile);
-				}
+				BufferedImage image = loadImage(files, i, height);
 
 				contentPanel.add(new TileLayoutItem(name, image), image.getWidth(), -1);
 //				contentPanel.add(new TileLayoutItem(name, image), 0.1f, -1);
@@ -104,5 +106,27 @@ public class Test
 		{
 			e.printStackTrace(System.out);
 		}
+	}
+
+
+	private static BufferedImage loadImage(List<File> aFiles, int aIndex, int aHeight) throws IOException
+	{
+		File thumbFile = new File("D:\\dev\\thumbs" + aFiles.get(aIndex).getAbsolutePath().substring(2));
+		thumbFile.getParentFile().mkdirs();
+
+		BufferedImage image;
+		if (thumbFile.exists())
+		{
+			image = ImageIO.read(thumbFile);
+		}
+		else
+		{
+			image = ImageResizer.getScaledImageAspect(ImageResizer.convertToRGB(ImageIO.read(aFiles.get(aIndex))), 2048, 600, false);
+			ImageIO.write(image, "jpeg", thumbFile);
+		}
+
+		image = ImageResizer.getScaledImageAspect(image, 2048, aHeight, false);
+
+		return image;
 	}
 }

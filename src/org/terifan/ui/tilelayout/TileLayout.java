@@ -13,28 +13,13 @@ import java.util.HashMap;
 public class TileLayout implements LayoutManager2
 {
 	private HashMap<Component, Number> mConstraints;
-	private int mRowHeight;
 	private Point mPadding;
 
 
-	public TileLayout(int aRowHeight)
+	public TileLayout()
 	{
 		mConstraints = new HashMap<>();
-		mRowHeight = aRowHeight;
 		mPadding = new Point(2, 2);
-	}
-
-
-	public int getRowHeight()
-	{
-		return mRowHeight;
-	}
-
-
-	public TileLayout setRowHeight(int aRowHeight)
-	{
-		mRowHeight = aRowHeight;
-		return this;
 	}
 
 
@@ -136,11 +121,13 @@ public class TileLayout implements LayoutManager2
 
 			ArrayList<ArrayList<Component>> rowComponents = new ArrayList<>();
 			ArrayList<Integer> rowWidths = new ArrayList<>();
+			ArrayList<Integer> rowHeights = new ArrayList<>();
 
 			{
 				ArrayList<Component> components = new ArrayList<>();
 
 				int rowWidth = 0;
+				int rowHeight = 0;
 				for (int i = 0; i < n; i++)
 				{
 					Component c = aParent.getComponent(i);
@@ -150,11 +137,14 @@ public class TileLayout implements LayoutManager2
 					{
 						rowComponents.add(components);
 						rowWidths.add(rowWidth);
+						rowHeights.add(rowHeight);
 						components = new ArrayList<>();
 						rowWidth = 0;
+						rowHeight = 0;
 					}
 
 					rowWidth += getPreferredWidth(c, parentSize.width) + 2 * mPadding.x;
+					rowHeight = Math.max(rowHeight, getPreferredHeight(c));
 
 					components.add(c);
 
@@ -162,8 +152,10 @@ public class TileLayout implements LayoutManager2
 					{
 						rowComponents.add(components);
 						rowWidths.add(rowWidth);
+						rowHeights.add(rowHeight);
 						components = new ArrayList<>();
 						rowWidth = 0;
+						rowHeight = 0;
 					}
 				}
 
@@ -171,6 +163,7 @@ public class TileLayout implements LayoutManager2
 				{
 					rowComponents.add(components);
 					rowWidths.add(rowWidth);
+					rowHeights.add(rowHeight);
 				}
 			}
 
@@ -179,6 +172,7 @@ public class TileLayout implements LayoutManager2
 			for (ArrayList<Component> row : rowComponents)
 			{
 				int rowWidth = rowWidths.get(rowIndex);
+				int rowHeight = rowHeights.get(rowIndex) + 2 * mPadding.y;
 				double rowX = 0;
 
 				for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
@@ -203,13 +197,13 @@ public class TileLayout implements LayoutManager2
 
 					if (aUpdateBounds)
 					{
-						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, mRowHeight + 2 * mPadding.y);
+						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, rowHeight);
 					}
 
 					rowX += w;
 				}
 
-				rowY += mRowHeight + 2 * mPadding.y;
+				rowY += rowHeight;
 				rowIndex++;
 			}
 
@@ -240,6 +234,12 @@ public class TileLayout implements LayoutManager2
 			}
 		}
 
+		return aItem.getPreferredSize().width;
+	}
+
+
+	private int getPreferredHeight(Component aItem)
+	{
 		return aItem.getPreferredSize().width;
 	}
 
