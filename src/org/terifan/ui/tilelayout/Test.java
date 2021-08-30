@@ -6,8 +6,8 @@ import java.io.File;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
@@ -20,17 +20,38 @@ public class Test
 	{
 		try
 		{
+			File[] files = new File("D:\\tmp\\test_images").listFiles();
+			Arrays.sort(files);
+
 			TileLayout layout = new TileLayout(130).setPaddingX(5).setPaddingY(5);
 			JPanel contentPanel = new JPanel(layout);
 			contentPanel.setBackground(new Color(29, 29, 29));
 			contentPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
-			contentPanel.add(new JLabel("header"), -1);
-			contentPanel.add(new JLabel("hello world"));
-			contentPanel.add(new JLabel("hello world"), 0.5f);
+//			contentPanel.add(new JButton("header"), -1, -1);
+//			contentPanel.add(new JButton("hello world"));
+//			contentPanel.add(new JButton("hello world"), 0.5f, -1);
 
-			File[] files = new File("D:\\tmp\\test_images").listFiles();
-			Arrays.sort(files);
+			for (int i = 0; i < 10; i++)
+			{
+				String name = files[i].getName();
+
+				BufferedImage image;
+				File thumbFile = new File("D:\\tmp\\thumbs" + files[i].getAbsolutePath().substring(2));
+				thumbFile.getParentFile().mkdirs();
+				if (thumbFile.exists())
+				{
+					image = ImageIO.read(thumbFile);
+				}
+				else
+				{
+					image = ImageResizer.getScaledImageAspect(ImageResizer.convertToRGB(ImageIO.read(files[i])), 1024, 300, false);
+					ImageIO.write(image, "jpeg", thumbFile);
+				}
+				image = ImageResizer.getScaledImageAspect(image, 2048, 600, false);
+
+				contentPanel.add(new TileLayoutItem(name, image));
+			}
 
 			String prefix = "";
 			for (File file : files)
@@ -68,7 +89,7 @@ public class Test
 					ImageIO.write(image, "jpeg", thumbFile);
 				}
 
-				contentPanel.add(new TileLayoutItem(name, image.getWidth(), image));
+				contentPanel.add(new TileLayoutItem(name, image));
 //				contentPanel.add(new TileLayoutItem(name, 0.25f, image));
 			}
 

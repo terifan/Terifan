@@ -17,14 +17,12 @@ public class TileLayoutItem extends JComponent
 
 	private String mLabel;
 	private BufferedImage mThumbnail;
-	private int mPreferredWidth;
 	private float mPreferredWidthWeight;
 
 
-	public TileLayoutItem(String aLabel, int aPreferredWidth, BufferedImage aThumbnail)
+	public TileLayoutItem(String aLabel, BufferedImage aThumbnail)
 	{
 		mLabel = aLabel;
-		mPreferredWidth = aPreferredWidth;
 		mThumbnail = aThumbnail;
 	}
 
@@ -40,7 +38,7 @@ public class TileLayoutItem extends JComponent
 	@Override
 	public Dimension getPreferredSize()
 	{
-		return new Dimension(mPreferredWidth, getTileLayout().getRowHeight());
+		return mThumbnail == null ? new Dimension(100, getTileLayout().getRowHeight()) : new Dimension(mThumbnail.getWidth(), mThumbnail.getHeight());
 	}
 
 

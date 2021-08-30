@@ -146,11 +146,13 @@ public class TileLayout implements LayoutManager2
 
 			ArrayList<ArrayList<Component>> rowComponents = new ArrayList<>();
 			ArrayList<Integer> rowWidths = new ArrayList<>();
+			ArrayList<Integer> rowHeights = new ArrayList<>();
 
 			{
 				ArrayList<Component> components = new ArrayList<>();
 
 				int rowWidth = 0;
+				int rowHeight = 0;
 				for (int i = 0; i < n; i++)
 				{
 					Component c = aParent.getComponent(i);
@@ -160,11 +162,14 @@ public class TileLayout implements LayoutManager2
 					{
 						rowComponents.add(components);
 						rowWidths.add(rowWidth);
+						rowHeights.add(rowHeight);
 						components = new ArrayList<>();
 						rowWidth = 0;
+						rowHeight = 0;
 					}
 
 					rowWidth += getPreferredWidth(c, parentSize.width) + 2 * mPaddingX;
+					rowHeight = Math.max(rowHeight, getPreferredHeight(c, rowWidth));
 
 					components.add(c);
 
@@ -172,8 +177,10 @@ public class TileLayout implements LayoutManager2
 					{
 						rowComponents.add(components);
 						rowWidths.add(rowWidth);
+						rowHeights.add(rowHeight);
 						components = new ArrayList<>();
 						rowWidth = 0;
+						rowHeight = 0;
 					}
 				}
 
@@ -181,6 +188,7 @@ public class TileLayout implements LayoutManager2
 				{
 					rowComponents.add(components);
 					rowWidths.add(rowWidth);
+					rowHeights.add(rowHeight);
 				}
 			}
 
@@ -189,6 +197,7 @@ public class TileLayout implements LayoutManager2
 			for (ArrayList<Component> row : rowComponents)
 			{
 				int rowWidth = rowWidths.get(rowIndex);
+				int rowHeight = rowHeights.get(rowIndex);
 				double rowX = 0;
 
 				for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
@@ -213,7 +222,7 @@ public class TileLayout implements LayoutManager2
 
 					if (aUpdateBounds)
 					{
-						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, mRowHeight + 2 * mPaddingY);
+						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, rowHeight + 2 * mPaddingY);
 					}
 
 					rowX += w;
@@ -247,5 +256,11 @@ public class TileLayout implements LayoutManager2
 		}
 
 		return aItem.getPreferredSize().width;
+	}
+
+
+	private int getPreferredHeight(Component aItem, int aLayoutWidth)
+	{
+		return aItem.getPreferredSize().height;
 	}
 }
