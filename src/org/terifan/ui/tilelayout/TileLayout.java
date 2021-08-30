@@ -5,22 +5,23 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.LayoutManager2;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 
 public class TileLayout implements LayoutManager2
 {
+	private HashMap<Component, Number> mConstraints;
 	private int mRowHeight;
-	private int mPaddingX;
-	private int mPaddingY;
+	private Point mPadding;
 
 
 	public TileLayout(int aRowHeight)
 	{
+		mConstraints = new HashMap<>();
 		mRowHeight = aRowHeight;
-		mPaddingX = 2;
-		mPaddingY = 2;
+		mPadding = new Point(2, 2);
 	}
 
 
@@ -37,37 +38,26 @@ public class TileLayout implements LayoutManager2
 	}
 
 
-	public int getPaddingX()
+	public Point getPadding()
 	{
-		return mPaddingX;
+		return mPadding;
 	}
 
 
-	public TileLayout setPaddingX(int aPaddingX)
+	public TileLayout setPadding(Point aPadding)
 	{
-		mPaddingX = aPaddingX;
+		mPadding.setLocation(aPadding);
 		return this;
 	}
 
-
-	public int getPaddingY()
-	{
-		return mPaddingY;
-	}
-
-
-	public TileLayout setPaddingY(int aPaddingY)
-	{
-		mPaddingY = aPaddingY;
-		return this;
-	}
-
-	private HashMap<Component, Object> mConstraints = new HashMap<>();
 
 	@Override
 	public void addLayoutComponent(Component aComp, Object aConstraints)
 	{
-		mConstraints.put(aComp, aConstraints);
+		if (aConstraints != null && Number.class.isAssignableFrom(aConstraints.getClass()))
+		{
+			mConstraints.put(aComp, (Number)aConstraints);
+		}
 	}
 
 
@@ -154,7 +144,7 @@ public class TileLayout implements LayoutManager2
 				for (int i = 0; i < n; i++)
 				{
 					Component c = aParent.getComponent(i);
-					boolean singleItem = (c instanceof TileLayoutItem) && ((TileLayoutItem)c).getPreferredWidthWeight() < 0;
+					boolean singleItem = getWeight(c).intValue() < 0;
 
 					if (singleItem && !components.isEmpty())
 					{
@@ -164,7 +154,7 @@ public class TileLayout implements LayoutManager2
 						rowWidth = 0;
 					}
 
-					rowWidth += getPreferredWidth(c, parentSize.width) + 2 * mPaddingX;
+					rowWidth += getPreferredWidth(c, parentSize.width) + 2 * mPadding.x;
 
 					components.add(c);
 
@@ -195,7 +185,7 @@ public class TileLayout implements LayoutManager2
 				{
 					Component c = row.get(columnIndex);
 
-					int pw = getPreferredWidth(c, parentSize.width) + 2 * mPaddingX;
+					int pw = getPreferredWidth(c, parentSize.width) + 2 * mPadding.x;
 
 					double w;
 					if (parentSize.width > rowWidth)
@@ -213,13 +203,13 @@ public class TileLayout implements LayoutManager2
 
 					if (aUpdateBounds)
 					{
-						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, mRowHeight + 2 * mPaddingY);
+						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, mRowHeight + 2 * mPadding.y);
 					}
 
 					rowX += w;
 				}
 
-				rowY += mRowHeight + 2 * mPaddingY;
+				rowY += mRowHeight + 2 * mPadding.y;
 				rowIndex++;
 			}
 
@@ -233,19 +223,29 @@ public class TileLayout implements LayoutManager2
 
 	private int getPreferredWidth(Component aItem, int aLayoutWidth)
 	{
-		if (aItem instanceof TileLayoutItem)
+		Number weight = getWeight(aItem);
+
+		if (weight != null)
 		{
-			float weight = ((TileLayoutItem)aItem).getPreferredWidthWeight();
-			if (weight < 0)
+			if (weight.intValue() < 0)
 			{
 				return aLayoutWidth;
 			}
-			if (weight > 0)
+			if (weight instanceof Float)
 			{
-				return (int)(weight * aLayoutWidth);
+				if (weight.floatValue() > 0)
+				{
+					return (int)(weight.floatValue() * aLayoutWidth);
+				}
 			}
 		}
 
 		return aItem.getPreferredSize().width;
+	}
+
+
+	private Number getWeight(Component aComponent)
+	{
+		return mConstraints.getOrDefault(aComponent, 0);
 	}
 }

@@ -2,13 +2,12 @@ package org.terifan.ui.tilelayout;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 import javax.swing.JComponent;
-import org.terifan.ui.Utilities;
 
 
 public class TileLayoutItem extends JComponent
@@ -17,22 +16,11 @@ public class TileLayoutItem extends JComponent
 
 	private String mLabel;
 	private BufferedImage mThumbnail;
-	private int mPreferredWidth;
-	private float mPreferredWidthWeight;
 
 
-	public TileLayoutItem(String aLabel, int aPreferredWidth, BufferedImage aThumbnail)
+	public TileLayoutItem(String aLabel, BufferedImage aThumbnail)
 	{
 		mLabel = aLabel;
-		mPreferredWidth = aPreferredWidth;
-		mThumbnail = aThumbnail;
-	}
-
-
-	public TileLayoutItem(String aLabel, float aPreferredWidthWeight, BufferedImage aThumbnail)
-	{
-		mLabel = aLabel;
-		mPreferredWidthWeight = aPreferredWidthWeight;
 		mThumbnail = aThumbnail;
 	}
 
@@ -40,13 +28,12 @@ public class TileLayoutItem extends JComponent
 	@Override
 	public Dimension getPreferredSize()
 	{
-		return new Dimension(mPreferredWidth, getTileLayout().getRowHeight());
-	}
-
-
-	public float getPreferredWidthWeight()
-	{
-		return mPreferredWidthWeight;
+//		return new Dimension(mThumbnail == null ? 100 : mThumbnail.getWidth(), getTileLayout().getRowHeight());
+		if (mThumbnail == null)
+		{
+			return new Dimension(100, 50);
+		}
+		return new Dimension(mThumbnail.getWidth(), mThumbnail.getHeight());
 	}
 
 
@@ -57,32 +44,25 @@ public class TileLayoutItem extends JComponent
 		int h = getHeight();
 
 		TileLayout layout = getTileLayout();
-		int padX = layout.getPaddingX();
-		int padY = layout.getPaddingY();
+		Point pad = layout.getPadding();
 
 		Graphics2D g = (Graphics2D)aGraphics;
-//		g.setColor(new Color(new Random(hashCode()).nextInt(0xffffff)));
 		g.setColor(getBackground());
 		g.fillRect(0, 0, w, h);
 
 		if (mThumbnail != null)
 		{
-			paintThumbnail(g, padX, padY, w - 2 * padX, h - 2 * padY);
+			paintThumbnail(g, pad.x, pad.y, w - 2 * pad.x, h - 2 * pad.y);
 		}
 
-		if (mPreferredWidthWeight < 0)
-		{
-			Graphics gt = g.create(5, 5, w-10, h-10);
-			Utilities.enableTextAntialiasing(gt);
-			gt.setFont(new Font("arial", Font.PLAIN, 48));
-			gt.setColor(Color.WHITE);
-			gt.drawString(mLabel, 0, h/2);
-			gt.dispose();
-		}
-//		else
+//		if (mPreferredWidthWeight < 0)
 //		{
+//			Graphics gt = g.create(5, 5, w-10, h-10);
+//			Utilities.enableTextAntialiasing(gt);
+//			gt.setFont(new Font("arial", Font.PLAIN, 48));
 //			gt.setColor(Color.WHITE);
-//			gt.drawString(mLabel, 0, 10);
+//			gt.drawString(mLabel, 0, h/2);
+//			gt.dispose();
 //		}
 	}
 
