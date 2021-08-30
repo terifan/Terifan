@@ -8,31 +8,25 @@ import java.awt.LayoutManager2;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
+import javax.swing.JLabel;
 
 
 public class TileLayout implements LayoutManager2
 {
 	private HashMap<Component, Number> mConstraints;
-	private Point mPadding;
+	private Point mSpacing;
 
 
 	public TileLayout()
 	{
+		this(5, 5);
+	}
+
+
+	public TileLayout(int aSpacingX, int aSpacingY)
+	{
 		mConstraints = new HashMap<>();
-		mPadding = new Point(2, 2);
-	}
-
-
-	public Point getPadding()
-	{
-		return mPadding;
-	}
-
-
-	public TileLayout setPadding(Point aPadding)
-	{
-		mPadding.setLocation(aPadding);
-		return this;
+		mSpacing = new Point(aSpacingX, aSpacingY);
 	}
 
 
@@ -115,9 +109,9 @@ public class TileLayout implements LayoutManager2
 		synchronized (aParent.getTreeLock())
 		{
 			Dimension parentSize = aParent.getSize();
-			int n = aParent.getComponentCount();
-
 			parentSize.width -= insets.left + insets.right;
+
+			int n = aParent.getComponentCount();
 
 			ArrayList<ArrayList<Component>> rowComponents = new ArrayList<>();
 			ArrayList<Integer> rowWidths = new ArrayList<>();
@@ -126,7 +120,7 @@ public class TileLayout implements LayoutManager2
 			{
 				ArrayList<Component> components = new ArrayList<>();
 
-				int rowWidth = 0;
+				int rowWidth = -mSpacing.x;
 				int rowHeight = 0;
 				for (int i = 0; i < n; i++)
 				{
@@ -139,11 +133,11 @@ public class TileLayout implements LayoutManager2
 						rowWidths.add(rowWidth);
 						rowHeights.add(rowHeight);
 						components = new ArrayList<>();
-						rowWidth = 0;
+						rowWidth = -mSpacing.x;
 						rowHeight = 0;
 					}
 
-					rowWidth += getPreferredWidth(c, parentSize.width) + 2 * mPadding.x;
+					rowWidth += getPreferredWidth(c, parentSize.width) + mSpacing.x;
 					rowHeight = Math.max(rowHeight, getPreferredHeight(c));
 
 					components.add(c);
@@ -154,7 +148,7 @@ public class TileLayout implements LayoutManager2
 						rowWidths.add(rowWidth);
 						rowHeights.add(rowHeight);
 						components = new ArrayList<>();
-						rowWidth = 0;
+						rowWidth = -mSpacing.x;
 						rowHeight = 0;
 					}
 				}
@@ -167,19 +161,20 @@ public class TileLayout implements LayoutManager2
 				}
 			}
 
-			int rowY = 0;
+			int rowY = insets.top;
 			int rowIndex = 0;
+
 			for (ArrayList<Component> row : rowComponents)
 			{
 				int rowWidth = rowWidths.get(rowIndex);
-				int rowHeight = rowHeights.get(rowIndex) + 2 * mPadding.y;
+				int rowHeight = rowHeights.get(rowIndex);
 				double rowX = 0;
 
 				for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
 				{
 					Component c = row.get(columnIndex);
 
-					int pw = getPreferredWidth(c, parentSize.width) + 2 * mPadding.x;
+					int pw = getPreferredWidth(c, parentSize.width);
 
 					double w;
 					if (parentSize.width > rowWidth)
@@ -197,13 +192,13 @@ public class TileLayout implements LayoutManager2
 
 					if (aUpdateBounds)
 					{
-						c.setBounds(insets.left + (int)rowX, insets.top + rowY, (int)(rowX+w)-(int)rowX, rowHeight);
+						c.setBounds(insets.left + (int)rowX, rowY, (int)(rowX + w) - (int)rowX, rowHeight);
 					}
 
-					rowX += w;
+					rowX += w + mSpacing.x;
 				}
 
-				rowY += rowHeight;
+				rowY += rowHeight + mSpacing.y;
 				rowIndex++;
 			}
 
@@ -240,7 +235,7 @@ public class TileLayout implements LayoutManager2
 
 	private int getPreferredHeight(Component aItem)
 	{
-		return aItem.getPreferredSize().width;
+		return aItem.getPreferredSize().height;
 	}
 
 

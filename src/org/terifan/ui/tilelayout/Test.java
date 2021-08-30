@@ -29,10 +29,10 @@ public class Test
 		{
 			int height = 150;
 
-			TileLayout layout = new TileLayout().setPadding(new Point(5, 5));
+			TileLayout layout = new TileLayout(5, 5);
 
 			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles());
-			Collections.shuffle(files, new Random(0));
+			Collections.shuffle(files, new Random(1));
 			files = files.subList(0, 100);
 			Collections.sort(files);
 
@@ -44,7 +44,7 @@ public class Test
 			header.setFont(new Font("arial", Font.PLAIN, 48));
 			header.setForeground(Color.WHITE);
 //			contentPanel.add(header, -1, -1);
-//			contentPanel.add(new JLabel("hello world"));
+			contentPanel.add(new JLabel("hello world"));
 //			contentPanel.add(new JLabel("hello world"), 0.5f, -1);
 
 			for (int i = 0; i < 10; i++)
@@ -83,7 +83,7 @@ public class Test
 
 				BufferedImage image = loadImage(files, i, height);
 
-				contentPanel.add(new TileLayoutItem(name, image), image.getWidth(), -1);
+				contentPanel.add(new TileLayoutItem(name, image));
 //				contentPanel.add(new TileLayoutItem(name, image), 0.1f, -1);
 			}
 

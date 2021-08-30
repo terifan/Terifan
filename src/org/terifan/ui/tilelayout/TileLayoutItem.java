@@ -2,12 +2,13 @@ package org.terifan.ui.tilelayout;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.util.Random;
 import javax.swing.JComponent;
+import org.terifan.ui.Utilities;
 
 
 public class TileLayoutItem extends JComponent
@@ -16,24 +17,28 @@ public class TileLayoutItem extends JComponent
 
 	private String mLabel;
 	private BufferedImage mThumbnail;
+	private Dimension mPreferredSize;
+
+
+	public TileLayoutItem(String aLabel, Dimension aPreferredSize)
+	{
+		mLabel = aLabel;
+		mPreferredSize = aPreferredSize;
+	}
 
 
 	public TileLayoutItem(String aLabel, BufferedImage aThumbnail)
 	{
 		mLabel = aLabel;
 		mThumbnail = aThumbnail;
+		mPreferredSize = new Dimension(mThumbnail.getWidth(), mThumbnail.getHeight());
 	}
 
 
 	@Override
 	public Dimension getPreferredSize()
 	{
-//		return new Dimension(mThumbnail == null ? 100 : mThumbnail.getWidth(), getTileLayout().getRowHeight());
-		if (mThumbnail == null)
-		{
-			return new Dimension(100, 50);
-		}
-		return new Dimension(mThumbnail.getWidth(), mThumbnail.getHeight());
+		return mPreferredSize;
 	}
 
 
@@ -43,25 +48,28 @@ public class TileLayoutItem extends JComponent
 		int w = getWidth();
 		int h = getHeight();
 
-		TileLayout layout = getTileLayout();
-		Point pad = layout.getPadding();
-
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setColor(getBackground());
+		g.setColor(new Color(new java.util.Random(hashCode()).nextInt(0xffffff)));
 		g.fillRect(0, 0, w, h);
+
+		Point pad = new Point(0*2, 0*2);
 
 		if (mThumbnail != null)
 		{
 			paintThumbnail(g, pad.x, pad.y, w - 2 * pad.x, h - 2 * pad.y);
 		}
 
-//		if (mPreferredWidthWeight < 0)
 //		{
-//			Graphics gt = g.create(5, 5, w-10, h-10);
+//			g.setColor(new Color(0, 0, 0, 128));
+//			g.fillRect(pad.x, h - pad.y - 30, w - 2 * pad.x, 30);
+//
+//			Graphics gt = g.create(pad.x + 5, pad.y, w - 10 - 2 * pad.x, h - 2 * pad.y);
+//
 //			Utilities.enableTextAntialiasing(gt);
-//			gt.setFont(new Font("arial", Font.PLAIN, 48));
+//			gt.setFont(getFont());
 //			gt.setColor(Color.WHITE);
-//			gt.drawString(mLabel, 0, h/2);
+//			gt.drawString(mLabel, 0, h - 5 - 2 * pad.y - getFontMetrics(getFont()).getDescent());
 //			gt.dispose();
 //		}
 	}
@@ -81,11 +89,5 @@ public class TileLayoutItem extends JComponent
 		int crop = (ow - w) / 2;
 
 		aGraphics.drawImage(mThumbnail, x, y, x + w, y + h, crop, 0, crop + w, ih, null);
-	}
-
-
-	public TileLayout getTileLayout()
-	{
-		return (TileLayout)getParent().getLayout();
 	}
 }
