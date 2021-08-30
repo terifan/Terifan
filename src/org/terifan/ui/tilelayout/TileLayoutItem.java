@@ -53,7 +53,7 @@ public class TileLayoutItem extends JComponent
 		g.setColor(new Color(new java.util.Random(hashCode()).nextInt(0xffffff)));
 		g.fillRect(0, 0, w, h);
 
-		Point pad = new Point(0*2, 0*2);
+		Point pad = new Point(2, 2);
 
 		if (mThumbnail != null)
 		{

@@ -8,7 +8,6 @@ import java.awt.LayoutManager2;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.swing.JLabel;
 
 
 public class TileLayout implements LayoutManager2
@@ -111,7 +110,10 @@ public class TileLayout implements LayoutManager2
 			Dimension parentSize = aParent.getSize();
 			parentSize.width -= insets.left + insets.right;
 
-			int n = aParent.getComponentCount();
+			if (parentSize.width < 0)
+			{
+				return new Dimension(0, 0);
+			}
 
 			ArrayList<ArrayList<Component>> rowComponents = new ArrayList<>();
 			ArrayList<Integer> rowWidths = new ArrayList<>();
@@ -122,10 +124,10 @@ public class TileLayout implements LayoutManager2
 
 				int rowWidth = -mSpacing.x;
 				int rowHeight = 0;
-				for (int i = 0; i < n; i++)
+				for (int i = 0; i < aParent.getComponentCount(); i++)
 				{
 					Component c = aParent.getComponent(i);
-					boolean singleItem = getWeight(c).intValue() < 0;
+					boolean singleItem = mConstraints.getOrDefault(c, 0).intValue() < 0;
 
 					if (singleItem && !components.isEmpty())
 					{
@@ -142,7 +144,7 @@ public class TileLayout implements LayoutManager2
 
 					components.add(c);
 
-					if (rowWidth > parentSize.width || singleItem)
+					if (rowWidth >= parentSize.width || singleItem)
 					{
 						rowComponents.add(components);
 						rowWidths.add(rowWidth);
@@ -177,17 +179,37 @@ public class TileLayout implements LayoutManager2
 					int pw = getPreferredWidth(c, parentSize.width);
 
 					double w;
-					if (parentSize.width > rowWidth)
+
+					Number param = getParam(c);
+					if (param != null)
 					{
-						w = pw;
-					}
-					else if (columnIndex + 1 == row.size())
-					{
-						w = parentSize.width - rowX;
+						if (param instanceof Double || param instanceof Float)
+						{
+							w = (int)Math.ceil(param.doubleValue() * parentSize.width);
+						}
+						else
+						{
+							w = param.intValue();
+							if (w < 0)
+							{
+								w = parentSize.width;
+							}
+						}
 					}
 					else
 					{
-						w = pw * parentSize.width / (double)rowWidth;
+						if (parentSize.width > rowWidth)
+						{
+							w = pw;
+						}
+						else if (columnIndex + 1 == row.size())
+						{
+							w = parentSize.width - rowX;
+						}
+						else
+						{
+							w = pw * parentSize.width / (double)rowWidth;
+						}
 					}
 
 					if (aUpdateBounds)
@@ -212,20 +234,22 @@ public class TileLayout implements LayoutManager2
 
 	private int getPreferredWidth(Component aItem, int aLayoutWidth)
 	{
-		Number weight = getWeight(aItem);
+		Number param = getParam(aItem);
 
-		if (weight != null)
+		if (param != null)
 		{
-			if (weight.intValue() < 0)
+			if (param instanceof Double || param instanceof Float)
 			{
-				return aLayoutWidth;
+				return (int)Math.ceil(param.doubleValue() * aLayoutWidth);
 			}
-			if (weight instanceof Float)
+			else
 			{
-				if (weight.floatValue() > 0)
+				int w = param.intValue();
+				if (w < 0)
 				{
-					return (int)(weight.floatValue() * aLayoutWidth);
+					w = aLayoutWidth;
 				}
+				return w;
 			}
 		}
 
@@ -239,8 +263,8 @@ public class TileLayout implements LayoutManager2
 	}
 
 
-	private Number getWeight(Component aComponent)
+	private Number getParam(Component aComponent)
 	{
-		return mConstraints.getOrDefault(aComponent, 0);
+		return mConstraints.get(aComponent);
 	}
 }
