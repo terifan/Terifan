@@ -185,7 +185,7 @@ public class TileLayout implements LayoutManager2
 					if (param instanceof Double || param instanceof Float)
 					{
 						double ww = param.doubleValue() * finalRowWidth;
-						w = (int)Math.round(ww + err);
+						w = (int)(ww + err);
 						err += ww - w;
 					}
 					else
@@ -233,15 +233,13 @@ public class TileLayout implements LayoutManager2
 			{
 				return (int)Math.ceil(param.doubleValue() * aLayoutWidth);
 			}
-			else
+
+			int w = param.intValue();
+			if (w < 0)
 			{
-				int w = param.intValue();
-				if (w < 0)
-				{
-					w = aLayoutWidth;
-				}
-				return w;
+				w = aLayoutWidth;
 			}
+			return w;
 		}
 
 		return aItem.getPreferredSize().width;

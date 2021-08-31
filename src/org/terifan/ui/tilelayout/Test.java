@@ -81,13 +81,13 @@ public class Test
 
 				BufferedImage image = loadImage(files, i, height);
 
-				if (p.equals("0"))
-					contentPanel.add(new TileLayoutItem(name, image));
-//				else
-				else if (p.equals("A"))
+//				if (p.equals("0"))
+//					contentPanel.add(new TileLayoutItem(name, image));
+////				else
+//				else if (p.equals("A"))
 					contentPanel.add(new TileLayoutItem(name, image), 0.1, -1);
-				else
-					contentPanel.add(new TileLayoutItem(name, image), 128, -1);
+//				else
+//					contentPanel.add(new TileLayoutItem(name, image), 128, -1);
 			}
 
 			JScrollPane scrollPane = new JScrollPane(contentPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
