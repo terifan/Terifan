@@ -171,33 +171,27 @@ public class TileLayout implements LayoutManager2
 				int rowWidth = rowWidths.get(rowIndex);
 				int rowHeight = rowHeights.get(rowIndex);
 				double rowX = 0;
+				double err = 0;
+
+				int finalRowWidth = parentSize.width - (row.size() - 1) * mSpacing.x;
 
 				for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
 				{
 					Component c = row.get(columnIndex);
 
-					int pw = getPreferredWidth(c, parentSize.width);
-
 					double w;
 
 					Number param = getParam(c);
-					if (param != null)
+					if (param instanceof Double || param instanceof Float)
 					{
-						if (param instanceof Double || param instanceof Float)
-						{
-							w = (int)Math.ceil(param.doubleValue() * parentSize.width);
-						}
-						else
-						{
-							w = param.intValue();
-							if (w < 0)
-							{
-								w = parentSize.width;
-							}
-						}
+						double ww = param.doubleValue() * finalRowWidth;
+						w = (int)Math.round(ww + err);
+						err += ww - w;
 					}
 					else
 					{
+						int pw = getPreferredWidth(c, parentSize.width);
+
 						if (parentSize.width > rowWidth)
 						{
 							w = pw;
@@ -224,10 +218,7 @@ public class TileLayout implements LayoutManager2
 				rowIndex++;
 			}
 
-			Dimension dim = new Dimension(parentSize.width, rowY);
-			dim.height += insets.top + insets.bottom;
-
-			return dim;
+			return new Dimension(parentSize.width, rowY - mSpacing.y + insets.bottom);
 		}
 	}
 

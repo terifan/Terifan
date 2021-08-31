@@ -29,7 +29,7 @@ public class Test
 		{
 			int height = 150;
 
-			TileLayout layout = new TileLayout(5, 5);
+			TileLayout layout = new TileLayout(20, 20);
 
 			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles());
 			Collections.shuffle(files, new Random(1));
@@ -38,20 +38,21 @@ public class Test
 
 			JPanel contentPanel = new JPanel(layout);
 			contentPanel.setBackground(new Color(29, 29, 29));
-			contentPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+//			contentPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+			contentPanel.setBorder(BorderFactory.createLineBorder(Color.RED, 50));
 
 			JLabel header = new JLabel("header");
 			header.setFont(new Font("arial", Font.PLAIN, 48));
 			header.setForeground(Color.WHITE);
 
-			for (int i = 0; i < 10; i++)
-			{
-				String name = files.get(i).getName();
-
-				BufferedImage image = loadImage(files, i, 600);
-
-				contentPanel.add(new TileLayoutItem(name, image));
-			}
+//			for (int i = 0; i < 10; i++)
+//			{
+//				String name = files.get(i).getName();
+//
+//				BufferedImage image = loadImage(files, i, 600);
+//
+//				contentPanel.add(new TileLayoutItem(name, image));
+//			}
 
 			String prefix = "";
 			for (int i = 10; i < files.size(); i++)
@@ -82,6 +83,7 @@ public class Test
 
 				if (p.equals("0"))
 					contentPanel.add(new TileLayoutItem(name, image));
+//				else
 				else if (p.equals("A"))
 					contentPanel.add(new TileLayoutItem(name, image), 0.1, -1);
 				else
