@@ -33,7 +33,7 @@ public class Test
 
 			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles());
 			Collections.shuffle(files, new Random(1));
-			files = files.subList(0, 500);
+			files = files.subList(0, 250);
 			Collections.sort(files);
 
 			JPanel contentPanel = new JPanel(layout);
