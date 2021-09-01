@@ -7,112 +7,98 @@ import java.util.function.Function;
 
 public class ColorHeatMap
 {
-	/** blue-to-red rainbow scale */
-	public final static int[] NARROW =
-	{
-		0x0000FF, // Blue
-		0x00FFFF, // Cyan
-		0x00FF00, // Green
-		0xFFFF00, // Yellow
-		0xFF0000, // Red
-	};
-	/** blue-to-red rainbow scale with thin black minimum and white maximum */
-	public final static int[] WIDE =
-	{
-		0x000000, // Black
-		0x0000FF, // Blue
-		0x0020FF,
-		0x0040FF,
-		0x0060FF,
-		0x0080FF,
-		0x00A0FF,
-		0x00C0FF,
-		0x00E0FF,
-		0x00FFFF, // Cyan
-		0x00FFE0,
-		0x00FFC0,
-		0x00FFA0,
-		0x00FF80,
-		0x00FF60,
-		0x00FF40,
-		0x00FF20,
-		0x00FF00, // Green
-		0x20FF00,
-		0x40FF00,
-		0x60FF00,
-		0x80FF00,
-		0xA0FF00,
-		0xC0FF00,
-		0xE0FF00,
-		0xFFFF00, // Yellow
-		0xFFE000,
-		0xFFC000,
-		0xFFA000,
-		0xFF8000,
-		0xFF6000,
-		0xFF4000,
-		0xFF2000,
-		0xFF0000, // Red
-		0xFFFFFF  // White
-	};
-	public final static int[] BLACK_BLUE =
-	{
-		0x000000,
-		0x000040,
-		0x000080,
-		0x0000C0,
-		0x0000FF
-	};
-	public final static int[] RED_YELLOW_GREEN =
-	{
-		new Color(255,109,32).getRGB(),
-		new Color(255,219,3).getRGB(),
-		new Color(114,197,27).getRGB()
-	};
-	public final static int[] RAINBOW =
-	{
-		0x00CC00,
-		0x9CEF00,
-		0xFFFF00,
-		0xFFD300,
-		0xFFAD00,
-		0xFF7300,
+	/** fades blue, cyan, green, yellow to red */
+	public final static ColorGradient WIDE = new ColorGradient(
+		-1,
+		-1,
+		0x0000FF, // blue
+		0x00FFFF, // cyan
+		0x00FF00, // green
+		0xFFFF00, // yellow
+		0xFF0000 // red
+	);
+	/** fades blue, cyan, green, yellow to red with black as min and white as max */
+	public final static ColorGradient MINWIDEMAX = new ColorGradient(
+		0x000000, // black
+		0xFFFFFF, // white
+		0x0000FF, // blue
+		0x00FFFF, // cyan
+		0x00FF00, // green
+		0xFFFF00, // yellow
+		0xFF0000 // red
+	);
+	/** fades black to blue */
+	public final static ColorGradient BB = new ColorGradient(
+		-1,
+		-1,
+		0x000000, // black
+		0x0000FF // blue
+	);
+	/** fades from yellow to red, min is green */
+	public final static ColorGradient MINGYR = new ColorGradient(
+		0x63BE7B, // green
+		-1,
+		0xFEEB84, // yellow
+		0xF8696B // red
+	);
+	/** fades from yellow to green, min is red */
+	public final static ColorGradient MINRYG = new ColorGradient(
+		0xF8696B, // red
+		-1,
+		0xFEEB84, // yellow
+		0x63BE7B // green
+	);
+	/** fades from green to yellow to red */
+	public final static ColorGradient GYR = new ColorGradient(
+		-1,
+		-1,
+		0x63BE7B, // green
+		0xFEEB84, // yellow
+		0xF8696B // red
+	);
+	/** fades from red to yellow to green */
+	public final static ColorGradient RYG = new ColorGradient(
+		-1,
+		-1,
+		0xF8696B, // red
+		0xFEEB84, // yellow
+		0x63BE7B // green
+	);
+	/** fades blue, magenta, red, yellow, green to cyan */
+	public final static ColorGradient RAINBOW = new ColorGradient(
+		-1,
+		-1,
+		0x0000FF,
+		0xFF00FF,
 		0xFF0000,
-		0xCD0074,
-		0x7209AB,
-		0x3914AF,
-		0x1241AB,
-		0x009C9C
-	};
+		0xFFFF00,
+		0x00FF00,
+		0x00FFFF
+	);
 
 
-	private final double mMaxValue;
-	private final int[] mColors;
-
-
-	public ColorHeatMap(double aMaxValueInclusive, int... aColors)
+	private ColorHeatMap()
 	{
-		mMaxValue = aMaxValueInclusive;
-		mColors = aColors;
 	}
 
 
-	public int getRGBForValue(double aValue)
+	public static int getRGBForValue(double aMinValue, double aMaxValue, double aValue, ColorGradient aColors)
 	{
-		if (aValue < 0 || aValue > mMaxValue)
-		{
-			throw new IllegalArgumentException("0 <= " + aValue + " <= " + mMaxValue);
-		}
+		if (aValue <= aMinValue && aColors.mMin >= 0) return aColors.mMin;
+		if (aValue >= aMaxValue && aColors.mMax >= 0) return aColors.mMax;
 
-		double valPerc = aValue / mMaxValue;
-		double colorPerc = 1.0 / (mColors.length - 1);
+		aValue = Math.max(aValue, aMinValue);
+		aValue = Math.min(aValue, aMaxValue);
+
+		double valPerc = aValue / aMaxValue;
+		double colorPerc = 1.0 / (aColors.mGradient.length - 1);
 		double blockOfColor = valPerc / colorPerc;
 		int blockIdx = (int)blockOfColor;
 		double valPercResidual = valPerc - (blockIdx * colorPerc);
 		double percOfColor = valPercResidual / colorPerc;
 
-		int first = mColors[Math.min(blockIdx, mColors.length - 1)];
-		int second = mColors[Math.min(blockIdx + 1, mColors.length - 1)];
+		int first = aColors.mGradient[Math.min(blockIdx, aColors.mGradient.length - 1)];
+		int second = aColors.mGradient[Math.min(blockIdx + 1, aColors.mGradient.length - 1)];
 
 		int r = Math.max(0, Math.min(255, (0xFF & (first >> 16)) + (int)(((0xFF & (second >> 16)) - (0xFF & (first >> 16))) * percOfColor)));
 		int g = Math.max(0, Math.min(255, (0xFF & (first >>  8)) + (int)(((0xFF & (second >>  8)) - (0xFF & (first >>  8))) * percOfColor)));
@@ -122,24 +108,62 @@ public class ColorHeatMap
 	}
 
 
+	public static class ColorGradient
+	{
+		final int mMin;
+		final int mMax;
+		final int[] mGradient;
+
+
+		/**
+		 * Create a color gradient with optional mimimum and maximum colors and a list of colors to fade between.
+		 *
+		 * @param aColorForMinimum
+		 *   the RGB value for the minimum or a negative value if unused
+		 * @param aColorForMaximum
+		 *   the RGB value for the maximum or a negative value if unused
+		 * @param aColorGradient
+		 *   one or more colors to fade between
+		 */
+		public ColorGradient(int aColorForMinimum, int aColorForMaximum, int... aColorGradient)
+		{
+			if (aColorGradient.length == 0)
+			{
+				throw new IllegalArgumentException();
+			}
+
+			mMin = aColorForMinimum;
+			mMax = aColorForMaximum;
+			mGradient = aColorGradient;
+		}
+	}
+
+
 	public static void main(String ... args)
 	{
 		try
 		{
-			java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(1000, 50, java.awt.image.BufferedImage.TYPE_INT_RGB);
+			java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(300, 300, java.awt.image.BufferedImage.TYPE_INT_RGB);
 			java.awt.Graphics2D g = image.createGraphics();
 			int h = image.getHeight();
 			int s = 0;
+
 			ArrayList<Function<Integer, Integer>> op = new ArrayList<>();
-			op.add(e -> new ColorHeatMap(image.getWidth(), WIDE).getRGBForValue(e));
-			op.add(e -> new ColorHeatMap(image.getWidth(), NARROW).getRGBForValue(e));
-			op.add(e -> new ColorHeatMap(image.getWidth(), RED_YELLOW_GREEN).getRGBForValue(e));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, MINWIDEMAX));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, WIDE));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, RYG));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, MINRYG));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, GYR));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, MINGYR));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, BB));
+			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, RAINBOW));
+
 			for (Function<Integer, Integer> fn : op)
 			{
 				for (int x = 0; x < image.getWidth(); x++)
 				{
 					g.setColor(new Color(fn.apply(x)));
-					g.drawLine(x, h * s / op.size(), x, h * (s + 1) / op.size());
+					g.drawLine(x, h * s / op.size(), x, h * (s + 1) / op.size()-2);
 				}
 				s++;
 			}
