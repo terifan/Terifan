@@ -225,6 +225,20 @@ public class TileLayout implements LayoutManager2
 	}
 
 
+	private static class Element
+	{
+		Component component;
+		int width;
+
+
+		public Element(Component aComponent, int aWidth)
+		{
+			component = aComponent;
+			width = aWidth;
+		}
+	}
+
+
 	private int getPreferredWidth(Component aItem, int aLayoutWidth)
 	{
 		Number param = getParam(aItem);
