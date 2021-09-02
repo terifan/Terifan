@@ -2,7 +2,6 @@ package org.terifan.util;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.function.Function;
 
 
 public class ColorHeatMap
@@ -82,15 +81,44 @@ public class ColorHeatMap
 	}
 
 
-	public static int getRGBForValue(double aMinValue, double aMaxValue, double aValue, ColorGradient aColors)
+	public static class ColorProvider
+	{
+		private final double mMinValue;
+		private final double mMaxValue;
+		private final ColorGradient mColors;
+		public ColorProvider(double aMinValue, double aMaxValue, ColorGradient aColors)
+		{
+			mMinValue = aMinValue;
+			mMaxValue = aMaxValue;
+			mColors = aColors;
+		}
+		public Color getColor(double aValue)
+		{
+			return ColorHeatMap.getColor(mMinValue, mMaxValue, aValue, mColors);
+		}
+		public int getRGB(double aValue)
+		{
+			return ColorHeatMap.getRGB(mMinValue, mMaxValue, aValue, mColors);
+		}
+	}
+
+
+	public static Color getColor(double aMinValue, double aMaxValue, double aValue, ColorGradient aColors)
+	{
+		return new Color(getRGB(aMinValue, aMaxValue, aValue, aColors));
+	}
+
+
+	public static int getRGB(double aMinValue, double aMaxValue, double aValue, ColorGradient aColors)
 	{
 		if (aValue <= aMinValue && aColors.mMin >= 0) return aColors.mMin;
 		if (aValue >= aMaxValue && aColors.mMax >= 0) return aColors.mMax;
+		if (aMinValue == aMaxValue) return aColors.mGradient[0];
 
 		aValue = Math.max(aValue, aMinValue);
 		aValue = Math.min(aValue, aMaxValue);
 
-		double valPerc = aValue / aMaxValue;
+		double valPerc = (aValue - aMinValue) / aMaxValue;
 		double colorPerc = 1.0 / (aColors.mGradient.length - 1);
 		double blockOfColor = valPerc / colorPerc;
 		int blockIdx = (int)blockOfColor;
@@ -148,21 +176,21 @@ public class ColorHeatMap
 			int h = image.getHeight();
 			int s = 0;
 
-			ArrayList<Function<Integer, Integer>> op = new ArrayList<>();
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, MINWIDEMAX));
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, WIDE));
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, RYG));
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, MINRYG));
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, GYR));
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, MINGYR));
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, BB));
-			op.add(e -> ColorHeatMap.getRGBForValue(0, image.getWidth() - 1, e, RAINBOW));
+			ArrayList<ColorProvider> op = new ArrayList<>();
+			op.add(new ColorProvider(0, image.getWidth() - 1, MINWIDEMAX));
+			op.add(new ColorProvider(0, image.getWidth() - 1, WIDE));
+			op.add(new ColorProvider(0, image.getWidth() - 1, RYG));
+			op.add(new ColorProvider(0, image.getWidth() - 1, MINRYG));
+			op.add(new ColorProvider(0, image.getWidth() - 1, GYR));
+			op.add(new ColorProvider(0, image.getWidth() - 1, MINGYR));
+			op.add(new ColorProvider(0, image.getWidth() - 1, BB));
+			op.add(new ColorProvider(0, image.getWidth() - 1, RAINBOW));
 
-			for (Function<Integer, Integer> fn : op)
+			for (ColorProvider fn : op)
 			{
 				for (int x = 0; x < image.getWidth(); x++)
 				{
-					g.setColor(new Color(fn.apply(x)));
+					g.setColor(fn.getColor(x));
 					g.drawLine(x, h * s / op.size(), x, h * (s + 1) / op.size()-2);
 				}
 				s++;
