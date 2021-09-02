@@ -108,120 +108,105 @@ public class TileLayout implements LayoutManager2
 		synchronized (aParent.getTreeLock())
 		{
 			Dimension parentSize = aParent.getSize();
-			parentSize.width -= insets.left + insets.right;
+			int width = parentSize.width - insets.left - insets.right;
 
-			if (parentSize.width < 0)
+			if (width < 0)
 			{
 				return new Dimension(0, 0);
 			}
 
-			ArrayList<ArrayList<Component>> rowComponents = new ArrayList<>();
-			ArrayList<ArrayList<Integer>> rowComponentWidths = new ArrayList<>();
-			ArrayList<Integer> rowWidths = new ArrayList<>();
-			ArrayList<Integer> rowHeights = new ArrayList<>();
+			int offsetY = insets.top;
 
+			for (Row row : layoutRows(aParent, width))
 			{
-				ArrayList<Component> elementComponents = new ArrayList<>();
-				ArrayList<Integer> elementWidths = new ArrayList<>();
-
-				int rowWidth = 0;
-				int rowHeight = 0;
-				for (int i = 0; i < aParent.getComponentCount(); i++)
-				{
-					Component c = aParent.getComponent(i);
-					boolean singleItem = mConstraints.getOrDefault(c, 0).intValue() < 0;
-
-					if (singleItem && !elementComponents.isEmpty())
-					{
-						rowComponents.add(elementComponents);
-						rowComponentWidths.add(elementWidths);
-						rowWidths.add(rowWidth);
-						rowHeights.add(rowHeight);
-						elementComponents = new ArrayList<>();
-						elementWidths = new ArrayList<>();
-						rowWidth = 0;
-						rowHeight = 0;
-					}
-
-					int ew = getPreferredWidth(c, parentSize.width);
-
-					elementWidths.add(ew);
-					elementComponents.add(c);
-
-					rowWidth += ew + mSpacing.x;
-					rowHeight = Math.max(rowHeight, getPreferredHeight(c));
-
-					if (rowWidth - mSpacing.x >= parentSize.width || singleItem)
-					{
-						rowComponents.add(elementComponents);
-						rowComponentWidths.add(elementWidths);
-						rowWidths.add(rowWidth);
-						rowHeights.add(rowHeight);
-						elementComponents = new ArrayList<>();
-						elementWidths = new ArrayList<>();
-						rowWidth = 0;
-						rowHeight = 0;
-					}
-				}
-
-				if (rowWidth > 0)
-				{
-					rowComponents.add(elementComponents);
-					rowComponentWidths.add(elementWidths);
-					rowWidths.add(rowWidth);
-					rowHeights.add(rowHeight);
-				}
+				offsetY = layoutColumns(row, insets.left, offsetY, aUpdateBounds, insets.left + width);
 			}
 
-			int rowY = insets.top;
-			int rowIndex = 0;
-
-			for (ArrayList<Component> elementComponents : rowComponents)
-			{
-				ArrayList<Integer> elementWidths = rowComponentWidths.get(rowIndex);
-
-				int rowWidth = rowWidths.get(rowIndex) - mSpacing.x * elementWidths.size();
-				int rowHeight = rowHeights.get(rowIndex);
-				int rowX = 0;
-				double err = 0;
-
-				double scale = (parentSize.width - mSpacing.x * (elementWidths.size() - 1)) / (double)rowWidth;
-
-				for (int columnIndex = 0; columnIndex < elementComponents.size(); columnIndex++)
-				{
-					Component c = elementComponents.get(columnIndex);
-
-					double w;
-					double pw = elementWidths.get(columnIndex);
-
-					if (scale >= 1)
-					{
-						w = pw;
-					}
-					else if (columnIndex + 1 == elementComponents.size())
-					{
-						w = parentSize.width - rowX;
-					}
-					else
-					{
-						w = pw * scale + err;
-					}
-
-					if (aUpdateBounds)
-					{
-						c.setBounds(insets.left + (int)rowX, rowY, (int)w, rowHeight);
-					}
-
-					err = w - (int)w;
-					rowX += w + mSpacing.x;
-				}
-
-				rowY += rowHeight + mSpacing.y;
-				rowIndex++;
-			}
-
-			return new Dimension(parentSize.width, rowY - mSpacing.y + insets.bottom);
+			return new Dimension(width, offsetY - mSpacing.y + insets.bottom);
 		}
+	}
+
+
+	private int layoutColumns(Row aRow, int aOffsetX, int aOffsetY, boolean aUpdateBounds, int aTarget)
+	{
+		double scale = (aTarget - aOffsetX - mSpacing.x * (aRow.elements.size() - 1)) / (double)(aRow.width - mSpacing.x * aRow.elements.size());
+		double error = 0;
+
+		for (int columnIndex = 0; columnIndex < aRow.elements.size(); columnIndex++)
+		{
+			Element element = aRow.elements.get(columnIndex);
+
+			double width;
+			if (scale >= 1)
+			{
+				width = element.width;
+			}
+			else if (columnIndex + 1 == aRow.elements.size())
+			{
+				width = aTarget - aOffsetX;
+			}
+			else
+			{
+				width = element.width * scale + error;
+			}
+
+			if (aUpdateBounds)
+			{
+				element.component.setBounds(aOffsetX, aOffsetY, (int)width, aRow.height);
+			}
+
+			error = width - (int)width;
+			aOffsetX += width + mSpacing.x;
+		}
+
+		return aOffsetY + aRow.height + mSpacing.y;
+	}
+
+
+	private ArrayList<Row> layoutRows(Container aParent, int aTargetWidth)
+	{
+		ArrayList<Row> rows = new ArrayList<>();
+
+		Row row = new Row();
+
+		for (int i = 0; i < aParent.getComponentCount(); i++)
+		{
+			Component c = aParent.getComponent(i);
+
+			boolean singleItem = mConstraints.getOrDefault(c, 0).intValue() < 0;
+
+			if (singleItem && !row.elements.isEmpty())
+			{
+				rows.add(row);
+				row = new Row();
+			}
+
+			Element element = new Element(c, getPreferredWidth(c, aTargetWidth));
+			row.elements.add(element);
+			row.width += element.width + mSpacing.x;
+			row.height = Math.max(row.height, getPreferredHeight(c));
+
+			if (row.width - mSpacing.x >= aTargetWidth || singleItem)
+			{
+				rows.add(row);
+				row = new Row();
+			}
+		}
+
+		if (row.width > 0)
+		{
+			rows.add(row);
+		}
+
+		return rows;
+	}
+
+
+	private static class Row
+	{
+		ArrayList<Element> elements = new ArrayList<>();
+		int width;
+		int height;
 	}
 
 

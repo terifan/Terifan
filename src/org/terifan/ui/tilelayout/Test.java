@@ -27,14 +27,12 @@ public class Test
 	{
 		try
 		{
-			int height = 150;
-
 			TileLayout layout = new TileLayout(5, 5);
 
 			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles());
-			Collections.shuffle(files, new Random(1));
-			files = files.subList(0, 250);
-			Collections.sort(files);
+//			Collections.shuffle(files, new Random(1));
+//			files = files.subList(0, 250);
+//			Collections.sort(files);
 
 			JPanel contentPanel = new JPanel(layout);
 			contentPanel.setBackground(new Color(29, 29, 29));
@@ -45,44 +43,37 @@ public class Test
 			header.setFont(new Font("arial", Font.PLAIN, 48));
 			header.setForeground(Color.WHITE);
 
-//			for (int i = 0; i < 10; i++)
-//			{
-//				String name = files.get(i).getName();
-//
-//				BufferedImage image = loadImage(files, i, 600);
-//
-//				contentPanel.add(new TileLayoutItem(name, image));
-//			}
-
-			String prefix = "";
+			String lastPrefix = "";
 			for (int i = 0; i < files.size(); i++)
 			{
 				String name = files.get(i).getName();
 
-				String p = name.substring(0, 1).toUpperCase();
-				String label;
-				while (!p.isEmpty() && !(Character.isLetter(p.charAt(0)) || Character.isDigit(p.charAt(0)))) p = p.substring(1);
+				String prefix = name.substring(0, 1).toUpperCase();
+				while (!prefix.isEmpty() && !(Character.isLetter(prefix.charAt(0)) || Character.isDigit(prefix.charAt(0)))) prefix = prefix.substring(1);
 
-				if (p.matches("[A-D]")) {p = "A"; label = "A-D";}
-				else if (p.matches("[E-H]")) {p = "E"; label = "E-H";}
-				else if (p.matches("[I-L]")) {p = "I"; label = "I-L";}
-				else if (p.matches("[M-P]")) {p = "M"; label = "M-P";}
-				else if (p.matches("[Q-T]")) {p = "Q"; label = "Q-T";}
-				else if (p.matches("[U-Z]")) {p = "U"; label = "U-Z";}
-				else {p = "0"; label = "0-9";}
-				if (!p.equals(prefix))
+				String label;
+				if (prefix.matches("[A-D]")) {prefix = "A"; label = "A-D";}
+				else if (prefix.matches("[E-H]")) {prefix = "E"; label = "E-H";}
+				else if (prefix.matches("[I-L]")) {prefix = "I"; label = "I-L";}
+				else if (prefix.matches("[M-P]")) {prefix = "M"; label = "M-P";}
+				else if (prefix.matches("[Q-T]")) {prefix = "Q"; label = "Q-T";}
+				else if (prefix.matches("[U-Z]")) {prefix = "U"; label = "U-Z";}
+				else {prefix = "0"; label = "0-9";}
+				if (!prefix.equals(lastPrefix))
 				{
-					prefix = p;
+					lastPrefix = prefix;
 					JLabel groupHeader = new JLabel(label);
 					groupHeader.setFont(new Font("arial", Font.PLAIN, 48));
 					groupHeader.setForeground(Color.WHITE);
 					contentPanel.add(groupHeader, -1, -1);
 				}
 
-				BufferedImage image = loadImage(files, i, i < 10 ? 600 : i < 100 ? 300 : 150);
+				BufferedImage image = loadImage(files, i, prefix.equals("M") ? 64 : i < 10 ? 600 : i < 100 ? 300 : 150);
 
-				if (p.equals("U"))
-					contentPanel.add(new TileLayoutItem(name, image), 128, -1);
+				if (prefix.equals("M"))
+					contentPanel.add(new TileLayoutItem(name, image), 64, -1);
+				else if (prefix.equals("Q"))
+					contentPanel.add(new TileLayoutItem(name, image), 0.1, -1);
 				else
 					contentPanel.add(new TileLayoutItem(name, image));
 			}
@@ -91,8 +82,6 @@ public class Test
 			scrollPane.getVerticalScrollBar().setUnitIncrement(108);
 			scrollPane.getVerticalScrollBar().setBlockIncrement(1000);
 			scrollPane.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
-//			scrollPane.getViewport().setScrollMode(JViewport.BLIT_SCROLL_MODE);
-//			scrollPane.getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
 			scrollPane.setBorder(null);
 
 			JFrame frame = new JFrame();

@@ -58,7 +58,7 @@ public class TileLayoutItem extends JComponent
 
 		Graphics2D g = (Graphics2D)aGraphics;
 		g.setColor(getBackground());
-		g.setColor(new Color(new java.util.Random(hashCode()).nextInt(0xffffff)));
+//		g.setColor(new Color(new java.util.Random(hashCode()).nextInt(0xffffff)));
 		g.fillRect(0, 0, w, h);
 
 //		for (int i = 0; i < 6; i++)
@@ -72,7 +72,7 @@ public class TileLayoutItem extends JComponent
 
 		if (mThumbnail != null)
 		{
-//			paintThumbnail(g, pad.x, pad.y, w - 2 * pad.x, h - 2 * pad.y);
+			paintThumbnail(g, pad.x, pad.y, w - 2 * pad.x, h - 2 * pad.y);
 		}
 
 //		{
