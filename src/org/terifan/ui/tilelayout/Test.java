@@ -74,11 +74,11 @@ public class Test
 				BufferedImage image = loadImage(files, i);
 				image = layout.isVertical() ? ImageResizer.getScaledImageAspect(image, 2048, size, false) : ImageResizer.getScaledImageAspect(image, size, 2048, false);
 
-//				if (prefix.equals("M"))
-//					contentPanel.add(new TileLayoutItem(name, image), 64, -1);
-//				else if (prefix.equals("Q"))
-//					contentPanel.add(new TileLayoutItem(name, image), 0.1, -1);
-//				else
+				if (prefix.equals("M"))
+					contentPanel.add(new TileLayoutItem(name, image), 64, -1);
+				else if (prefix.equals("Q"))
+					contentPanel.add(new TileLayoutItem(name, image), 0.1, -1);
+				else
 					contentPanel.add(new TileLayoutItem(name, image));
 			}
 
