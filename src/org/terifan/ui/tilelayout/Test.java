@@ -29,7 +29,7 @@ public class Test
 		{
 			TileLayout layout = new TileLayout(5, 5);
 
-			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles());
+			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles(e->e.getName().matches(".*png|.*jpg")));
 //			Collections.shuffle(files, new Random(1));
 //			files = files.subList(0, 250);
 //			Collections.sort(files);
