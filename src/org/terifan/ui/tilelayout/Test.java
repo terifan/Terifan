@@ -18,6 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 import org.terifan.ui.ImageResizer;
 
 
@@ -27,7 +28,7 @@ public class Test
 	{
 		try
 		{
-			TileLayout layout = new TileLayout(5, 5);
+			TileLayout layout = new TileLayout(!true, 5, 5);
 
 			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles(e->e.getName().matches(".*png|.*jpg")));
 //			Collections.shuffle(files, new Random(1));
@@ -62,23 +63,28 @@ public class Test
 				if (!prefix.equals(lastPrefix))
 				{
 					lastPrefix = prefix;
-					JLabel groupHeader = new JLabel(label);
-					groupHeader.setFont(new Font("arial", Font.PLAIN, 48));
-					groupHeader.setForeground(Color.WHITE);
-					contentPanel.add(groupHeader, -1, -1);
+					JLabel lbl = new JLabel(label);
+					lbl.setVerticalAlignment(SwingConstants.TOP);
+					lbl.setFont(new Font("arial", Font.PLAIN, 48));
+					lbl.setForeground(Color.WHITE);
+					contentPanel.add(lbl, -1, -1);
 				}
 
-				BufferedImage image = loadImage(files, i, prefix.equals("M") ? 64 : i < 10 ? 600 : i < 100 ? 300 : 150);
+				int size = prefix.equals("M") ? 64 : i < 10 ? 600 : i < 100 ? 300 : 150;
+				BufferedImage image = loadImage(files, i);
+				image = layout.isVertical() ? ImageResizer.getScaledImageAspect(image, 2048, size, false) : ImageResizer.getScaledImageAspect(image, size, 2048, false);
 
-				if (prefix.equals("M"))
-					contentPanel.add(new TileLayoutItem(name, image), 64, -1);
-				else if (prefix.equals("Q"))
-					contentPanel.add(new TileLayoutItem(name, image), 0.1, -1);
-				else
+//				if (prefix.equals("M"))
+//					contentPanel.add(new TileLayoutItem(name, image), 64, -1);
+//				else if (prefix.equals("Q"))
+//					contentPanel.add(new TileLayoutItem(name, image), 0.1, -1);
+//				else
 					contentPanel.add(new TileLayoutItem(name, image));
 			}
 
-			JScrollPane scrollPane = new JScrollPane(contentPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+			JScrollPane scrollPane = new JScrollPane(contentPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+			scrollPane.getHorizontalScrollBar().setUnitIncrement(108);
+			scrollPane.getHorizontalScrollBar().setBlockIncrement(1000);
 			scrollPane.getVerticalScrollBar().setUnitIncrement(108);
 			scrollPane.getVerticalScrollBar().setBlockIncrement(1000);
 			scrollPane.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
@@ -98,7 +104,7 @@ public class Test
 	}
 
 
-	private static BufferedImage loadImage(List<File> aFiles, int aIndex, int aHeight) throws IOException
+	private static BufferedImage loadImage(List<File> aFiles, int aIndex) throws IOException
 	{
 		File thumbFile = new File("D:\\dev\\thumbs" + aFiles.get(aIndex).getAbsolutePath().substring(2));
 		thumbFile.getParentFile().mkdirs();
@@ -113,8 +119,6 @@ public class Test
 			image = ImageResizer.getScaledImageAspect(ImageResizer.convertToRGB(ImageIO.read(aFiles.get(aIndex))), 2048, 600, false);
 			ImageIO.write(image, "jpeg", thumbFile);
 		}
-
-		image = ImageResizer.getScaledImageAspect(image, 2048, aHeight, false);
 
 		return image;
 	}
