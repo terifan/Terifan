@@ -92,6 +92,9 @@ public class ImagePane extends JPanel
 	{
 		super(new BorderLayout());
 
+		mScaleValue = 1;
+		mDoScaleTouchInside = true;
+
 		synchronized (ImagePane.class)
 		{
 			if (OPEN_HAND_CURSOR == null)
@@ -173,8 +176,8 @@ public class ImagePane extends JPanel
 		mFilter = aFilter;
 		return this;
 	}
-	
-	
+
+
 	public ImagePane setCursorVisible(boolean aVisible)
 	{
 		mVisibleCursor = aVisible;
@@ -283,10 +286,7 @@ public class ImagePane extends JPanel
 	public synchronized void setImage(BufferedImage aImage)
 	{
 		mScaledImage = null;
-		mScaledOffsetX = 0;
-		mScaledOffsetY = 0;
 		mImage = aImage;
-		mScaleValue = 1;
 
 //		if (mImage != null && mImage.getData().getTransferType() != DataBuffer.TYPE_INT)
 //		{
@@ -299,6 +299,10 @@ public class ImagePane extends JPanel
 
 		if (mImage == null)
 		{
+			mScaledOffsetX = 0;
+			mScaledOffsetY = 0;
+			mScaleValue = 1;
+
 			mImageWidth = 0;
 			mImageHeight = 0;
 		}
@@ -306,7 +310,6 @@ public class ImagePane extends JPanel
 		{
 			mImageWidth = mImage.getWidth(null);
 			mImageHeight = mImage.getHeight(null);
-			mDoScaleTouchInside = true;
 			validateImageOffset();
 		}
 
