@@ -293,7 +293,7 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	@FunctionalInterface
 	public interface RunnableTask
 	{
-		void  run() throws Exception;
+		void run() throws Exception;
 	}
 
 
