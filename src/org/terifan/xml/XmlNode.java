@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import static java.nio.file.Files.size;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.xml.transform.ErrorListener;
@@ -472,49 +471,6 @@ public class XmlNode
 	public XmlElement toElement()
 	{
 		return new XmlElement(mNode);
-	}
-
-
-	public String getAttribute(String aName)
-	{
-		String v = getAttribute(aName, null);
-		if (v == null)
-		{
-			return null;
-		}
-		return v;
-	}
-
-
-	public boolean hasAttribute(String aName)
-	{
-		return getAttribute(aName, null) != null;
-	}
-
-
-	public String getAttribute(String aName, String aDefaultValue)
-	{
-		if (mNode instanceof Element)
-		{
-			Element el = (Element)mNode;
-			if (el.hasAttribute(aName))
-			{
-				return el.getAttribute(aName);
-			}
-			return aDefaultValue;
-		}
-		throw new XmlException("This XmlNode is not an XmlElement or an instance of org.w3c.dom.Element: " + getClass().getName());
-	}
-
-
-	public void setAttribute(String aName, String aValue)
-	{
-		if (mNode instanceof Element)
-		{
-			Element el = (Element)mNode;
-			el.setAttribute(aName, aValue);
-		}
-		throw new XmlException("This XmlNode is not an XmlElement or an instance of org.w3c.dom.Element: " + getClass().getName());
 	}
 
 

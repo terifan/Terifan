@@ -87,17 +87,58 @@ public class XmlElement extends XmlNode implements Iterable<XmlElement>
 	}
 
 
-	@Override
 	public String getAttribute(String aName)
 	{
 		return ((Element)mNode).getAttribute(aName);
 	}
 
 
-	@Override
-	public void setAttribute(String aName, String aValue)
+	public boolean getAttribute(String aName, boolean aDefaultValue)
+	{
+		String attribute = getAttribute(aName);
+		return attribute == null ? aDefaultValue : Boolean.parseBoolean(attribute);
+	}
+
+
+	public int getAttribute(String aName, int aDefaultValue)
+	{
+		String attribute = getAttribute(aName);
+		return attribute == null ? aDefaultValue : Integer.parseInt(attribute);
+	}
+
+
+	public double getAttribute(String aName, double aDefaultValue)
+	{
+		String attribute = getAttribute(aName);
+		return attribute == null ? aDefaultValue : Double.parseDouble(attribute);
+	}
+
+
+	public XmlElement setAttribute(String aName, String aValue)
 	{
 		((Element)mNode).setAttribute(aName, aValue);
+		return this;
+	}
+
+
+	public XmlElement setAttribute(String aName, boolean aValue)
+	{
+		((Element)mNode).setAttribute(aName, Boolean.toString(aValue));
+		return this;
+	}
+
+
+	public XmlElement setAttribute(String aName, int aValue)
+	{
+		((Element)mNode).setAttribute(aName, Integer.toString(aValue));
+		return this;
+	}
+
+
+	public XmlElement setAttribute(String aName, long aValue)
+	{
+		((Element)mNode).setAttribute(aName, Long.toString(aValue));
+		return this;
 	}
 
 
