@@ -53,13 +53,13 @@ public class Test
 				while (!prefix.isEmpty() && !(Character.isLetter(prefix.charAt(0)) || Character.isDigit(prefix.charAt(0)))) prefix = prefix.substring(1);
 
 				String label;
-				if (prefix.matches("[A-D]")) {prefix = "A"; label = "A-D";}
+				if (prefix.charAt(0) < 'A') {prefix = "0"; label = "0-9";}
+				else if (prefix.matches("[A-D]")) {prefix = "A"; label = "A-D";}
 				else if (prefix.matches("[E-H]")) {prefix = "E"; label = "E-H";}
 				else if (prefix.matches("[I-L]")) {prefix = "I"; label = "I-L";}
 				else if (prefix.matches("[M-P]")) {prefix = "M"; label = "M-P";}
 				else if (prefix.matches("[Q-T]")) {prefix = "Q"; label = "Q-T";}
-				else if (prefix.matches("[U-Z]")) {prefix = "U"; label = "U-Z";}
-				else {prefix = "0"; label = "0-9";}
+				else {prefix = "U"; label = "U-Z";}
 				if (!prefix.equals(lastPrefix))
 				{
 					lastPrefix = prefix;

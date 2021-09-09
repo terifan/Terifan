@@ -75,18 +75,18 @@ public class TileLayoutItem extends JComponent
 			paintThumbnail(g, pad.x, pad.y, w - 2 * pad.x, h - 2 * pad.y);
 		}
 
-//		{
-//			g.setColor(new Color(0, 0, 0, 128));
-//			g.fillRect(pad.x, h - pad.y - 30, w - 2 * pad.x, 30);
-//
-//			Graphics gt = g.create(pad.x + 5, pad.y, w - 10 - 2 * pad.x, h - 2 * pad.y);
-//
-//			Utilities.enableTextAntialiasing(gt);
-//			gt.setFont(getFont());
-//			gt.setColor(Color.WHITE);
-//			gt.drawString(mLabel, 0, h - 5 - 2 * pad.y - getFontMetrics(getFont()).getDescent());
-//			gt.dispose();
-//		}
+		{
+			g.setColor(new Color(0, 0, 0, 128));
+			g.fillRect(pad.x, h - pad.y - 30, w - 2 * pad.x, 30);
+
+			Graphics gt = g.create(pad.x + 5, pad.y, w - 10 - 2 * pad.x, h - 2 * pad.y);
+
+			Utilities.enableTextAntialiasing(gt);
+			gt.setFont(getFont());
+			gt.setColor(Color.WHITE);
+			gt.drawString(mLabel, 0, h - 5 - 2 * pad.y - getFontMetrics(getFont()).getDescent());
+			gt.dispose();
+		}
 	}
 
 
