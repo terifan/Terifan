@@ -139,6 +139,7 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 							}
 							catch (Exception e)
 							{
+								e.printStackTrace(System.err);
 							}
 						}
 					});
@@ -156,6 +157,7 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 							}
 							catch (Exception e)
 							{
+								e.printStackTrace(System.err);
 								return e;
 							}
 						}

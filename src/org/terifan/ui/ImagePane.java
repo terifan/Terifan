@@ -37,8 +37,6 @@ import org.terifan.util.log.Log;
 public class ImagePane extends JPanel
 {
 	private final static double SCALE_STEP = 1.05;
-	private final static double MAX_SCALE = 10.0;
-	private final static double MIN_SCALE = 0.01;
 	private final static int SCROLL_STEP = 20;
 	private Object mFilter;
 	private boolean mVisibleCursor;
@@ -76,6 +74,9 @@ public class ImagePane extends JPanel
 	private double mScaledScale;
 	private ImagePaneResampler mImageFilter;
 	private Overlay mOverlay;
+	private boolean mUseControlWhenZooming;
+	private double mMaxScale;
+	private double mMinScale;
 
 	private BufferedImage mBackgroundImage;
 	private BufferedImage mPlaceholder;
@@ -92,6 +93,8 @@ public class ImagePane extends JPanel
 	{
 		super(new BorderLayout());
 
+		mMinScale = 0.01;
+		mMaxScale = 10.0;
 		mScaleValue = 1;
 		mDoScaleTouchInside = true;
 
@@ -162,6 +165,42 @@ public class ImagePane extends JPanel
 		setImage(aImage);
 
 		mFilter = RenderingHints.VALUE_INTERPOLATION_BILINEAR;
+	}
+
+
+	public boolean isUseControlWhenZooming()
+	{
+		return mUseControlWhenZooming;
+	}
+
+
+	public void setUseControlWhenZooming(boolean aUseControlWhenZooming)
+	{
+		this.mUseControlWhenZooming = aUseControlWhenZooming;
+	}
+
+
+	public double getMinScale()
+	{
+		return mMinScale;
+	}
+
+
+	public void setMinScale(double aMinScale)
+	{
+		this.mMinScale = aMinScale;
+	}
+
+
+	public double getMaxScale()
+	{
+		return mMaxScale;
+	}
+
+
+	public void setMaxScale(double aMaxScale)
+	{
+		this.mMaxScale = aMaxScale;
 	}
 
 
@@ -602,7 +641,7 @@ public class ImagePane extends JPanel
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent aEvent)
 		{
-			if (aEvent.isControlDown() && !aEvent.isShiftDown() && !aEvent.isAltDown())
+			if (!mUseControlWhenZooming || aEvent.isControlDown() && !aEvent.isShiftDown() && !aEvent.isAltDown())
 			{
 				doScale(aEvent.getUnitsToScroll() < 0 ? -1 : 1, aEvent.getX(), aEvent.getY());
 			}
@@ -716,7 +755,7 @@ public class ImagePane extends JPanel
 
 	public void setScale(double aScale)
 	{
-		mScaleValue = Math.max(Math.min(aScale, MAX_SCALE), MIN_SCALE);
+		mScaleValue = Math.max(Math.min(aScale, mMaxScale), mMinScale);
 		repaint();
 	}
 
@@ -738,20 +777,17 @@ public class ImagePane extends JPanel
 		mOffsetY -= dy;
 		double scale = mScaleValue;
 
-		if (aDirection > 0 && scale < MAX_SCALE)
+		if (aDirection > 0 && scale < mMaxScale)
 		{
 			scale *= SCALE_STEP;
 			mOffsetX *= SCALE_STEP;
 			mOffsetY *= SCALE_STEP;
 		}
-		else
+		else if (aDirection < 0 && scale > mMinScale)
 		{
-			if (aDirection < 0 && scale > MIN_SCALE)
-			{
-				scale /= SCALE_STEP;
-				mOffsetX /= SCALE_STEP;
-				mOffsetY /= SCALE_STEP;
-			}
+			scale /= SCALE_STEP;
+			mOffsetX /= SCALE_STEP;
+			mOffsetY /= SCALE_STEP;
 		}
 
 		mOffsetX += dx;
