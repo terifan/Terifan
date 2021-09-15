@@ -7,7 +7,14 @@ public class Test
 	{
 		try
 		{
-			SimpleHttpServer http = new SimpleHttpServer(80, null);
+			SimpleHttpServer http = new SimpleHttpServer(80, null)
+			{
+				@Override
+				protected void printLog(String aMessage)
+				{
+					System.out.println(aMessage);
+				}
+			};
 
 			http.setRequestHandler((req, resp) ->
 			{

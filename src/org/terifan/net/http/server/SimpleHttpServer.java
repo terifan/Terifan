@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import org.terifan.io.ByteArray;
 import org.terifan.util.log.Log;
@@ -80,8 +81,6 @@ public class SimpleHttpServer
 	 */
 	public void shutdown(boolean aBlock)
 	{
-		printLog("Shutdown started");
-
 		ConnectionListener listener;
 		synchronized (LOCK)
 		{
@@ -121,6 +120,12 @@ public class SimpleHttpServer
 	}
 
 
+	private void printLogDetailed(String aStartTime, String aLocalAddress, String aMethod, String aPath, int aLocalPort, String aRemoteAddress, int aResponseCode, int aResponseLength, long aResponseTime)
+	{
+		printLog(aStartTime + " " + aLocalAddress + " " + aMethod + " \"" + aPath + "\" " + aLocalPort + " " + aRemoteAddress + " " + aResponseCode + " " + aResponseLength + " " + aResponseTime);
+	}
+
+
 	private class ConnectionListener extends Thread
 	{
 		private boolean mDisconnect;
@@ -140,7 +145,7 @@ public class SimpleHttpServer
 		@Override
 		public void run()
 		{
-			printLog("Start listening to port " + mPort);
+			printLog("HTTP server starting listening to port " + mPort);
 
 			ServerSocket serverSocket = null;
 
@@ -150,8 +155,6 @@ public class SimpleHttpServer
 				{
 					serverSocket = new ServerSocket(mPort, 0, mInetAddress);
 					serverSocket.setSoTimeout(1000);
-
-					printLog("Waiting for connection");
 
 					while (!mDisconnect)
 					{
@@ -166,7 +169,7 @@ public class SimpleHttpServer
 						}
 						catch (SocketTimeoutException e)
 						{
-							printLog("Waiting for connection");
+							// ignore
 						}
 					}
 				}
@@ -184,7 +187,7 @@ public class SimpleHttpServer
 						LOCK.notify();
 					}
 
-					printLog("Shutdown completed");
+					printLog("HTTP server shutdown");
 				}
 			}
 			catch (RuntimeException e)
@@ -199,7 +202,7 @@ public class SimpleHttpServer
 	}
 
 
-	private static class ConnectionHandler extends Thread
+	private class ConnectionHandler extends Thread
 	{
 		private HttpServerHandler mRequestHandler;
 		private Socket mSocket;
@@ -219,6 +222,8 @@ public class SimpleHttpServer
 			{
 				try (InputStream in = mSocket.getInputStream())
 				{
+					long startTime = System.currentTimeMillis();
+
 					HttpServerRequest request = parseRequest(in);
 					HttpServerResponse response = new HttpServerResponse();
 
@@ -242,6 +247,10 @@ public class SimpleHttpServer
 
 						out.write(temp);
 					}
+
+					long endTime = System.currentTimeMillis();
+
+					printLogDetailed(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(startTime), request.getLocalAddress().getHostAddress(), request.getMethod(), request.getPath(), request.getLocalPort(), request.getRemoteAddress().getHostAddress(), response.getStatusCode().code, response.getContent().length, (endTime - startTime));
 				}
 				finally
 				{
