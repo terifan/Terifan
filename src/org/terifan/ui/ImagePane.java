@@ -608,6 +608,7 @@ public class ImagePane extends JPanel
 			mOldOffsetX = aEvent.getX();
 			mOldOffsetY = aEvent.getY();
 			updateCursor();
+			requestFocus();
 		}
 
 
@@ -756,6 +757,20 @@ public class ImagePane extends JPanel
 	public void setScale(double aScale)
 	{
 		mScaleValue = Math.max(Math.min(aScale, mMaxScale), mMinScale);
+		repaint();
+	}
+
+
+	public void setScaleTouchInside()
+	{
+		mDoScaleTouchInside = true;
+		repaint();
+	}
+
+
+	public void setScaleTouchOutside()
+	{
+		mDoScaleTouchOutside = true;
 		repaint();
 	}
 
