@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 
@@ -12,23 +11,19 @@ import java.util.function.Function;
  * A ParameterizedTemplate is used to insert parameter values into a String, e.g "hello ${name}". The template is "compiled" making the
  * process of formatting very efficient when reused.
  *
- * e.g.:
- * <code>
- * Map<String,Object> map = new HashMap<>();
- * map.put("name", "jones");
- * map.put("size", 7);
+ * e.g.:  <code>
+ * Map<String,Object> map = new HashMap<>(); map.put("name", "jones"); map.put("size", 7);
  *
  * String result = new ParameterizedTemplate("Name: ${name}\nSize: ${size}\n").format(map::get);
  * </code>
  *
  * Using the simplified parameterised builder:
  *
- * e.g.:
- * <code>
+ * e.g.:  <code>
  * String result = new ParameterizedTemplate("Name: ${name}\nSize: ${size}\n").put("name", "Olle").put("size", 8).format();
  * </code>
  */
-public final class ParameterizedTemplate<V>
+public final class ParamsString<V>
 {
 	private final static char START_SYMBOL_1 = '$';
 	private final static char START_SYMBOL_2 = '#';
@@ -36,6 +31,7 @@ public final class ParameterizedTemplate<V>
 	private final static char RIGHT_BRACE = '}';
 
 	private Object[] mCommands;
+	private boolean mIgnoreMissingKeys;
 
 
 	/**
@@ -43,7 +39,7 @@ public final class ParameterizedTemplate<V>
 	 *
 	 * e.g. new ParameterizedString().setTemplate("Name: ${name}\nSize: ${size}\n").format(map);
 	 */
-	public ParameterizedTemplate()
+	public ParamsString()
 	{
 	}
 
@@ -53,17 +49,30 @@ public final class ParameterizedTemplate<V>
 	 *
 	 * e.g. new ParameterizedString("Name: ${name}\nSize: ${size}\n").format(map);
 	 */
-	public ParameterizedTemplate(String aTemplate)
+	public ParamsString(String aTemplate)
 	{
 		this();
 		setTemplate(aTemplate);
 	}
 
 
+	public ParamsString<V> setIgnoreMissingKeys(boolean aIgnoreMissingKeys)
+	{
+		mIgnoreMissingKeys = aIgnoreMissingKeys;
+		return this;
+	}
+
+
+	public boolean isIgnoreMissingKeys()
+	{
+		return mIgnoreMissingKeys;
+	}
+
+
 	/**
 	 * Sets the template to use.
 	 */
-	public ParameterizedTemplate setTemplate(String aTemplate)
+	public ParamsString setTemplate(String aTemplate)
 	{
 		ArrayList<Object> commands = new ArrayList<>();
 
@@ -116,7 +125,7 @@ public final class ParameterizedTemplate<V>
 	/**
 	 * Formats the template using the parameters provided.
 	 */
-	public String format(Function<String,V> aParameters) throws IOException
+	public String format(Function<String, V> aParameters)
 	{
 		return format(aParameters, null);
 	}
@@ -125,7 +134,7 @@ public final class ParameterizedTemplate<V>
 	/**
 	 * Formats the template using the parameters provided.
 	 */
-	public String format(Function<String,V> aParameters, Function<String,V> aValueFunction) throws IOException
+	public String format(Function<String, V> aParameters, Function<String, V> aValueFunction)
 	{
 		StringWriter sw = new StringWriter();
 		format(sw, aParameters, aValueFunction);
@@ -136,7 +145,7 @@ public final class ParameterizedTemplate<V>
 	/**
 	 * Formats the template using the parameters provided.
 	 */
-	public void format(Appendable aAppendable, Function<String,V> aParameters) throws IOException
+	public void format(Appendable aAppendable, Function<String, V> aParameters)
 	{
 		format(aAppendable, aParameters, null);
 	}
@@ -145,28 +154,35 @@ public final class ParameterizedTemplate<V>
 	/**
 	 * Formats the template using the parameters provided.
 	 */
-	public void format(Appendable aAppendable, Function<String,V> aParameters1, Function<String,V> aParameters2) throws IOException
+	public void format(Appendable aAppendable, Function<String, V> aParameters1, Function<String, V> aParameters2)
 	{
 		for (Object o : mCommands)
 		{
-			if (o instanceof String)
+			try
 			{
-				aAppendable.append((String)o);
-			}
-			else
-			{
-				Command command = (Command)o;
-				String key = command.key;
-				V value = command.symbol == '$' ? aParameters1.apply(key) : aParameters2.apply(key);
-
-				if (value != null)
+				if (o instanceof String)
 				{
-					aAppendable.append(value.toString());
+					aAppendable.append((String)o);
 				}
 				else
 				{
-					aAppendable.append(command.symbol + "" + LEFT_BRACE + key + RIGHT_BRACE);
+					Command command = (Command)o;
+					String key = command.key;
+					V value = command.symbol == '$' ? aParameters1.apply(key) : aParameters2.apply(key);
+
+					if (value != null)
+					{
+						aAppendable.append(value.toString());
+					}
+					else if (!mIgnoreMissingKeys)
+					{
+						throw new IllegalArgumentException("Key has no value: " + key);
+					}
 				}
+			}
+			catch (IOException e)
+			{
+				throw new IllegalStateException(e);
 			}
 		}
 	}
@@ -176,6 +192,7 @@ public final class ParameterizedTemplate<V>
 	{
 		char symbol;
 		String key;
+
 
 		public Command(char aSymbol, String aKey)
 		{
@@ -193,22 +210,29 @@ public final class ParameterizedTemplate<V>
 	 * </code>
 	 * </p>
 	 */
-	public static ParameterizedTemplateBuilder builder(String aTemplate)
+	public static ParameterizedTemplateBuilder build(String aTemplate)
 	{
-		return new ParameterizedTemplateBuilder(new ParameterizedTemplate(aTemplate));
+		return new ParameterizedTemplateBuilder(new ParamsString(aTemplate));
 	}
 
 
 	public static class ParameterizedTemplateBuilder
 	{
-		private final ParameterizedTemplate mTemplate;
-		private final HashMap<String,Object> mValues;
+		private final ParamsString mTemplate;
+		private final HashMap<String, Object> mValues;
 
 
-		ParameterizedTemplateBuilder(ParameterizedTemplate aTemplate)
+		ParameterizedTemplateBuilder(ParamsString aTemplate)
 		{
 			mTemplate = aTemplate;
 			mValues = new HashMap<>();
+		}
+
+
+		public ParameterizedTemplateBuilder setIgnoreMissingKeys(boolean aIgnoreMissingKeys)
+		{
+			mTemplate.setIgnoreMissingKeys(aIgnoreMissingKeys);
+			return this;
 		}
 
 
@@ -219,7 +243,7 @@ public final class ParameterizedTemplate<V>
 		}
 
 
-		public String format() throws IOException
+		public String format()
 		{
 			return mTemplate.format(mValues::get);
 		}
@@ -230,14 +254,13 @@ public final class ParameterizedTemplate<V>
 	 * Process the parameterised String without building a template.
 	 * <p>
 	 * <code>
-	 * HashMap<String,Object> map = new HashMap<>();
-	 * map.put("value", 7);
+	 * HashMap<String,Object> map = new HashMap<>(); map.put("value", 7);
 	 *
 	 * String result = ParameterizedTemplate.format("${value}").format(map::get);
 	 * </code>
 	 * </p>
 	 */
-	public static String replace(String aTemplate, Function<String,Object> aParameters)
+	public static String replace(String aTemplate, Function<String, Object> aParameters)
 	{
 		StringBuilder buffer = new StringBuilder(aTemplate);
 
@@ -259,26 +282,36 @@ public final class ParameterizedTemplate<V>
 	}
 
 
-	public static void main(String ... args)
+	public static void main(String... args)
 	{
 		try
 		{
-			Map<String,Object> map = new HashMap<>();
+			HashMap<String, Object> map = new HashMap<>();
 			map.put("name", "Stig");
 			map.put("size", 7);
 
-			System.out.println(new ParameterizedTemplate("${name}${size}").format(map::get));
-			System.out.println(new ParameterizedTemplate("{${name}:${size}}").format(map::get));
+			System.out.println(new ParamsString("${name}${size}").format(map::get));
+			System.out.println(new ParamsString("{${name}:${size}}").format(map::get));
 
 			System.out.println("-----");
 
-			System.out.println(ParameterizedTemplate.builder("${name}${size}").put("name","Olle").put("size",8).format());
+			System.out.println(ParamsString.build("${name}${size}").put("name", "Olle").put("size", 8).format());
 
 			System.out.println("-----");
 
-			System.out.println(ParameterizedTemplate.replace("${name}${size}", map::get));
-			System.out.println(ParameterizedTemplate.replace("{${name}:${size}}", map::get));
-			System.out.println(ParameterizedTemplate.replace("xxxxxx ${name yyyyy", map::get));
+			System.out.println(ParamsString.replace("${name}${size}", map::get));
+			System.out.println(ParamsString.replace("{${name}:${size}}", map::get));
+			System.out.println(ParamsString.replace("xxxxxx ${name yyyyy", map::get));
+
+			System.out.println(new ParamsString<>("${name}${size}").format(f ->
+			{
+				switch (f)
+				{
+					case "name": return "Stig";
+					case "size": return 7;
+				}
+				throw new IllegalArgumentException();
+			}));
 		}
 		catch (Throwable e)
 		{
