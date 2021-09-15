@@ -10,7 +10,7 @@ public class Test
 			SimpleHttpServer http = new SimpleHttpServer(80, null)
 			{
 				@Override
-				protected void printLog(String aMessage)
+				protected void printLog(Object aMessage)
 				{
 					System.out.println(aMessage);
 				}
