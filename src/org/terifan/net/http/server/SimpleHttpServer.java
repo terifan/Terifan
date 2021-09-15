@@ -21,6 +21,8 @@ public class SimpleHttpServer
 	private boolean mDaemon;
 	private int mPort;
 
+	private final Object LOCK = new Object(){};
+
 
 	public SimpleHttpServer(int aPort, HttpServerHandler aRequestHandler) throws UnknownHostException
 	{
@@ -36,11 +38,23 @@ public class SimpleHttpServer
 	}
 
 
+	public HttpServerHandler getRequestHandler()
+	{
+		return mRequestHandler;
+	}
+
+
+	public SimpleHttpServer setRequestHandler(HttpServerHandler aRequestHandler)
+	{
+		mRequestHandler = aRequestHandler;
+		return this;
+	}
+
+
 	/**
 	 * Start listening to the port specified in the constructor.
 	 *
-	 * @param aDaemon
-	 *   true if the listener thread should be a daemon thread.
+	 * @param aDaemon true if the listener thread should be a daemon thread.
 	 */
 	public SimpleHttpServer start(boolean aDaemon)
 	{
@@ -48,7 +62,7 @@ public class SimpleHttpServer
 
 		if (mConnectionListener == null)
 		{
-			synchronized (SimpleHttpServer.class)
+			synchronized (LOCK)
 			{
 				mConnectionListener = new ConnectionListener();
 				mConnectionListener.start();
@@ -62,39 +76,48 @@ public class SimpleHttpServer
 	/**
 	 * Disconnects this socket listener.
 	 *
-	 * @param aBlock
-	 *   true if this method should block until the socket listener has closed.
+	 * @param aBlock true if this method should block until the socket listener has closed.
 	 */
-	public void close(boolean aBlock)
+	public void shutdown(boolean aBlock)
 	{
 		printLog("Shutdown started");
 
-		mConnectionListener.mDisconnect = true;
-
-		if (aBlock)
+		ConnectionListener listener;
+		synchronized (LOCK)
 		{
-			while (mConnectionListener.mDisconnect)
+			listener = mConnectionListener;
+			mConnectionListener = null;
+		}
+
+		if (listener != null)
+		{
+			listener.mDisconnect = true;
+
+			if (aBlock)
 			{
-				synchronized (SimpleHttpServer.class)
+				while (listener.mDisconnect)
 				{
-					try
+					synchronized (LOCK)
 					{
-						SimpleHttpServer.class.wait(1000);
-					}
-					catch (InterruptedException e)
-					{
+						try
+						{
+							LOCK.wait(1000);
+						}
+						catch (InterruptedException e)
+						{
+						}
 					}
 				}
 			}
 		}
-
-		mConnectionListener = null;
 	}
 
 
+	/**
+	 * Override this method to handle/print/store log messages.
+	 */
 	protected void printLog(String aMessage)
 	{
-		//System.out.println(aMessage);
 	}
 
 
@@ -107,13 +130,9 @@ public class SimpleHttpServer
 		{
 			super.setDaemon(mDaemon);
 			super.setName("SimpleHttpListener.ConnectionListener");
-			super.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
+			super.setUncaughtExceptionHandler((Thread t, Throwable e) ->
 			{
-				@Override
-				public void uncaughtException(Thread t, Throwable e)
-				{
-					e.printStackTrace(Log.out);
-				}
+				e.printStackTrace(Log.out);
 			});
 		}
 
@@ -160,15 +179,19 @@ public class SimpleHttpServer
 
 					mDisconnect = false;
 
-					synchronized (SimpleHttpServer.class)
+					synchronized (LOCK)
 					{
-						SimpleHttpServer.class.notify();
+						LOCK.notify();
 					}
 
 					printLog("Shutdown completed");
 				}
 			}
-			catch (Throwable e)
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception | Error e)
 			{
 				throw new IllegalStateException(e);
 			}
@@ -203,7 +226,7 @@ public class SimpleHttpServer
 					{
 						mRequestHandler.service(request, response);
 					}
-					catch (Throwable e)
+					catch (Error | Exception e)
 					{
 						e.printStackTrace(Log.out);
 
@@ -226,7 +249,11 @@ public class SimpleHttpServer
 					mSocket = null;
 				}
 			}
-			catch (Throwable e)
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception | Error e)
 			{
 				e.printStackTrace(Log.out);
 			}
@@ -252,11 +279,11 @@ public class SimpleHttpServer
 					if (!pathLoaded)
 					{
 						request.setMethod(buf.substring(0, buf.indexOf(" ")));
-						String path = buf.substring(buf.indexOf(" ")+1).trim();
-						String protocol = path.substring(path.lastIndexOf(" ")+1).toLowerCase();
+						String path = buf.substring(buf.indexOf(" ") + 1).trim();
+						String protocol = path.substring(path.lastIndexOf(" ") + 1).toLowerCase();
 						if (protocol.length() == 8 && protocol.contains("http"))
 						{
-							path = path.substring(0, path.length()-9); // remove one space and the protocol, eg: " HTTP/1.1"
+							path = path.substring(0, path.length() - 9); // remove one space and the protocol, eg: " HTTP/1.1"
 						}
 						request.setPath(path);
 						pathLoaded = true;
@@ -271,7 +298,7 @@ public class SimpleHttpServer
 						else
 						{
 							String key = buf.substring(0, i).trim();
-							String value = buf.substring(i+1).trim();
+							String value = buf.substring(i + 1).trim();
 							headers.put(key, value);
 						}
 					}
@@ -280,7 +307,7 @@ public class SimpleHttpServer
 				}
 				else
 				{
-					buf.append((char) c);
+					buf.append((char)c);
 				}
 			}
 

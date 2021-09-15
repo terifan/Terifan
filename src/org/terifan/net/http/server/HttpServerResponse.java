@@ -4,20 +4,14 @@ package org.terifan.net.http.server;
 public class HttpServerResponse
 {
 	private HttpStatusCode mHttpStatusCode;
-	private byte [] mContent;
+	private byte[] mContent;
 	private String mContentType;
 	private Integer mContentLength;
 
 
-	public HttpServerResponse()
+	HttpServerResponse()
 	{
 		setStatusCode(HttpStatusCode.OK);
-	}
-
-
-	public HttpServerResponse(HttpStatusCode aHttpStatusCode)
-	{
-		this.mHttpStatusCode = aHttpStatusCode;
 	}
 
 
@@ -29,7 +23,7 @@ public class HttpServerResponse
 
 	public void setStatusCode(HttpStatusCode aHttpStatusCode)
 	{
-		this.mHttpStatusCode = aHttpStatusCode;
+		mHttpStatusCode = aHttpStatusCode;
 	}
 
 
@@ -41,7 +35,7 @@ public class HttpServerResponse
 
 	public void setContent(byte[] aContent)
 	{
-		this.mContent = aContent;
+		mContent = aContent;
 	}
 
 
@@ -53,7 +47,7 @@ public class HttpServerResponse
 
 	public void setContentType(String aContentType)
 	{
-		this.mContentType = aContentType;
+		mContentType = aContentType;
 	}
 
 

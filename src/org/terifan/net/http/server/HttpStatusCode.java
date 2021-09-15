@@ -47,15 +47,17 @@ public enum HttpStatusCode
 	public final int code;
 	public final String description;
 
-	private HttpStatusCode(int code, String message)
+
+	private HttpStatusCode(int aCode, String aMessage)
 	{
-		this.code = code;
-		this.description = message;
+		code = aCode;
+		description = aMessage;
 	}
+
 
 	@Override
 	public String toString()
 	{
-		return code+" "+description;
+		return code + " " + description;
 	}
 }

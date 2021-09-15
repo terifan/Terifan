@@ -15,14 +15,14 @@ public class HttpServerRequest
 	private String mPath;
 	private Integer mContentLength;
 	private InputStream mInputStream;
-	private HashMap<String,String> mHeaders;
+	private HashMap<String, String> mHeaders;
 	private InetAddress mLocalAddress;
 	private InetAddress mRemoteAddress;
 	private int mLocalPort;
 	private int mRemotePort;
 
 
-	public HttpServerRequest(Socket aSocket)
+	HttpServerRequest(Socket aSocket)
 	{
 		mLocalAddress = aSocket.getLocalAddress();
 		mLocalPort = aSocket.getLocalPort();
@@ -64,6 +64,18 @@ public class HttpServerRequest
 	public String getPath()
 	{
 		return mPath;
+	}
+
+
+	public String getMethod()
+	{
+		return mMethod;
+	}
+
+
+	void setMethod(String aMethod)
+	{
+		mMethod = aMethod;
 	}
 
 
@@ -125,14 +137,9 @@ public class HttpServerRequest
 	}
 
 
-	public String getMethod()
+	@Override
+	public String toString()
 	{
-		return mMethod;
-	}
-
-
-	void setMethod(String aMethod)
-	{
-		mMethod = aMethod;
+		return "HttpServerRequest{" + "mMethod=" + mMethod + ", mPath=" + mPath + ", mContentLength=" + mContentLength + ", mHeaders=" + mHeaders + ", mLocalAddress=" + mLocalAddress + ", mRemoteAddress=" + mRemoteAddress + ", mLocalPort=" + mLocalPort + ", mRemotePort=" + mRemotePort + '}';
 	}
 }

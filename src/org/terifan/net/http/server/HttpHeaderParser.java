@@ -9,9 +9,9 @@ import org.terifan.util.log.Log;
 
 public class HttpHeaderParser
 {
-	public static LinkedHashMap<String,String> readHeader(InputStream aInputStream) throws IOException
+	public static LinkedHashMap<String, String> readHeader(InputStream aInputStream) throws IOException
 	{
-		LinkedHashMap<String,String> map = new LinkedHashMap<>();
+		LinkedHashMap<String, String> map = new LinkedHashMap<>();
 
 		byte[] header = readInput(aInputStream, 0x0D0A0D0A, 0xFFFFFFFF);
 
@@ -24,9 +24,9 @@ public class HttpHeaderParser
 
 		int i0 = lines[0].indexOf(" ");
 		int i1 = lines[0].lastIndexOf(" ");
-		map.put("#command", lines[0].substring(0,i0));
-		map.put("#path", lines[0].substring(i0+1,i1));
-		map.put("#protocol", lines[0].substring(i1+1));
+		map.put("#command", lines[0].substring(0, i0));
+		map.put("#path", lines[0].substring(i0 + 1, i1));
+		map.put("#protocol", lines[0].substring(i1 + 1));
 
 		for (int i = 1; i < lines.length; i++)
 		{
@@ -72,7 +72,6 @@ public class HttpHeaderParser
 //				break;
 //			}
 //		}
-
 		return map;
 	}
 
@@ -95,7 +94,6 @@ public class HttpHeaderParser
 
 		return baos.toByteArray();
 	}
-
 
 //	private static int getPort(HashMap<String,String> aParams) throws IOException
 //	{
