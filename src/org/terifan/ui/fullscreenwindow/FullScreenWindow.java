@@ -438,6 +438,10 @@ public class FullScreenWindow
 		{
 			mWindowBorder.getTabBar().selectTab((WindowTabItem)aBorderIntersection.getComponent());
 		}
+		else if (aBorderIntersection.getType() == BorderIntersectionType.MENU)
+		{
+			mWindowBorder.getMenuBar().selectMenu((WindowMenuItem)aBorderIntersection.getComponent());
+		}
 	}
 
 
@@ -451,6 +455,11 @@ public class FullScreenWindow
 			mClickPoint = aEvent.getPoint();
 
 			mBorderIntersection = mWindowBorder.intersectBorder(FullScreenWindow.this, mClickPoint);
+
+			if (mBorderIntersection.getType() == BorderIntersectionType.TAB || mBorderIntersection.getType() == BorderIntersectionType.MENU)
+			{
+				fireComponentClickEvent(mBorderIntersection);
+			}
 
 			mCursor = mBorderIntersection.getType().CURSOR;
 
@@ -576,11 +585,6 @@ public class FullScreenWindow
 			mCursor = null;
 
 			BorderIntersection bi = mWindowBorder.intersectBorder(FullScreenWindow.this, p);
-
-			if (bi.getType() == oldIntersection.getType() && bi.getComponent() == oldIntersection.getComponent())
-			{
-				fireComponentClickEvent(oldIntersection);
-			}
 
 			mWindow.setCursor(Cursor.getPredefinedCursor(bi.getType().CURSOR));
 

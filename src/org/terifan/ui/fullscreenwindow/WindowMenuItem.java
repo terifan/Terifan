@@ -8,6 +8,7 @@ public class WindowMenuItem
 	private Rectangle mBounds;
 	private WindowMenuBar mParent;
 	private String mLabel;
+	private WindowMenuSelectionHandler mMenuSelectionHandler;
 
 
 	public WindowMenuItem(String aLabel)
@@ -44,5 +45,18 @@ public class WindowMenuItem
 	public void setBounds(int aX, int aY, int aWidth, int aHeight)
 	{
 		mBounds = new Rectangle(aX, aY, aWidth, aHeight);
+	}
+
+
+	public WindowMenuSelectionHandler getMenuSelectionHandler()
+	{
+		return mMenuSelectionHandler;
+	}
+
+
+	public WindowMenuItem setMenuSelectionHandler(WindowMenuSelectionHandler aMenuSelectionHandler)
+	{
+		mMenuSelectionHandler = aMenuSelectionHandler;
+		return this;
 	}
 }

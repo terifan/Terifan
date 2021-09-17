@@ -27,14 +27,7 @@ public class Test
 	{
 		try
 		{
-			WindowMenuBar menuBar = new WindowMenuBar()
-				.add(new WindowMenuItem("File"))
-				.add(new WindowMenuItem("Edit"))
-				.add(new WindowMenuItem("Render"))
-				.add(new WindowMenuItem("Window"))
-				.add(new WindowMenuItem("Help"));
-
-			TabSelectedHandler tabHandler = tab ->
+			WindowTabSelectionHandler tabHandler = tab ->
 			{
 				if (tab.getTabBar().indexOf(tab) > 2)
 				{
@@ -43,6 +36,20 @@ public class Test
 				((CardLayout)wnd.getLayout()).show(wnd.getContentPanel(), tab.getLabel());
 				return true;
 			};
+
+			WindowMenuSelectionHandler menuHandler = menu ->
+			{
+				System.out.println(menu);
+				return true;
+			};
+
+			WindowMenuBar menuBar = new WindowMenuBar()
+				.setOnMenuSelected(menuHandler)
+				.add(new WindowMenuItem("File"))
+				.add(new WindowMenuItem("Edit"))
+				.add(new WindowMenuItem("Render"))
+				.add(new WindowMenuItem("Window"))
+				.add(new WindowMenuItem("Help"));
 
 			WindowTabBar tabBar = new WindowTabBar()
 				.setOnTabSelected(tabHandler)
@@ -65,16 +72,13 @@ public class Test
 
 			wnd.setOnClosed(() -> System.out.println("closed"));
 
-			CardLayout cardLayout = new CardLayout();
-			wnd.setLayout(cardLayout);
-
+			wnd.setLayout(new CardLayout());
 			wnd.add(createContent_Modeling(), "Modeling");
 			wnd.add(createContent_Layout(), "Layout");
 			wnd.add(createContent_Sculpting(), "Sculpting");
+			wnd.setVisible(true);
 
 			tabBar.selectTab(tabBar.getItem("Sculpting"));
-
-			wnd.setVisible(true);
 		}
 		catch (Throwable e)
 		{

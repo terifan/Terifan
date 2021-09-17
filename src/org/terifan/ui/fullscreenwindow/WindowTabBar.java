@@ -7,7 +7,7 @@ public class WindowTabBar
 {
 	private ArrayList<WindowTabItem> mItems;
 	private int mSelectedIndex;
-	private TabSelectedHandler mTabSelectedHandler;
+	private WindowTabSelectionHandler mTabSelectedHandler;
 
 
 	public WindowTabBar()
@@ -69,14 +69,14 @@ public class WindowTabBar
 	}
 
 
-	public WindowTabBar setOnTabSelected(TabSelectedHandler aTabHandler)
+	public WindowTabBar setOnTabSelected(WindowTabSelectionHandler aTabHandler)
 	{
 		mTabSelectedHandler = aTabHandler;
 		return this;
 	}
 
 
-	public TabSelectedHandler getTabSelectedHandler()
+	public WindowTabSelectionHandler getTabSelectedHandler()
 	{
 		return mTabSelectedHandler;
 	}
@@ -84,7 +84,7 @@ public class WindowTabBar
 
 	public void selectTab(WindowTabItem aTab)
 	{
-		TabSelectedHandler handler = aTab.getTabSelectedHandler();
+		WindowTabSelectionHandler handler = aTab.getTabSelectedHandler();
 
 		if (handler == null)
 		{

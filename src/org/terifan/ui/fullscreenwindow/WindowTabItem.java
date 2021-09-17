@@ -8,7 +8,7 @@ public class WindowTabItem
 	private Rectangle mBounds;
 	private String mLabel;
 	private WindowTabBar mTabBar;
-	private TabSelectedHandler mTabSelectedHandler;
+	private WindowTabSelectionHandler mTabSelectedHandler;
 
 
 	public WindowTabItem(String aLabel)
@@ -48,14 +48,14 @@ public class WindowTabItem
 	}
 
 
-	public WindowTabItem setOnTabSelected(TabSelectedHandler aHandler)
+	public WindowTabItem setOnTabSelected(WindowTabSelectionHandler aHandler)
 	{
 		mTabSelectedHandler = aHandler;
 		return this;
 	}
 
 
-	public TabSelectedHandler getTabSelectedHandler()
+	public WindowTabSelectionHandler getTabSelectedHandler()
 	{
 		return mTabSelectedHandler;
 	}

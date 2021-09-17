@@ -2,10 +2,10 @@ package org.terifan.ui.fullscreenwindow;
 
 
 @FunctionalInterface
-public interface TabSelectedHandler
+public interface WindowTabSelectionHandler
 {
 	/**
-	 * Windows signals that a tab has been selected. The implementation can veto the selection by returning false.
+	 * Handle the selection of a tab. The implementation can veto the selection by returning false.
 	 *
 	 * @param aTab
 	 *   selected tab
