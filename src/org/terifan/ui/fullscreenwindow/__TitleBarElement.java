@@ -4,16 +4,16 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 
 
-public class TitleBarElement
+public class __TitleBarElement
 {
-	private ArrayList<TitleBarElement> mChildren;
+	private ArrayList<__TitleBarElement> mChildren;
 	private Rectangle mBounds;
 	private String mLabel;
 	private int mId;
 	private int mTypeId;
 
 
-	public TitleBarElement()
+	public __TitleBarElement()
 	{
 	}
 
@@ -24,7 +24,7 @@ public class TitleBarElement
 	}
 
 
-	public TitleBarElement setId(int aId)
+	public __TitleBarElement setId(int aId)
 	{
 		mId = aId;
 		return this;
@@ -37,28 +37,28 @@ public class TitleBarElement
 	}
 
 
-	public TitleBarElement setBounds(Rectangle aBounds)
+	public __TitleBarElement setBounds(Rectangle aBounds)
 	{
 		mBounds = aBounds;
 		return this;
 	}
 
 
-	public TitleBarElement setBounds(int aX, int aY, int aWidth, int aHeight)
+	public __TitleBarElement setBounds(int aX, int aY, int aWidth, int aHeight)
 	{
 		mBounds = new Rectangle(aX, aY, aWidth, aHeight);
 		return this;
 	}
 
 
-	public TitleBarElement add(TitleBarElement aElement)
+	public __TitleBarElement add(__TitleBarElement aElement)
 	{
 		mChildren.add(aElement);
 		return this;
 	}
 
 
-	public ArrayList<TitleBarElement> getChildren()
+	public ArrayList<__TitleBarElement> getChildren()
 	{
 		return mChildren;
 	}
@@ -70,7 +70,7 @@ public class TitleBarElement
 	}
 
 
-	public TitleBarElement setLabel(String aLabel)
+	public __TitleBarElement setLabel(String aLabel)
 	{
 		mLabel = aLabel;
 		return this;
@@ -83,7 +83,7 @@ public class TitleBarElement
 	}
 
 
-	public TitleBarElement setTypeId(int aTypeId)
+	public __TitleBarElement setTypeId(int aTypeId)
 	{
 		mTypeId = aTypeId;
 		return this;

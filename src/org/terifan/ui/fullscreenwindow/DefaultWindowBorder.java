@@ -9,8 +9,6 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import javax.imageio.ImageIO;
 import org.terifan.ui.Anchor;
 import org.terifan.ui.ColorSet;
@@ -222,14 +220,38 @@ public class DefaultWindowBorder
 	 *
 	 * @return Cursor.DEFAULT_CURSOR if no intersection occurs or one of the directional cursors e.g. Cursor.NW_RESIZE_CURSOR
 	 */
-	protected BorderIntersectionType intersectBorder(FullScreenWindow aWindow, Point aPoint)
+	protected BorderIntersection intersectBorder(FullScreenWindow aWindow, Point aPoint)
 	{
+		if (aPoint.x >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < mTitleBarHeight)
+		{
+			for (WindowMenuItem el : mMenuBar.getItems())
+			{
+				if (el.getBounds().contains(aPoint))
+				{
+					return new BorderIntersection(BorderIntersectionType.MENU, el);
+				}
+			}
+
+			for (WindowTabItem el : mTabBar.getItems())
+			{
+				if (el.getBounds().contains(aPoint))
+				{
+					return new BorderIntersection(BorderIntersectionType.TAB, el);
+				}
+			}
+
+			if (aPoint.y >= mBorderSize)
+			{
+				return new BorderIntersection(BorderIntersectionType.MOVE);
+			}
+		}
+
 		boolean hor = aWindow.isResizeHorizontal();
 		boolean ver = aWindow.isResizeVertical();
 
 		if (!mBorderPainted)
 		{
-			return BorderIntersectionType.NONE;
+			return new BorderIntersection(BorderIntersectionType.NONE);
 		}
 		if (ver)
 		{
@@ -239,18 +261,18 @@ public class DefaultWindowBorder
 				{
 					if (aPoint.x < mBorderSize)
 					{
-						return BorderIntersectionType.NORTHWEST;
+						return new BorderIntersection(BorderIntersectionType.NORTHWEST);
 					}
 					if (aPoint.x >= mBounds.width - mBorderSize)
 					{
-						return BorderIntersectionType.NORTHEAST;
+						return new BorderIntersection(BorderIntersectionType.NORTHEAST);
 					}
 				}
 				if (aPoint.y > 0 && aPoint.x > mButtonBounds.x)
 				{
-					return BorderIntersectionType.NONE;
+					return new BorderIntersection(BorderIntersectionType.NONE);
 				}
-				return BorderIntersectionType.NORTH;
+				return new BorderIntersection(BorderIntersectionType.NORTH);
 			}
 			if (aPoint.y >= mBounds.height - mBorderSize)
 			{
@@ -258,29 +280,29 @@ public class DefaultWindowBorder
 				{
 					if (aPoint.x < mBorderSize)
 					{
-						return BorderIntersectionType.SOUTHWEST;
+						return new BorderIntersection(BorderIntersectionType.SOUTHWEST);
 					}
 					if (aPoint.x >= mBounds.width - mBorderSize)
 					{
-						return BorderIntersectionType.SOUTHEAST;
+						return new BorderIntersection(BorderIntersectionType.SOUTHEAST);
 					}
 				}
-				return BorderIntersectionType.SOUTH;
+				return new BorderIntersection(BorderIntersectionType.SOUTH);
 			}
 		}
 		if (hor)
 		{
 			if (aPoint.x < mBorderSize)
 			{
-				return BorderIntersectionType.WEST;
+				return new BorderIntersection(BorderIntersectionType.WEST);
 			}
 			if (aPoint.x >= mBounds.width - mBorderSize)
 			{
-				return BorderIntersectionType.EAST;
+				return new BorderIntersection(BorderIntersectionType.EAST);
 			}
 		}
 
-		return BorderIntersectionType.NONE;
+		return new BorderIntersection(BorderIntersectionType.NONE);
 	}
 
 

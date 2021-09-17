@@ -9,7 +9,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Insets;
-import java.awt.LayoutManager2;
+import java.awt.LayoutManager;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
@@ -23,8 +23,8 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
 import java.awt.event.WindowStateListener;
-import java.io.IOException;
 import java.util.List;
+import javax.lang.model.type.IntersectionType;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -40,7 +40,7 @@ public class FullScreenWindow
 	protected JDialog mDialog;
 	protected final Window mWindow;
 
-	protected WindowButtonType mArmedButton;
+	protected WindowButtonType mArmedWindowButton;
 	protected WindowButtonType mHoverButton;
 	protected boolean mMousePressed;
 	private boolean mMaximized;
@@ -119,6 +119,12 @@ public class FullScreenWindow
 		mMinSize = new Dimension(200, 40);
 		mMaxSize = new Dimension(32000, 32000);
 		mMousePoint = new Point();
+	}
+
+
+	public DefaultWindowBorder getWindowBorder()
+	{
+		return mWindowBorder;
 	}
 
 
@@ -320,7 +326,7 @@ public class FullScreenWindow
 		{
 			if (!mUndecorated)
 			{
-				mWindowBorder.paintBorder(FullScreenWindow.this, (Graphics2D)aGraphics, aX, aY, aWidth, aHeight, mHoverButton, mArmedButton, mMousePoint);
+				mWindowBorder.paintBorder(FullScreenWindow.this, (Graphics2D)aGraphics, aX, aY, aWidth, aHeight, mHoverButton, mArmedWindowButton, mMousePoint);
 			}
 		}
 
@@ -411,12 +417,27 @@ public class FullScreenWindow
 	}
 
 
-	BorderIntersectionType mBorderIntersectionType;
+	BorderIntersection mBorderIntersection;
 
 
-	public void setLayout(LayoutManager2 aLayout)
+	public void setLayout(LayoutManager aLayout)
 	{
 		getContentPanel().setLayout(aLayout);
+	}
+
+
+	public LayoutManager getLayout()
+	{
+		return getContentPanel().getLayout();
+	}
+
+
+	protected void fireComponentClickEvent(BorderIntersection aBorderIntersection)
+	{
+		if (aBorderIntersection.getType() == BorderIntersectionType.TAB)
+		{
+			mWindowBorder.getTabBar().selectTab((WindowTabItem)aBorderIntersection.getComponent());
+		}
 	}
 
 
@@ -429,17 +450,17 @@ public class FullScreenWindow
 
 			mClickPoint = aEvent.getPoint();
 
-			mBorderIntersectionType = mWindowBorder.intersectBorder(FullScreenWindow.this, mClickPoint);
+			mBorderIntersection = mWindowBorder.intersectBorder(FullScreenWindow.this, mClickPoint);
 
-			mCursor = mBorderIntersectionType.CURSOR;
+			mCursor = mBorderIntersection.getType().CURSOR;
 
 			mWindowBounds = mWindow.getBounds();
 			mMousePressed = true;
 
-			mArmedButton = mHoverButton = mWindowBorder.intersectButton(FullScreenWindow.this, mClickPoint);
+			mArmedWindowButton = mHoverButton = mWindowBorder.intersectButton(FullScreenWindow.this, mClickPoint);
 			mBorderPanel.repaint();
 
-			if (mBorderIntersectionType == BorderIntersectionType.MOVE && aEvent.getClickCount() > 1)
+			if (mBorderIntersection.getType() == BorderIntersectionType.MOVE && aEvent.getClickCount() > 1)
 			{
 				if (mMaximized)
 				{
@@ -467,7 +488,7 @@ public class FullScreenWindow
 		{
 			mMousePoint = aEvent.getPoint();
 
-			if (mBorderIntersectionType != BorderIntersectionType.MOVE)
+			if (mBorderIntersection != null && mBorderIntersection.getType() != BorderIntersectionType.MOVE)
 			{
 				mHoverButton = null;
 				mWindow.setCursor(Cursor.getDefaultCursor());
@@ -482,16 +503,16 @@ public class FullScreenWindow
 		{
 			mMousePoint = aEvent.getPoint();
 
-			BorderIntersectionType bi = mWindowBorder.intersectBorder(FullScreenWindow.this, mMousePoint);
+			BorderIntersection bi = mWindowBorder.intersectBorder(FullScreenWindow.this, mMousePoint);
 
 			if (mBorderPainted)
 			{
-				if (bi != BorderIntersectionType.NONE)
+				if (bi.getType() != BorderIntersectionType.NONE)
 				{
 					mWindowBounds = mWindow.getBounds();
 				}
 
-				mWindow.setCursor(Cursor.getPredefinedCursor(bi.CURSOR));
+				mWindow.setCursor(Cursor.getPredefinedCursor(bi.getType().CURSOR));
 			}
 
 			WindowButtonType old = mHoverButton;
@@ -514,7 +535,7 @@ public class FullScreenWindow
 
 			mMousePoint = aEvent.getPoint();
 
-			if (mBorderIntersectionType.RESIZE)
+			if (mBorderIntersection.getType().RESIZE)
 			{
 				Point p = aEvent.getLocationOnScreen();
 				p.x -= mWindowBounds.x;
@@ -524,10 +545,10 @@ public class FullScreenWindow
 			}
 
 			WindowButtonType tmp = mWindowBorder.intersectButton(FullScreenWindow.this, aEvent.getPoint());
-			mHoverButton = tmp == mArmedButton ? tmp : null;
+			mHoverButton = tmp == mArmedWindowButton ? tmp : null;
 			mBorderPanel.repaint();
 
-			if (mBorderIntersectionType == BorderIntersectionType.MOVE)
+			if (mBorderIntersection.getType() == BorderIntersectionType.MOVE)
 			{
 				if (mMaximized)
 				{
@@ -547,18 +568,23 @@ public class FullScreenWindow
 		@Override
 		public void mouseReleased(MouseEvent aEvent)
 		{
-			BorderIntersectionType oldIntersection = mBorderIntersectionType;
+			BorderIntersection oldIntersection = mBorderIntersection;
 
 			Point p = aEvent.getPoint();
-			mBorderIntersectionType = BorderIntersectionType.NONE;
+			mBorderIntersection = new BorderIntersection(BorderIntersectionType.NONE);
 			mMousePressed = false;
 			mCursor = null;
 
-			BorderIntersectionType bi = mWindowBorder.intersectBorder(FullScreenWindow.this, p);
+			BorderIntersection bi = mWindowBorder.intersectBorder(FullScreenWindow.this, p);
 
-			mWindow.setCursor(Cursor.getPredefinedCursor(bi.CURSOR));
+			if (bi.getType() == oldIntersection.getType() && bi.getComponent() == oldIntersection.getComponent())
+			{
+				fireComponentClickEvent(oldIntersection);
+			}
 
-			if (mFrame != null && oldIntersection == BorderIntersectionType.MOVE && aEvent.getLocationOnScreen().y == 0)
+			mWindow.setCursor(Cursor.getPredefinedCursor(bi.getType().CURSOR));
+
+			if (mFrame != null && oldIntersection.getType() == BorderIntersectionType.MOVE && aEvent.getLocationOnScreen().y == 0)
 			{
 				setExtendedState(JFrame.MAXIMIZED_BOTH);
 				return;
@@ -566,9 +592,9 @@ public class FullScreenWindow
 
 			WindowButtonType newArmedButton = mWindowBorder.intersectButton(FullScreenWindow.this, aEvent.getPoint());
 
-			if (mArmedButton != null && newArmedButton == mArmedButton)
+			if (mArmedWindowButton != null && newArmedButton == mArmedWindowButton)
 			{
-				switch (mArmedButton)
+				switch (mArmedWindowButton)
 				{
 					case MINIMIZE:
 						setExtendedState(JFrame.ICONIFIED);
@@ -584,11 +610,11 @@ public class FullScreenWindow
 						break;
 				}
 
-				mArmedButton = null;
+				mArmedWindowButton = null;
 			}
 			else
 			{
-				mArmedButton = newArmedButton;
+				mArmedWindowButton = newArmedButton;
 			}
 			mBorderPanel.repaint();
 		}

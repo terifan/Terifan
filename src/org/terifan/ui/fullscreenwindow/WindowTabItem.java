@@ -7,7 +7,8 @@ public class WindowTabItem
 {
 	private Rectangle mBounds;
 	private String mLabel;
-	private WindowTabBar mParent;
+	private WindowTabBar mTabBar;
+	private TabSelectedHandler mTabSelectedHandler;
 
 
 	public WindowTabItem(String aLabel)
@@ -25,7 +26,7 @@ public class WindowTabItem
 
 	void setParent(WindowTabBar aParent)
 	{
-		mParent = aParent;
+		mTabBar = aParent;
 	}
 
 
@@ -44,5 +45,24 @@ public class WindowTabItem
 	public void setBounds(int aX, int aY, int aWidth, int aHeight)
 	{
 		mBounds = new Rectangle(aX, aY, aWidth, aHeight);
+	}
+
+
+	public WindowTabItem setOnTabSelected(TabSelectedHandler aHandler)
+	{
+		mTabSelectedHandler = aHandler;
+		return this;
+	}
+
+
+	public TabSelectedHandler getTabSelectedHandler()
+	{
+		return mTabSelectedHandler;
+	}
+
+
+	public WindowTabBar getTabBar()
+	{
+		return mTabBar;
 	}
 }

@@ -7,7 +7,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import org.terifan.ui.Anchor;
 import org.terifan.ui.ColorSet;
@@ -117,7 +116,6 @@ public class BlackWindowBorder extends DefaultWindowBorder
 				.setShadow(new Color(43, 43, 43), 1, 1)
 				.setForeground(index == mTabBar.getSelectedIndex() ? item.getBounds().contains(aPointer) ? new Color(255, 255, 255) : new Color(238, 238, 238) : item.getBounds().contains(aPointer) ? new Color(170, 170, 170) : new Color(147, 147, 147))
 				.setBackground(mTabImages[mi])
-//				.setPadding(0, 20, 4, 40)
 				.setPadding(0, 0, 4, 0)
 				.setFont(mTitleBarFont)
 				.setAnchor(Anchor.SOUTH)
@@ -164,36 +162,5 @@ public class BlackWindowBorder extends DefaultWindowBorder
 
 			aX += item.getBounds().width + 5;
 		}
-	}
-
-
-	@Override
-	protected BorderIntersectionType intersectBorder(FullScreenWindow aWindow, Point aPoint)
-	{
-		if (aPoint.x >= mBorderSize && aPoint.x < mButtonBounds.x && aPoint.y < mTitleBarHeight)
-		{
-			for (WindowMenuItem el : mMenuBar.getItems())
-			{
-				if (el.getBounds().contains(aPoint))
-				{
-					return BorderIntersectionType.NONE;
-				}
-			}
-
-			for (WindowTabItem el : mTabBar.getItems())
-			{
-				if (el.getBounds().contains(aPoint))
-				{
-					return BorderIntersectionType.NONE;
-				}
-			}
-
-			if (aPoint.y >= mBorderSize)
-			{
-				return BorderIntersectionType.MOVE;
-			}
-		}
-
-		return super.intersectBorder(aWindow, aPoint);
 	}
 }

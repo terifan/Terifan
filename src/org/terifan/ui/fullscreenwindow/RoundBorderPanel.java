@@ -1,7 +1,9 @@
 package org.terifan.ui.fullscreenwindow;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
+import java.awt.LayoutManager;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
@@ -9,17 +11,26 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
 
-public class BlackWindowPanel extends JPanel
+public class RoundBorderPanel extends JPanel
 {
 	private final static long serialVersionUID = 1L;
+
 	private BufferedImage mImage;
 
 
-	public BlackWindowPanel() throws IOException
+	public RoundBorderPanel() throws IOException
 	{
+		this(new FlowLayout());
+	}
+
+
+	public RoundBorderPanel(LayoutManager aLayoutManager) throws IOException
+	{
+		super(aLayoutManager);
+
 		mImage = ImageIO.read(getClass().getResource("panel_border.png"));
 
-		setBackground(new Color(51,51,51));
+		setBackground(new Color(51, 51, 51));
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		setOpaque(true);
 	}
@@ -43,6 +54,6 @@ public class BlackWindowPanel extends JPanel
 		aGraphics.drawImage(mImage, x2, y1 + 8, x2 + 8, y2, 16, 8, 24, 16, null);
 
 		aGraphics.setColor(getBackground());
-		aGraphics.fillRect(x1+8, y1+8, x2-x1-8, y2-y1-8);
+		aGraphics.fillRect(x1 + 8, y1 + 8, x2 - x1 - 8, y2 - y1 - 8);
 	}
 }

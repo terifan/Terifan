@@ -14,13 +14,11 @@ public class WindowMenuBar
 	}
 
 
-	public void add(WindowMenuItem... aItems)
+	public WindowMenuBar add(WindowMenuItem aItem)
 	{
-		for (WindowMenuItem item : aItems)
-		{
-			item.setParent(this);
-			mItems.add(item);
-		}
+		aItem.setParent(this);
+		mItems.add(aItem);
+		return this;
 	}
 
 

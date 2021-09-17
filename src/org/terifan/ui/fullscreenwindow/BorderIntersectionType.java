@@ -14,7 +14,10 @@ public enum BorderIntersectionType
 	SOUTHWEST(Cursor.SW_RESIZE_CURSOR, true),
 	SOUTHEAST(Cursor.SE_RESIZE_CURSOR, true),
 	MOVE(Cursor.DEFAULT_CURSOR, false),
-	NONE(Cursor.DEFAULT_CURSOR, false);
+	NONE(Cursor.DEFAULT_CURSOR, false),
+	BUTTON(Cursor.DEFAULT_CURSOR, false),
+	MENU(Cursor.DEFAULT_CURSOR, false),
+	TAB(Cursor.DEFAULT_CURSOR, false);
 
 	final int CURSOR;
 	final boolean RESIZE;

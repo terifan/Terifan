@@ -7,6 +7,7 @@ public class WindowTabBar
 {
 	private ArrayList<WindowTabItem> mItems;
 	private int mSelectedIndex;
+	private TabSelectedHandler mTabSelectedHandler;
 
 
 	public WindowTabBar()
@@ -15,13 +16,11 @@ public class WindowTabBar
 	}
 
 
-	public void add(WindowTabItem... aItems)
+	public WindowTabBar add(WindowTabItem aItem)
 	{
-		for (WindowTabItem item : aItems)
-		{
-			item.setParent(this);
-			mItems.add(item);
-		}
+		aItem.setParent(this);
+		mItems.add(aItem);
+		return this;
 	}
 
 
@@ -31,14 +30,80 @@ public class WindowTabBar
 	}
 
 
+	public WindowTabItem getItem(int aIndex)
+	{
+		return mItems.get(aIndex);
+	}
+
+
+	public WindowTabItem getItem(String aLabel)
+	{
+		for (WindowTabItem item : mItems)
+		{
+			if (aLabel.equals(item.getLabel()))
+			{
+				return item;
+			}
+		}
+		return null;
+	}
+
+
 	public int getSelectedIndex()
 	{
 		return mSelectedIndex;
 	}
 
 
-	public void setSelectedIndex(int aSelectedIndex)
+	public WindowTabBar setSelectedIndex(int aSelectedIndex)
 	{
 		mSelectedIndex = aSelectedIndex;
+		return this;
+	}
+
+
+	public WindowTabBar setSelectedTab(WindowTabItem aTab)
+	{
+		mSelectedIndex = mItems.indexOf(aTab);
+		return this;
+	}
+
+
+	public WindowTabBar setOnTabSelected(TabSelectedHandler aTabHandler)
+	{
+		mTabSelectedHandler = aTabHandler;
+		return this;
+	}
+
+
+	public TabSelectedHandler getTabSelectedHandler()
+	{
+		return mTabSelectedHandler;
+	}
+
+
+	public void selectTab(WindowTabItem aTab)
+	{
+		TabSelectedHandler handler = aTab.getTabSelectedHandler();
+
+		if (handler == null)
+		{
+			handler = mTabSelectedHandler;
+		}
+		if (handler != null)
+		{
+			if (!handler.tabSelected(aTab))
+			{
+				return;
+			}
+		}
+
+		setSelectedTab(aTab);
+	}
+
+
+	public int indexOf(WindowTabItem aTabButton)
+	{
+		return mItems.indexOf(aTabButton);
 	}
 }
