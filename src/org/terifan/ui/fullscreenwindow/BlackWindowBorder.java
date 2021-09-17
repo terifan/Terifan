@@ -31,7 +31,7 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	@Override
 	protected void paintBorder(FullScreenWindow aWindow, Graphics2D aGraphics, int aX, int aY, int aWidth, int aHeight, WindowButtonType aHoverButton, WindowButtonType aArmedButton, Point aPointer)
 	{
-		setup(aX, aY, aWidth, aHeight);
+		layoutButtons(aX, aY, aWidth, aHeight);
 
 		super.paintBorder(aWindow, aGraphics, aX, aY, aWidth, aHeight, aHoverButton, aArmedButton, aPointer);
 	}
@@ -90,31 +90,40 @@ public class BlackWindowBorder extends DefaultWindowBorder
 		Graphics2D g = (Graphics2D)aGraphics.create(aX, aY, aWidth, aHeight);
 		TextBox.enableAntialiasing(g);
 
+		int index = 0;
 		for (WindowMenuItem item : mMenuBar.getItems())
 		{
-			int mi = item.getBounds().contains(aPointer) ? 2 : 0;
+			boolean selectedItem = index == mMenuBar.getSelectedIndex();
+			boolean armedItem = item.getBounds().contains(aPointer);
+
+			int mi = armedItem ? selectedItem ? 3 : 2 : selectedItem ? 1 : 0;
 
 			new TextBox(item.getLabel())
 				.setBounds(item.getBounds())
 				.setShadow(new Color(0, 0, 0), 1, 1)
-				.setForeground(item.getBounds().contains(aPointer) ? new Color(255, 255, 255) : new Color(201, 201, 201))
+				.setForeground(selectedItem ? armedItem ? new Color(255, 255, 255) : new Color(238, 238, 238) : armedItem ? new Color(255, 255, 255) : new Color(201, 201, 201))
 				.setBackground(mMenuImages[mi])
 				.setPadding((mTitleBarHeight - item.getBounds().height) / 2, 0, 0, 0)
 				.setFont(mTitleBarFont)
 				.setAnchor(Anchor.CENTER)
 				.setMaxLineCount(1)
 				.render(g);
+
+			index++;
 		}
 
-		int index = 0;
+		index = 0;
 		for (WindowTabItem item : mTabBar.getItems())
 		{
-			int mi = item.getBounds().contains(aPointer) ? index == mTabBar.getSelectedIndex() ? 3 : 2 : index == mTabBar.getSelectedIndex() ? 1 : 0;
+			boolean selectedTab = index == mTabBar.getSelectedIndex();
+			boolean armedTab = item.getBounds().contains(aPointer);
+
+			int mi = armedTab ? selectedTab ? 3 : 2 : selectedTab ? 1 : 0;
 
 			new TextBox(item.getLabel())
 				.setBounds(item.getBounds())
 				.setShadow(new Color(43, 43, 43), 1, 1)
-				.setForeground(index == mTabBar.getSelectedIndex() ? item.getBounds().contains(aPointer) ? new Color(255, 255, 255) : new Color(238, 238, 238) : item.getBounds().contains(aPointer) ? new Color(170, 170, 170) : new Color(147, 147, 147))
+				.setForeground(selectedTab ? armedTab ? new Color(255, 255, 255) : new Color(238, 238, 238) : armedTab ? new Color(170, 170, 170) : new Color(147, 147, 147))
 				.setBackground(mTabImages[mi])
 				.setPadding(0, 0, 4, 0)
 				.setFont(mTitleBarFont)
@@ -127,7 +136,7 @@ public class BlackWindowBorder extends DefaultWindowBorder
 	}
 
 
-	protected void setup(int aX, int aY, int aWidth, int aHeight)
+	protected void layoutButtons(int aX, int aY, int aWidth, int aHeight)
 	{
 		aX += mBorderSize;
 
@@ -143,7 +152,7 @@ public class BlackWindowBorder extends DefaultWindowBorder
 
 			item.setBounds(r.x, aY + mBorderSize, r.width, mTitleBarHeight - aY - mBorderSize - mBorderSize);
 
-			aX += item.getBounds().width;
+			aX += item.getBounds().width + 1;
 		}
 
 		aX += 20;

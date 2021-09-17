@@ -135,7 +135,7 @@ public class Test
 	{
 		JPanel leftPanel = new RoundBorderPanel();
 		leftPanel.setBackground(new Color(51, 51, 51));
-		leftPanel.add(new JButton(new AbstractAction("undecorated")
+		leftPanel.add(new JButton(new AbstractAction("Undecorated")
 		{
 			@Override
 			public void actionPerformed(ActionEvent aE)
@@ -143,7 +143,7 @@ public class Test
 				wnd.setUndecorated(!wnd.isUndecorated());
 			}
 		}));
-		leftPanel.add(new JButton(new AbstractAction("border")
+		leftPanel.add(new JButton(new AbstractAction("Border")
 		{
 			@Override
 			public void actionPerformed(ActionEvent aE)
@@ -151,12 +151,23 @@ public class Test
 				wnd.setBorderPainted(!wnd.isBorderPainted());
 			}
 		}));
-		leftPanel.add(new JButton(new AbstractAction("modal")
+		leftPanel.add(new JButton(new AbstractAction("AlwaysOnTop")
 		{
 			@Override
 			public void actionPerformed(ActionEvent aE)
 			{
-//				wnd.setModal(!wnd.isModal());
+				wnd.setAlwaysOnTop(!wnd.isAlwaysOnTop());
+			}
+		}));
+		leftPanel.add(new JButton(new AbstractAction("Open Modal")
+		{
+			@Override
+			public void actionPerformed(ActionEvent aE)
+			{
+				FullScreenWindow dialog = new FullScreenWindow(null, "Modal Dialog", false, true, new BlackWindowBorder());
+				dialog.setSize(500, 0);
+				dialog.setLocationRelativeTo(wnd);
+				dialog.setVisible(true);
 			}
 		}));
 

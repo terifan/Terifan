@@ -13,6 +13,7 @@ public class WindowMenuBar
 	public WindowMenuBar()
 	{
 		mItems = new ArrayList<>();
+		mSelectedIndex = -1;
 	}
 
 
@@ -21,6 +22,12 @@ public class WindowMenuBar
 		aItem.setParent(this);
 		mItems.add(aItem);
 		return this;
+	}
+
+
+	public int getSelectedIndex()
+	{
+		return mSelectedIndex;
 	}
 
 

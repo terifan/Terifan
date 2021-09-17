@@ -3,6 +3,7 @@ package org.terifan.ui.fullscreenwindow;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
@@ -119,6 +120,46 @@ public class FullScreenWindow
 		mMinSize = new Dimension(200, 40);
 		mMaxSize = new Dimension(32000, 32000);
 		mMousePoint = new Point();
+	}
+
+
+	public boolean isAlwaysOnTop()
+	{
+		return mWindow.isAlwaysOnTop();
+	}
+
+
+	public FullScreenWindow setAlwaysOnTop(boolean aAlwaysOnTop)
+	{
+		mWindow.setAlwaysOnTop(aAlwaysOnTop);
+		return this;
+	}
+
+
+	public boolean isModal()
+	{
+		return mWindow.getModalExclusionType() != Dialog.ModalExclusionType.NO_EXCLUDE;
+	}
+
+
+	public FullScreenWindow setModal(boolean aModal)
+	{
+		mWindow.setModalExclusionType(aModal ? Dialog.ModalExclusionType.APPLICATION_EXCLUDE : Dialog.ModalExclusionType.NO_EXCLUDE);
+		return this;
+	}
+
+
+	public FullScreenWindow setLocationRelativeTo(Component aComponent)
+	{
+		mWindow.setLocationRelativeTo(aComponent);
+		return this;
+	}
+
+
+	public FullScreenWindow setLocationRelativeTo(FullScreenWindow aComponent)
+	{
+		mWindow.setLocationRelativeTo(aComponent.mWindow);
+		return this;
 	}
 
 
