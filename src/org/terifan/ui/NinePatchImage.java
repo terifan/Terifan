@@ -62,7 +62,10 @@ public class NinePatchImage
 		mImage = aImage;
 		mPadding = new Insets(0, 0, 0, 0);
 
-		for (int x = 1, w = mImage.getWidth() - 1, y = mImage.getHeight() - 1; x < w; x++)
+		int width = mImage.getWidth();
+		int height = mImage.getHeight();
+
+		for (int x = 1, w = width - 1, y = height - 1; x < w; x++)
 		{
 			if ((mImage.getRGB(x, y) & COLOR_MASK) == 0)
 			{
@@ -70,7 +73,7 @@ public class NinePatchImage
 			}
 			mPadding.left++;
 		}
-		for (int x = mImage.getWidth() - 2, y = mImage.getHeight() - 1; x > 0; x--)
+		for (int x = width - 2, y = height - 1; x > 0; x--)
 		{
 			if ((mImage.getRGB(x, y) & COLOR_MASK) == 0)
 			{
@@ -78,7 +81,7 @@ public class NinePatchImage
 			}
 			mPadding.right++;
 		}
-		for (int x = mImage.getWidth() - 1, y = 1, h = mImage.getHeight() - 1; y < h; y++)
+		for (int x = width - 1, y = 1, h = height - 1; y < h; y++)
 		{
 			if ((mImage.getRGB(x, y) & COLOR_MASK) == 0)
 			{
@@ -86,7 +89,7 @@ public class NinePatchImage
 			}
 			mPadding.top++;
 		}
-		for (int x = mImage.getWidth() - 1, y = mImage.getHeight() - 2; y > 0; y--)
+		for (int x = width - 1, y = height - 2; y > 0; y--)
 		{
 			if ((mImage.getRGB(x, y) & COLOR_MASK) == 0)
 			{
@@ -101,7 +104,7 @@ public class NinePatchImage
 		int numSegmentsX = 0;
 		int numSegmentsY = 0;
 
-		for (int y = 1, py = 0, pc = -1, h = mImage.getHeight() - 1; y <= h; y++)
+		for (int y = 1, py = 0, pc = -1, h = height - 1; y <= h; y++)
 		{
 			int c = y == h ? -1 : (mImage.getRGB(0, y) & COLOR_MASK) == 0 ? 0 : 1; // 0=black, 1=white, -1=other
 			if (y == 1)
@@ -127,7 +130,7 @@ public class NinePatchImage
 			}
 		}
 
-		for (int x = 1, px = 0, pc = -1, w = mImage.getWidth() - 1; x <= w; x++)
+		for (int x = 1, px = 0, pc = -1, w = width - 1; x <= w; x++)
 		{
 			int c = x == w ? -1 : (mImage.getRGB(x, 0) & COLOR_MASK) == 0 ? 0 : 1; // 0=black, 1=white, -1=other
 			if (x == 1)

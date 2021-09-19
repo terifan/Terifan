@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.LayoutManager;
+import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -13,6 +14,35 @@ import javax.swing.JPanel;
 
 public class FairGridLayout implements LayoutManager
 {
+	private static final int[][] GRID = new int[][]{
+		{0},
+		{1},
+		{2},
+		{3},
+		{2,2},
+		{3,2},
+		{3,3},
+		{4,3},
+		{4,4},
+		{5,4},
+		{5,5},
+		{6,5},
+		{6,6},
+		{7,6},
+		{7,7},
+		{5,5,5},
+		{6,5,5},
+		{6,6,5},
+		{6,6,6},
+		{7,6,6},
+		{7,7,6},
+		{7,7,7},
+		{8,7,7},
+		{8,8,7},
+		{8,8,8}
+	};
+
+
 	@Override
 	public void addLayoutComponent(String aName, Component aComp)
 	{
@@ -28,14 +58,37 @@ public class FairGridLayout implements LayoutManager
 	@Override
 	public Dimension preferredLayoutSize(Container aParent)
 	{
-		return new Dimension(200, 100);
+		return measure(aParent);
 	}
 
 
 	@Override
 	public Dimension minimumLayoutSize(Container aParent)
 	{
-		return new Dimension(200, 100);
+		return measure(aParent);
+	}
+
+
+	protected Dimension measure(Container aParent)
+	{
+		Dimension size = new Dimension();
+
+		int n = aParent.getComponentCount();
+		for (int row = 0, i = 0; i < n; )
+		{
+			int rowWidth = 0;
+			int rowHeight = 0;
+			for (int col = 0; i < n && col < GRID[n][row]; col++, i++)
+			{
+				Dimension d = aParent.getComponent(i).getPreferredSize();
+				rowWidth += d.width;
+				rowHeight = Math.max(rowHeight, d.height);
+			}
+			size.width = Math.max(rowWidth, size.width);
+			size.height += rowHeight;
+		}
+
+		return size;
 	}
 
 
@@ -47,33 +100,7 @@ public class FairGridLayout implements LayoutManager
 			int n = aParent.getComponentCount();
 			Dimension dim = aParent.getSize();
 
-			int[] layout = new int[][]{
-				{0},
-				{1},
-				{2},
-				{3},
-				{2,2},
-				{3,2},
-				{3,3},
-				{4,3},
-				{4,4},
-				{5,4},
-				{5,5},
-				{6,5},
-				{6,6},
-				{7,6},
-				{7,7},
-				{5,5,5},
-				{6,5,5},
-				{6,6,5},
-				{6,6,6},
-				{7,6,6},
-				{7,7,6},
-				{7,7,7},
-				{8,7,7},
-				{8,8,7},
-				{8,8,8}
-			}[n];
+			int[] layout = GRID[n];
 
 			for (int row = 0, rows = layout.length, index = 0; row < rows; row++)
 			{

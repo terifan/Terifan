@@ -54,6 +54,8 @@ public class TextBox implements Cloneable, Serializable
 	protected TextRenderCallback mRenderCallback;
 	private NinePatchImage mBackgroundImage;
 	private boolean mBackgroundImageSurroundText;
+	private boolean mMirrorShadow;
+	private Color mShadowMirrorColor;
 
 
 	public TextBox()
@@ -521,11 +523,11 @@ public class TextBox implements Cloneable, Serializable
 
 		if (mBackgroundImage != null)
 		{
-			Insets padding = mBackgroundImage.getPadding();
-			bounds.x += padding.left;
-			bounds.y += padding.top;
-			bounds.width += padding.left + padding.right;
-			bounds.height += padding.top + padding.bottom;
+			Insets bi = mBackgroundImage.getPadding();
+			bounds.x -= bi.left;
+			bounds.y -= bi.top;
+			bounds.width += bi.left + bi.right;
+			bounds.height += bi.top + bi.bottom;
 		}
 
 		if (mTextBorder != null)
@@ -543,42 +545,6 @@ public class TextBox implements Cloneable, Serializable
 		bounds.height += mMargins.top + mMargins.bottom;
 
 		return bounds;
-	}
-
-
-	@Override
-	public TextBox clone()
-	{
-		try
-		{
-			TextBox textBox = (TextBox)super.clone();
-			textBox.mAnchor = this.mAnchor;
-			textBox.mBackground = this.mBackground;
-			textBox.mBackgroundImage = this.mBackgroundImage;
-			textBox.mBorder = this.mBorder;
-			textBox.mBounds.setBounds(this.mBounds);
-			textBox.mBreakChars = this.mBreakChars == DEFAULT_BREAK_CHARS ? DEFAULT_BREAK_CHARS : this.mBreakChars.clone();
-			textBox.mDirty = this.mDirty;
-			textBox.mFont = this.mFont;
-			textBox.mForeground = this.mForeground;
-			textBox.mHighlight = this.mHighlight;
-			textBox.mMaxLineCount = this.mMaxLineCount;
-			textBox.mLineSpacing = this.mLineSpacing;
-			textBox.mMargins.set(mMargins.top, mMargins.left, mMargins.bottom, mMargins.right);
-			textBox.mPadding.set(mPadding.top, mPadding.left, mPadding.bottom, mPadding.right);
-			textBox.mText = this.mText;
-			textBox.mTextBorder = this.mTextBorder;
-			textBox.mTextLines = this.mTextLines == null ? null : new ArrayList<>(this.mTextLines);
-			textBox.mMaxWidth = this.mMaxWidth;
-			textBox.mMinWidth = this.mMinWidth;
-			textBox.mSuffix = this.mSuffix;
-
-			return textBox;
-		}
-		catch (CloneNotSupportedException e)
-		{
-			throw new Error();
-		}
 	}
 
 
@@ -612,10 +578,10 @@ public class TextBox implements Cloneable, Serializable
 
 		aGraphics.translate(aTranslateX, aTranslateY);
 
-		int boxX = mBounds.x;
-		int boxY = mBounds.y;
-		int boxW = mBounds.width;
-		int boxH = mBounds.height;
+		int boxX = mBounds.x + mMargins.left;
+		int boxY = mBounds.y + mMargins.top;
+		int boxW = mBounds.width - mMargins.left - mMargins.right;
+		int boxH = mBounds.height - mMargins.top - mMargins.bottom;
 
 		if (mBorder != null)
 		{
@@ -637,11 +603,11 @@ public class TextBox implements Cloneable, Serializable
 		{
 			if (mBackgroundImageSurroundText)
 			{
-				mBackgroundImage.paintSurrounding(aGraphics, boxX, boxY, boxW, boxH + 1);
+				mBackgroundImage.paintSurrounding(aGraphics, boxX - mShadowOffset.x, boxY - mShadowOffset.y, boxW, boxH);
 			}
 			else
 			{
-				mBackgroundImage.paintImage(aGraphics, boxX, boxY, boxW, boxH + 1);
+				mBackgroundImage.paintImage(aGraphics, boxX - mShadowOffset.x, boxY - mShadowOffset.y, boxW, boxH);
 			}
 		}
 
@@ -654,13 +620,6 @@ public class TextBox implements Cloneable, Serializable
 		for (int i = 0, sz = mTextBounds.size(); i < sz; i++)
 		{
 			Rectangle r = mTextBounds.get(i);
-
-//			if (mBackgroundImage != null)
-//			{
-//				Insets padding = mBackgroundImage.getPadding();
-//				r.x -= padding.left;
-//				r.y -= padding.top;
-//			}
 
 			if (mTextBorder != null)
 			{
@@ -715,7 +674,7 @@ public class TextBox implements Cloneable, Serializable
 			boxX += bi.left;
 			boxY += bi.top;
 			boxW -= bi.left + bi.right;
-			boxH -= bi.left + bi.bottom;
+			boxH -= bi.top + bi.bottom;
 		}
 
 		boxX += mMargins.left;
@@ -725,11 +684,11 @@ public class TextBox implements Cloneable, Serializable
 
 		if (mBackgroundImage != null)
 		{
-			Insets padding = mBackgroundImage.getPadding();
-			boxX -= padding.left;
-			boxY -= padding.top;
-			boxW += padding.left + padding.right;
-			boxH += padding.top + padding.bottom;
+			Insets bi = mBackgroundImage.getPadding();
+			boxX += bi.left;
+			boxY += bi.top;
+			boxW -= bi.left + bi.right;
+			boxH -= bi.top + bi.bottom;
 		}
 
 		int extraLineHeight = 0;
@@ -739,7 +698,7 @@ public class TextBox implements Cloneable, Serializable
 			boxX += bi.left;
 			boxY += bi.top;
 			boxW -= bi.left + bi.right;
-			boxH -= bi.left + bi.bottom;
+			boxH -= bi.top + bi.bottom;
 			extraLineHeight = bi.top + bi.bottom;
 		}
 
@@ -955,6 +914,12 @@ public class TextBox implements Cloneable, Serializable
 
 		aGraphics.drawString(aText.mText, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
 
+		if (aShadow && mMirrorShadow)
+		{
+			aGraphics.setColor(mShadowMirrorColor);
+			aGraphics.drawString(aText.mText, aOffsetX + mPadding.left - 2 * mShadowOffset.x, aOffsetY + adjust + mPadding.top);
+		}
+
 		if (mRenderCallback != null)
 		{
 			mRenderCallback.afterRender(aText, aOffsetX, aOffsetY, aWidth, aHeight, aOffsetX + mPadding.left, aOffsetY + adjust + mPadding.top);
@@ -992,8 +957,26 @@ public class TextBox implements Cloneable, Serializable
 
 	public TextBox setShadow(Color aColor, int aX, int aY)
 	{
+		return setShadow(aColor, aX, aY, false);
+	}
+
+
+	public TextBox setShadow(Color aColor, int aX, int aY, boolean aMirrorShadow)
+	{
+		mShadowColor = aColor;
+		mShadowMirrorColor = aColor;
+		mShadowOffset = new Point(aX, aY);
+		mMirrorShadow = aMirrorShadow;
+		return this;
+	}
+
+
+	public TextBox setShadow(Color aColor, int aX, int aY, Color aMirrorColor)
+	{
 		mShadowColor = aColor;
 		mShadowOffset = new Point(aX, aY);
+		mMirrorShadow = aMirrorColor != null;
+		mShadowMirrorColor = aMirrorColor;
 		return this;
 	}
 
@@ -1064,6 +1047,42 @@ public class TextBox implements Cloneable, Serializable
 	public String toString()
 	{
 		return getText();
+	}
+
+
+	@Override
+	public TextBox clone()
+	{
+		try
+		{
+			TextBox textBox = (TextBox)super.clone();
+			textBox.mAnchor = this.mAnchor;
+			textBox.mBackground = this.mBackground;
+			textBox.mBackgroundImage = this.mBackgroundImage;
+			textBox.mBorder = this.mBorder;
+			textBox.mBounds.setBounds(this.mBounds);
+			textBox.mBreakChars = this.mBreakChars == DEFAULT_BREAK_CHARS ? DEFAULT_BREAK_CHARS : this.mBreakChars.clone();
+			textBox.mDirty = this.mDirty;
+			textBox.mFont = this.mFont;
+			textBox.mForeground = this.mForeground;
+			textBox.mHighlight = this.mHighlight;
+			textBox.mMaxLineCount = this.mMaxLineCount;
+			textBox.mLineSpacing = this.mLineSpacing;
+			textBox.mMargins.set(mMargins.top, mMargins.left, mMargins.bottom, mMargins.right);
+			textBox.mPadding.set(mPadding.top, mPadding.left, mPadding.bottom, mPadding.right);
+			textBox.mText = this.mText;
+			textBox.mTextBorder = this.mTextBorder;
+			textBox.mTextLines = this.mTextLines == null ? null : new ArrayList<>(this.mTextLines);
+			textBox.mMaxWidth = this.mMaxWidth;
+			textBox.mMinWidth = this.mMinWidth;
+			textBox.mSuffix = this.mSuffix;
+
+			return textBox;
+		}
+		catch (CloneNotSupportedException e)
+		{
+			throw new Error();
+		}
 	}
 
 
