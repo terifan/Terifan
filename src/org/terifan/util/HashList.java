@@ -7,8 +7,18 @@ import java.util.Iterator;
 
 
 /**
- * This class implements accessory methods to handle a HashMap<K,ArrayList<V>> structure.
+ * This class implements accessory methods to handle a HashMap&lt;K,ArrayList&lt;V&gt;&gt; structure.
  * Each key item contain a list of value items.
+ * <pre>
+ * HashList&lt;String,Integer&gt; map = new HashList&lt;&gt;();
+ * map.add("a", 1);
+ * map.add("a", 2);
+ * map.add("a", 3);
+ * map.add("b", 4);
+ * map.add("b", 5);
+ * System.out.println(map.get("a")); // prints 1,2,3
+ * System.out.println(map.get("b")); // prints 4,5
+ * </pre>
  *
  * @param <K>
  *   key type
@@ -169,7 +179,7 @@ public class HashList<K,V> extends HashMap<K,ArrayList<V>> implements Iterable<A
 		{
 			size += size(k);
 		}
-	
+
 		return size;
 	}
 }
