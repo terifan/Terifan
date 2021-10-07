@@ -554,6 +554,18 @@ public class TextBox implements Cloneable, Serializable
 	}
 
 
+	public TextBox render(Graphics aGraphics, boolean aAntialise)
+	{
+		if (aAntialise)
+		{
+			Graphics2D g = (Graphics2D)aGraphics;
+			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		}
+
+		return render(aGraphics, 0, 0);
+	}
+
+
 	public TextBox render(Graphics aGraphics, int aTranslateX, int aTranslateY)
 	{
 		boolean hasShadow = mShadowColor != null;
