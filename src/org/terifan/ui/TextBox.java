@@ -554,12 +554,11 @@ public class TextBox implements Cloneable, Serializable
 	}
 
 
-	public TextBox render(Graphics aGraphics, boolean aAntialise)
+	public TextBox render(Graphics aGraphics, boolean aAntialiase)
 	{
-		if (aAntialise)
+		if (aAntialiase)
 		{
-			Graphics2D g = (Graphics2D)aGraphics;
-			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			Utilities.enableTextAntialiasing(aGraphics);
 		}
 
 		return render(aGraphics, 0, 0);
