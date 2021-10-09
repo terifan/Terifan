@@ -12,7 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 
-public class FairGridLayout implements LayoutManager
+public class AutoGridLayout implements LayoutManager
 {
 	private static final int[][] GRID = new int[][]{
 		{0},
@@ -122,7 +122,7 @@ public class FairGridLayout implements LayoutManager
 	{
 		try
 		{
-			JPanel panel = new JPanel(new FairGridLayout());
+			JPanel panel = new JPanel(new AutoGridLayout());
 
 			JFrame frame = new JFrame();
 			frame.add(panel);
