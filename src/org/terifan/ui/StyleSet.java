@@ -19,6 +19,16 @@ public class StyleSet
 	private HashMap<String, Dimension> mDimensions = new HashMap<>();
 
 
+	public static class State
+	{
+		public boolean armed;
+		public boolean hover;
+		public boolean selected;
+		public boolean focused;
+		public boolean unfocusedWindow;
+	}
+
+
 	public StyleSet()
 	{
 	}
@@ -66,30 +76,6 @@ public class StyleSet
 	}
 
 
-	public Color getColor(String aName)
-	{
-		return getColor(aName, false, false, false, true);
-	}
-
-
-	public Color getColor(String aName, boolean aArmed, boolean aHover)
-	{
-		return getColor(aName, aArmed, aHover, false, true);
-	}
-
-
-	public Color getColor(String aName, boolean aArmed, boolean aHover, boolean aSelected)
-	{
-		return getColor(aName, aArmed, aHover, aSelected, true);
-	}
-
-
-	public Color getColor(String aName, boolean aArmed, boolean aHover, boolean aSelected, boolean aFocusedWindow)
-	{
-		return mColors.get(find(mColors, aName, aArmed, aHover, aSelected, aFocusedWindow));
-	}
-
-
 	public int getInt(String aName)
 	{
 		return mIntegers.get(find(mIntegers, aName, false, false, false, false));
@@ -120,9 +106,45 @@ public class StyleSet
 	}
 
 
-	private String find(Map<String, ?> aMap, String aKey, boolean aArmed, boolean aHover, boolean aSelected, boolean aFocusedWindow)
+	public Color getColor(String aName, State aState)
 	{
-		String type = toTypeString(aSelected, aArmed, aHover, aFocusedWindow);
+		return mColors.get(find(mColors, aName, aState.armed, aState.hover, aState.selected, aState.unfocusedWindow));
+	}
+
+
+	public int getInt(String aName, State aState)
+	{
+		return mIntegers.get(find(mIntegers, aName, aState.armed, aState.hover, aState.selected, aState.unfocusedWindow));
+	}
+
+
+	public Dimension getDimension(String aName, State aState)
+	{
+		return mDimensions.get(find(mDimensions, aName, aState.armed, aState.hover, aState.selected, aState.unfocusedWindow));
+	}
+
+
+	public Insets getInsets(String aName, State aState)
+	{
+		return mInsets.get(find(mInsets, aName, aState.armed, aState.hover, aState.selected, aState.unfocusedWindow));
+	}
+
+
+	public Font getFont(String aName, State aState)
+	{
+		return mFonts.get(find(mFonts, aName, aState.armed, aState.hover, aState.selected, aState.unfocusedWindow));
+	}
+
+
+	public Image getImage(String aName, State aState)
+	{
+		return mImages.get(find(mImages, aName, aState.armed, aState.hover, aState.selected, aState.unfocusedWindow));
+	}
+
+
+	private String find(Map<String, ?> aMap, String aKey, boolean aArmed, boolean aHover, boolean aSelected, boolean aUnfocusedWindow)
+	{
+		String type = toTypeString(aSelected, aArmed, aHover, aUnfocusedWindow);
 
 		String bestKey = null;
 		String bestMatches = "";
@@ -143,7 +165,7 @@ public class StyleSet
 				{
 					for (String m : args[1].split("\\|"))
 					{
-						if (type.equals(toTypeString(m.contains("s"), m.contains("a"), m.contains("h"), !m.contains("u"))))
+						if (type.equals(toTypeString(m.contains("s"), m.contains("a"), m.contains("h"), m.contains("u"))))
 						{
 							bestKey = key;
 							bestMatches = m;
@@ -157,9 +179,9 @@ public class StyleSet
 	}
 
 
-	public String toTypeString(boolean aSelected, boolean aArmed, boolean aHover, boolean aFocusedWindow)
+	public String toTypeString(boolean aSelected, boolean aArmed, boolean aHover, boolean aUnfocusedWindow)
 	{
-		return (aSelected ? "s" : "-") + (aArmed ? "a" : "-") + (aHover ? "h" : "-") + (aFocusedWindow ? "f" : "-");
+		return (aSelected ? "s" : "-") + (aArmed ? "a" : "-") + (aHover ? "h" : "-") + (aUnfocusedWindow ? "u" : "-");
 	}
 
 
@@ -182,16 +204,6 @@ public class StyleSet
 				aMap.put(key, aValue);
 			}
 		}
-	}
-
-
-	public static class State
-	{
-		boolean selected;
-		boolean focused;
-		boolean hover;
-		boolean armed;
-		boolean unfocusedWindow;
 	}
 
 
