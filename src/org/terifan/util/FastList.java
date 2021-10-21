@@ -156,4 +156,11 @@ public class FastList<T> implements Iterable<T>
 			mElementData = Arrays.copyOfRange(mElementData, 0, aSize);
 		}
 	}
+
+
+	@Override
+	public String toString()
+	{
+		return "FastList{" + "mElementData=" + Arrays.toString(mElementData) + '}';
+	}
 }
