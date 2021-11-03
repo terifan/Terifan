@@ -423,6 +423,40 @@ public class FilterFactory
 	};
 
 
+	// https://www.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-2-image-processing/ipp-ref-interpolation-in-image-geometry-transform/interpolation-with-two-parameter-cubic-filters.html
+	public final static FilterFactory.Filter Cubic2 = new FilterFactory.Filter("Cubic2", 2.0)
+	{
+		@Override
+		public double filter(double x)
+		{
+			double b = 0;
+			double c = 1;
+
+			if (x < -2.0)
+			{
+				return 0;
+			}
+			if (x < -1.0)
+			{
+				return Math.pow((12 - 9*b - 6*c) * Math.abs(x), 3) + Math.pow((-18 + 12*b + 6*c) * Math.abs(x), 2) + (6 - 2 * b) / 6;
+			}
+			if (x < 0.0)
+			{
+				return Math.pow((-b-6*c)*Math.abs(x), 3) + Math.pow((6*b+30*c)*Math.abs(x),2) + (-12*b-48*c)*Math.abs(x)+(8*b+24*c);
+			}
+			if (x < 1.0)
+			{
+				return Math.pow((-b-6*c)*Math.abs(x), 3) + Math.pow((6*b+30*c)*Math.abs(x),2) + (-12*b-48*c)*Math.abs(x)+(8*b+24*c);
+			}
+			if (x < 2.0)
+			{
+				return Math.pow((12 - 9*b - 6*c) * Math.abs(x), 3) + Math.pow((-18 + 12*b + 6*c) * Math.abs(x), 2) + (6 - 2 * b);
+			}
+			return 0;
+		}
+	};
+
+
 	public final static FilterFactory.Filter Catrom = new FilterFactory.Filter("Catrom", 2.0)
 	{
 		@Override
