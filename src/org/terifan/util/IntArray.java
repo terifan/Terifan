@@ -2,7 +2,6 @@ package org.terifan.util;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
@@ -33,8 +32,8 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		mValues = aValues;
 		mSize = aSize;
 	}
-	
-	
+
+
 	public int indexOf(int aValue)
 	{
 		for (int i = 0; i < mSize; i++)
@@ -63,7 +62,7 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 				mValues[dst++] = mValues[src++];
 			}
 		}
-		
+
 		return this;
 	}
 
@@ -82,11 +81,11 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 				mValues[dst++] = mValues[src++];
 			}
 		}
-		
+
 		return this;
 	}
-	
-	
+
+
 	public IntArray remove(int aIndex)
 	{
 		if (aIndex < mSize - 1)
@@ -99,7 +98,7 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		return this;
 	}
 
-	
+
 	public int[] array()
 	{
 		return mValues;
@@ -110,8 +109,8 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 	{
 		return mValues[aIndex];
 	}
-	
-	
+
+
 	public IntArray add(int aValue)
 	{
 		if (mSize == mValues.length)
@@ -123,15 +122,15 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 
 		return this;
 	}
-	
-	
+
+
 	public IntArray add(int... aValues)
 	{
 		add(aValues, 0, aValues.length);
 		return this;
 	}
-	
-	
+
+
 	public IntArray add(int[] aValues, int aOffset, int aLength)
 	{
 		if (mSize + aLength > mValues.length)
@@ -140,13 +139,13 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		}
 
 		System.arraycopy(aValues, aOffset, mValues, mSize, aLength);
-		
+
 		mSize += aLength;
 
 		return this;
 	}
-	
-	
+
+
 	public <T> IntArray addValues(T[] aArray, ToIntFunction<T> aFunction)
 	{
 		for (int i = 0; i < aArray.length; i++)
@@ -155,8 +154,8 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		}
 		return this;
 	}
-	
-	
+
+
 	public IntArray set(int aIndex, int aValue)
 	{
 		if (aIndex >= mValues.length)
@@ -165,12 +164,12 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 		}
 
 		mValues[aIndex] = aValue;
-		
+
 		if (aIndex >= mSize)
 		{
 			mSize = aIndex + 1;
 		}
-		
+
 		return this;
 	}
 
@@ -198,29 +197,29 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 
 		return this;
 	}
-	
-	
+
+
 	public IntArray clear()
 	{
 		mSize = 0;
 		mValues = new int[0];
 		return this;
 	}
-	
-	
+
+
 	public IntArray trimToSize()
 	{
 		mValues = Arrays.copyOfRange(mValues, 0, mSize);
 		return this;
 	}
-	
+
 
 	public int size()
 	{
 		return mSize;
 	}
-	
-	
+
+
 	public boolean isEmpty()
 	{
 		return mSize == 0;
@@ -247,8 +246,8 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 			}
 		};
 	}
-	
-	
+
+
 	@Override
 	public IntArray clone()
 	{
@@ -324,14 +323,14 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 
         return true;
 	}
-	
+
 
 	public boolean contains(int aValue)
 	{
 		return indexOf(aValue) != -1;
 	}
-	
-	
+
+
 	public IntStream stream()
 	{
 		return Arrays.stream(mValues, 0, mSize);
@@ -346,13 +345,13 @@ public final class IntArray implements Cloneable, Iterable<Integer>
 			if (value != null)
 			{
 				return value;
-			}			
+			}
 		}
 
 		return null;
 	}
-	
-	
+
+
 	@FunctionalInterface
 	public interface Visitor<T>
 	{

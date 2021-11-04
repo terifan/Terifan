@@ -5,56 +5,50 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 
-public class FastList<T> implements Iterable<T>
+public abstract class FastList<T> implements Iterable<T>
 {
 	private final static int GROWTH = 1000;
 
 	protected Class<T> mType;
-	protected T[] mElementData;
+	protected T[] mElements;
 	protected int mSize;
-	protected boolean mLocked;
+	protected boolean mInitializeElements;
 
 
 	public FastList(Class<T> aType)
 	{
+		this(aType, false);
+	}
+
+
+	public FastList(Class<T> aType, boolean aInitializeElements)
+	{
 		mType = aType;
-		mElementData = (T[])Array.newInstance(aType, 0);
-	}
-
-
-	public boolean isLocked()
-	{
-		return mLocked;
-	}
-
-
-	public FastList<T> setLocked(boolean aLocked)
-	{
-		mLocked = aLocked;
-		return this;
+		mInitializeElements = aInitializeElements;
+		mElements = (T[])Array.newInstance(aType, 0);
 	}
 
 
 	public FastList<T> add(T aElement)
 	{
-		if (mSize == mElementData.length)
+		if (mSize == mElements.length)
 		{
 			resize(mSize + GROWTH);
 		}
-		mElementData[mSize++] = aElement;
+		mElements[mSize++] = aElement;
 		return this;
 	}
 
 
 	public T get(int aIndex)
 	{
-		return (T)mElementData[aIndex];
+		return (T)mElements[aIndex];
 	}
 
 
 	public FastList<T> trimToSize()
 	{
-		if (mSize != mElementData.length)
+		if (mSize != mElements.length)
 		{
 			resize(mSize);
 		}
@@ -66,7 +60,7 @@ public class FastList<T> implements Iterable<T>
 	{
 		for (int i = 0; i < mSize; i++)
 		{
-			mElementData[i] = null;
+			mElements[i] = null;
 		}
 		mSize = 0;
 		return this;
@@ -75,7 +69,7 @@ public class FastList<T> implements Iterable<T>
 
 	public T[] array()
 	{
-		return (T[])mElementData;
+		return (T[])mElements;
 	}
 
 
@@ -93,7 +87,7 @@ public class FastList<T> implements Iterable<T>
 
 	public FastList<T> ensureCapacity(int aSize)
 	{
-		if (aSize > mElementData.length)
+		if (aSize > mElements.length)
 		{
 			resize(aSize);
 		}
@@ -118,7 +112,7 @@ public class FastList<T> implements Iterable<T>
 			@Override
 			public T next()
 			{
-				return (T)mElementData[mIndex++];
+				return (T)mElements[mIndex++];
 			}
 		};
 	}
@@ -130,7 +124,7 @@ public class FastList<T> implements Iterable<T>
 		{
 			resize(aIndex + GROWTH);
 		}
-		mElementData[aIndex] = aElement;
+		mElements[aIndex] = aElement;
 		if (aIndex >= mSize)
 		{
 			mSize = aIndex + 1;
@@ -138,29 +132,37 @@ public class FastList<T> implements Iterable<T>
 	}
 
 
-	public void addAll(T[] aElements)
+	public void addAll(T... aElements)
 	{
-		if (mSize + aElements.length > mElementData.length)
+		if (mSize + aElements.length > mElements.length)
 		{
 			resize(mSize + aElements.length + GROWTH);
 		}
-		System.arraycopy(aElements, 0, mElementData, mSize, aElements.length);
+		System.arraycopy(aElements, 0, mElements, mSize, aElements.length);
 		mSize += aElements.length;
 	}
 
 
 	protected void resize(int aSize)
 	{
-		if (!mLocked && aSize != mElementData.length || mLocked && aSize > mElementData.length) // locked lists can grow but not shrink
+		mElements = Arrays.copyOfRange(mElements, 0, aSize);
+
+		if (mInitializeElements)
 		{
-			mElementData = Arrays.copyOfRange(mElementData, 0, aSize);
+			for (int i = mSize; i < aSize; i++)
+			{
+				mElements[i] = newInstance();
+			}
 		}
 	}
+
+
+	protected abstract T newInstance();
 
 
 	@Override
 	public String toString()
 	{
-		return "FastList{" + "mElementData=" + Arrays.toString(mElementData) + '}';
+		return "FastList{" + "mElementData=" + Arrays.toString(mElements) + '}';
 	}
 }
