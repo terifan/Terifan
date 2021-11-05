@@ -132,31 +132,13 @@ public class ImageResampler
 			this.g = aG;
 			this.b = aB;
 		}
-
-
-		public Color3d add(Color3d c)
-		{
-			r += c.r;
-			g += c.g;
-			b += c.b;
-			return this;
-		}
-
-
-		public Color3d scale(double s)
-		{
-			r *= s;
-			g *= s;
-			b *= s;
-			return this;
-		}
 	}
 
 
 	private final static double GAMMA = 2.4;
 
 
-	public static int toRGB(Color3d aColor)
+	private static int toRGB(Color3d aColor)
 	{
 		int r = mul8(aColor.r) << 16;
 		int g = mul8(aColor.g) << 8;
@@ -166,7 +148,7 @@ public class ImageResampler
 	}
 
 
-	public static int toSRGB(Color3d aColor)
+	private static int toSRGB(Color3d aColor)
 	{
 		int r = mul8(f(aColor.r)) << 16;
 		int g = mul8(f(aColor.g)) << 8;
@@ -176,7 +158,7 @@ public class ImageResampler
 	}
 
 
-	public static Color3d fromRGB(int aColor)
+	private static Color3d fromRGB(int aColor)
 	{
 		Color3d c = new Color3d();
 		c.r = (0xff & (aColor >> 16)) / 255f;
@@ -186,7 +168,7 @@ public class ImageResampler
 	}
 
 
-	public static Color3d fromSRGB(int aColor)
+	private static Color3d fromSRGB(int aColor)
 	{
 		Color3d c = new Color3d();
 		c.r = f_inv((0xff & (aColor >> 16)) / 255.0);
