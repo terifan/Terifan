@@ -9,10 +9,10 @@ import static java.lang.Math.sqrt;
 
 public class FilterFactory
 {
-//	public final static int FIXED_POINT_SCALE = 65536;
-//	public final static int HALF_FIXED_POINT_SCALE = 32768;
-//
-//
+	public final static int FIXED_POINT_SCALE = 65536;
+	public final static int HALF_FIXED_POINT_SCALE = 32768;
+
+
 //	public static FilterFactory.Filter [] values()
 //	{
 //		return new FilterFactory.Filter[]
@@ -85,82 +85,83 @@ public class FilterFactory
 //
 //			return new Kernel(aDiameter, aDiameter, tmp);
 //		}
-//
-//
-//		public int[][] getKernel2DInt(int aDiameter)
-//		{
-//			double step = mRadius / (aDiameter / 2.0);
-//			double step2 = step * step;
-//			double c = (aDiameter - 1) / 2.0;
-//
-//			double[][] kernel = new double[aDiameter][aDiameter];
-//			double weight = 0;
-//
-//			for (int y = 0; y < aDiameter; y++)
-//			{
-//				for (int x = 0; x < aDiameter; x++)
-//				{
-//					double d = sqrt(((x - c) * (x - c) + (y - c) * (y - c)) * step2);
-//					double v = filter(d);
-//
-//					kernel[y][x] = v;
-//					weight += v;
-//				}
-//			}
-//
-//			double scale = weight == 0 ? 1 : 1.0 / weight;
-//			int[][] tmp = new int[aDiameter][aDiameter];
-//
-//			// ensure the weight of the kernel is FIXED_POINT_SCALE
-//
-//			double bias = 0.5;
-//			step = 0.25;
-//
-//			for (int rescale = 10, order = 0; --rescale >= 0;)
-//			{
-//				int sum = 0;
-//
-//				for (int y = 0; y < aDiameter; y++)
-//				{
-//					for (int x = 0; x < aDiameter; x++)
-//					{
-//						sum += tmp[y][x] = (int)(FIXED_POINT_SCALE * scale * kernel[y][x] + bias);
-//					}
-//				}
-//
-//				if (sum == FIXED_POINT_SCALE)
-//				{
-//					break;
-//				}
-//				if (rescale == 0 && (aDiameter & 1) == 1)
-//				{
-//					tmp[aDiameter/2][aDiameter/2] = FIXED_POINT_SCALE + tmp[aDiameter/2][aDiameter/2] - sum;
-//					break;
-//				}
-//
-//				int o;
-//				if (sum < FIXED_POINT_SCALE)
-//				{
-//					o = 1;
-//					bias += step;
-//				}
-//				else
-//				{
-//					o = 2;
-//					bias -= step;
-//				}
-//
-//				if (order != o)
-//				{
-//					step /= 2;
-//					order = o;
-//				}
-//			}
-//
-//			return tmp;
-//		}
-//
-//
+
+
+		@Deprecated
+		public int[][] getKernel2DInt(int aDiameter)
+		{
+			double step = mRadius / (aDiameter / 2.0);
+			double step2 = step * step;
+			double c = (aDiameter - 1) / 2.0;
+
+			double[][] kernel = new double[aDiameter][aDiameter];
+			double weight = 0;
+
+			for (int y = 0; y < aDiameter; y++)
+			{
+				for (int x = 0; x < aDiameter; x++)
+				{
+					double d = sqrt(((x - c) * (x - c) + (y - c) * (y - c)) * step2);
+					double v = filter(d);
+
+					kernel[y][x] = v;
+					weight += v;
+				}
+			}
+
+			double scale = weight == 0 ? 1 : 1.0 / weight;
+			int[][] tmp = new int[aDiameter][aDiameter];
+
+			// ensure the weight of the kernel is FIXED_POINT_SCALE
+
+			double bias = 0.5;
+			step = 0.25;
+
+			for (int rescale = 10, order = 0; --rescale >= 0;)
+			{
+				int sum = 0;
+
+				for (int y = 0; y < aDiameter; y++)
+				{
+					for (int x = 0; x < aDiameter; x++)
+					{
+						sum += tmp[y][x] = (int)(FIXED_POINT_SCALE * scale * kernel[y][x] + bias);
+					}
+				}
+
+				if (sum == FIXED_POINT_SCALE)
+				{
+					break;
+				}
+				if (rescale == 0 && (aDiameter & 1) == 1)
+				{
+					tmp[aDiameter/2][aDiameter/2] = FIXED_POINT_SCALE + tmp[aDiameter/2][aDiameter/2] - sum;
+					break;
+				}
+
+				int o;
+				if (sum < FIXED_POINT_SCALE)
+				{
+					o = 1;
+					bias += step;
+				}
+				else
+				{
+					o = 2;
+					bias -= step;
+				}
+
+				if (order != o)
+				{
+					step /= 2;
+					order = o;
+				}
+			}
+
+			return tmp;
+		}
+
+
 //		public double[][] getKernel2D(int aDiameter)
 //		{
 //			double step = mRadius / (aDiameter / 2.0);

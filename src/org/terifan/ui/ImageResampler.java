@@ -1,12 +1,92 @@
 package org.terifan.ui;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import org.terifan.ui.FilterFactory.Filter;
 
 
 public class ImageResampler
 {
-	public static BufferedImage resize(BufferedImage aImage, int aDstWidth, int aDstHeight, boolean aSRGB, Filter aFilter)
+	public static BufferedImage getScaledImageAspect(BufferedImage aSource, int aWidth, int aHeight, boolean aSRGB, Filter aFilter)
+	{
+		double scale = Math.min(aWidth / (double)aSource.getWidth(), aHeight / (double)aSource.getHeight());
+
+		return getScaledImageAspectImpl(aSource, aWidth, aHeight, aSRGB, scale, aFilter);
+	}
+
+
+	public static BufferedImage getScaledImageAspectOuter(BufferedImage aSource, int aWidth, int aHeight, boolean aSRGB, Filter aFilter)
+	{
+		double scale = Math.max(aWidth / (double)aSource.getWidth(), aHeight / (double)aSource.getHeight());
+
+		return getScaledImageAspectImpl(aSource, aWidth, aHeight, aSRGB, scale, aFilter);
+	}
+
+
+	private static BufferedImage getScaledImageAspectImpl(BufferedImage aSource, int aWidth, int aHeight, boolean aSRGB, double aScale, Filter aFilter)
+	{
+		int dw = (int)Math.round(aSource.getWidth() * aScale);
+		int dh = (int)Math.round(aSource.getHeight() * aScale);
+
+		if (dw < 1 || dh < 1)
+		{
+			return aSource;
+		}
+
+		// make sure one direction has specified dimension
+		if (dw != aWidth && dh != aHeight)
+		{
+			if (Math.abs(aWidth - dw) < Math.abs(aHeight - dh))
+			{
+				dw = aWidth;
+			}
+			else
+			{
+				dh = aHeight;
+			}
+		}
+
+		return getScaledImage(aSource, dw, dh, aSRGB, aFilter);
+	}
+
+
+	public static BufferedImage getScaledImage(BufferedImage aSource, int aWidth, int aHeight, boolean aSRGB, Filter aFilter)
+	{
+		if (aWidth < aSource.getWidth() || aHeight < aSource.getHeight())
+		{
+			aSource = resizeDown(aSource, aWidth, aHeight, aSRGB, aFilter);
+		}
+		if (aWidth > aSource.getWidth() || aHeight > aSource.getHeight())
+		{
+			aSource = resizeUp(aSource, aWidth, aHeight, aSRGB);
+		}
+
+		return aSource;
+	}
+
+
+	private static BufferedImage resizeUp(BufferedImage aSource, int aWidth, int aHeight, boolean aQuality)
+	{
+		return resizeUpImpl(aSource, aWidth, aHeight, aQuality);
+	}
+
+
+	private static BufferedImage resizeUpImpl(BufferedImage aSource, int aWidth, int aHeight, boolean aQuality)
+	{
+		BufferedImage output = new BufferedImage(aWidth, aHeight, aSource.getTransparency() == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB);
+
+		Graphics2D g = output.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, aQuality ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.drawImage(aSource, 0, 0, aWidth, aHeight, null);
+		g.dispose();
+
+		return output;
+	}
+
+
+	public static BufferedImage resizeDown(BufferedImage aImage, int aDstWidth, int aDstHeight, boolean aSRGB, Filter aFilter)
 	{
 		int srcWidth = aImage.getWidth();
 		int srcHeight = aImage.getHeight();

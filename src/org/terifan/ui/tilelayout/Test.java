@@ -28,7 +28,7 @@ public class Test
 	{
 		try
 		{
-			TileLayout layout = new TileLayout(!true, 5, 5);
+			TileLayout layout = new TileLayout(true, 5, 5);
 
 			List<File> files = Arrays.asList(new File("D:\\dev\\test_images").listFiles(e->e.getName().matches(".*png|.*jpg")));
 //			Collections.shuffle(files, new Random(1));
