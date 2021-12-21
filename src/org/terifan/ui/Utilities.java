@@ -22,7 +22,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
@@ -39,7 +38,6 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.text.JTextComponent;
 import javax.swing.undo.UndoManager;
-import static org.terifan.ui.TextRenderer.lineBreakText;
 
 
 public final class Utilities
@@ -568,135 +566,135 @@ public final class Utilities
 	}
 
 
-	public static void drawString(Graphics aGraphics, String aString, Rectangle aBounds, Anchor aAnchor, Color aTextColor, Color aBackground, boolean aMultiline)
-	{
-		drawString(aGraphics, aString, aBounds.x, aBounds.y, aBounds.width, aBounds.height, aAnchor, aTextColor, aBackground, aMultiline);
-	}
-
-
-	/**
-	 * Draws a multipline string within the bounds specified.
-	 *
-	 * @param aGraphics
-	 *   draw on this context
-	 * @param aString
-	 *   the string to draw
-	 * @param aPositionX
-	 *   x offset
-	 * @param aPositionY
-	 *   y offset
-	 * @param aWidth
-	 *   width of the bounds to draw within
-	 * @param aHeight
-	 *   height of the bounds to draw within
-	 * @param aAnchor
-	 *   specifying the orientation of the text.
-	 * @param aTextColor
-	 *   Text color to use or null
-	 * @param aBackground
-	 *   Text background or null
-	 */
-	public static void drawString(Graphics aGraphics, String aString, int aPositionX, int aPositionY, int aWidth, int aHeight, Anchor aAnchor, Color aTextColor, Color aBackground, boolean aMultiline)
-	{
-		if (aString == null || aString.isEmpty())
-		{
-			return;
-		}
-
-		Font font = aGraphics.getFont();
-
-		if (aTextColor == null && aBackground != null)
-		{
-			aTextColor = aGraphics.getColor();
-		}
-
-		ArrayList<String> list;
-
-		if (aMultiline)
-		{
-			list = lineBreakText(aString, font, aWidth);
-		}
-		else if (aWidth > 0)
-		{
-			list = new ArrayList<>();
-			list.add(clipString(aString, font, aWidth));
-		}
-		else
-		{
-			list = new ArrayList<>();
-			list.add(aString);
-		}
-
-		int lineHeight = (int)font.getStringBounds(aString, mFontRenderContext).getHeight();
-
-		LineMetrics lm = font.getLineMetrics("Adgj", mFontRenderContext);
-		int ascent = (int)lm.getAscent();
-
-		int lineCount;
-		if (aHeight <= 0)
-		{
-			lineCount = list.size();
-			aHeight = lineCount * lineHeight;
-
-			if (aAnchor == Anchor.SOUTH_EAST || aAnchor == Anchor.SOUTH || aAnchor == Anchor.SOUTH_WEST)
-			{
-				aPositionY -= aHeight;
-			}
-			if (aAnchor == Anchor.WEST || aAnchor == Anchor.CENTER || aAnchor == Anchor.EAST)
-			{
-				aPositionY -= aHeight/2;
-			}
-		}
-		else
-		{
-			lineCount = Math.min(list.size(), aHeight / lineHeight);
-		}
-
-		if (aAnchor == Anchor.SOUTH_EAST || aAnchor == Anchor.SOUTH || aAnchor == Anchor.SOUTH_WEST)
-		{
-			aPositionY += Math.max(0, aHeight-lineCount*lineHeight);
-		}
-		else if (aAnchor == Anchor.CENTER || aAnchor == Anchor.WEST || aAnchor == Anchor.EAST)
-		{
-			aPositionY += Math.max(0, (aHeight-lineCount*lineHeight)/2);
-		}
-
-		for (int i = 0; i < lineCount; i++)
-		{
-			String str = list.get(i);
-
-			int x = aPositionX, w = -1;
-
-			if (aAnchor == Anchor.NORTH || aAnchor == Anchor.CENTER || aAnchor == Anchor.SOUTH)
-			{
-				w = getStringLength(str, font);
-				x += (aWidth-w)/2;
-			}
-			else if (aAnchor == Anchor.NORTH_EAST || aAnchor == Anchor.EAST || aAnchor == Anchor.SOUTH_EAST)
-			{
-				w = getStringLength(str, font);
-				x += aWidth-w;
-			}
-
-			int y = aPositionY+i*lineHeight;
-
-			if (aBackground != null)
-			{
-				if (w == -1)
-				{
-					w = getStringLength(str, font);
-				}
-				aGraphics.setColor(aBackground);
-				aGraphics.fillRect(x, y, w+1, lineHeight+1);
-			}
-			if (aTextColor != null)
-			{
-				aGraphics.setColor(aTextColor);
-			}
-
-			aGraphics.drawString(str, x, y+ascent);
-		}
-	}
+//	public static void drawString(Graphics aGraphics, String aString, Rectangle aBounds, Anchor aAnchor, Color aTextColor, Color aBackground, boolean aMultiline)
+//	{
+//		drawString(aGraphics, aString, aBounds.x, aBounds.y, aBounds.width, aBounds.height, aAnchor, aTextColor, aBackground, aMultiline);
+//	}
+//
+//
+//	/**
+//	 * Draws a multipline string within the bounds specified.
+//	 *
+//	 * @param aGraphics
+//	 *   draw on this context
+//	 * @param aString
+//	 *   the string to draw
+//	 * @param aPositionX
+//	 *   x offset
+//	 * @param aPositionY
+//	 *   y offset
+//	 * @param aWidth
+//	 *   width of the bounds to draw within
+//	 * @param aHeight
+//	 *   height of the bounds to draw within
+//	 * @param aAnchor
+//	 *   specifying the orientation of the text.
+//	 * @param aTextColor
+//	 *   Text color to use or null
+//	 * @param aBackground
+//	 *   Text background or null
+//	 */
+//	public static void drawString(Graphics aGraphics, String aString, int aPositionX, int aPositionY, int aWidth, int aHeight, Anchor aAnchor, Color aTextColor, Color aBackground, boolean aMultiline)
+//	{
+//		if (aString == null || aString.isEmpty())
+//		{
+//			return;
+//		}
+//
+//		Font font = aGraphics.getFont();
+//
+//		if (aTextColor == null && aBackground != null)
+//		{
+//			aTextColor = aGraphics.getColor();
+//		}
+//
+//		ArrayList<String> list;
+//
+//		if (aMultiline)
+//		{
+//			list = lineBreakText(aString, font, aWidth);
+//		}
+//		else if (aWidth > 0)
+//		{
+//			list = new ArrayList<>();
+//			list.add(clipString(aString, font, aWidth));
+//		}
+//		else
+//		{
+//			list = new ArrayList<>();
+//			list.add(aString);
+//		}
+//
+//		int lineHeight = (int)font.getStringBounds(aString, mFontRenderContext).getHeight();
+//
+//		LineMetrics lm = font.getLineMetrics("Adgj", mFontRenderContext);
+//		int ascent = (int)lm.getAscent();
+//
+//		int lineCount;
+//		if (aHeight <= 0)
+//		{
+//			lineCount = list.size();
+//			aHeight = lineCount * lineHeight;
+//
+//			if (aAnchor == Anchor.SOUTH_EAST || aAnchor == Anchor.SOUTH || aAnchor == Anchor.SOUTH_WEST)
+//			{
+//				aPositionY -= aHeight;
+//			}
+//			if (aAnchor == Anchor.WEST || aAnchor == Anchor.CENTER || aAnchor == Anchor.EAST)
+//			{
+//				aPositionY -= aHeight/2;
+//			}
+//		}
+//		else
+//		{
+//			lineCount = Math.min(list.size(), aHeight / lineHeight);
+//		}
+//
+//		if (aAnchor == Anchor.SOUTH_EAST || aAnchor == Anchor.SOUTH || aAnchor == Anchor.SOUTH_WEST)
+//		{
+//			aPositionY += Math.max(0, aHeight-lineCount*lineHeight);
+//		}
+//		else if (aAnchor == Anchor.CENTER || aAnchor == Anchor.WEST || aAnchor == Anchor.EAST)
+//		{
+//			aPositionY += Math.max(0, (aHeight-lineCount*lineHeight)/2);
+//		}
+//
+//		for (int i = 0; i < lineCount; i++)
+//		{
+//			String str = list.get(i);
+//
+//			int x = aPositionX, w = -1;
+//
+//			if (aAnchor == Anchor.NORTH || aAnchor == Anchor.CENTER || aAnchor == Anchor.SOUTH)
+//			{
+//				w = getStringLength(str, font);
+//				x += (aWidth-w)/2;
+//			}
+//			else if (aAnchor == Anchor.NORTH_EAST || aAnchor == Anchor.EAST || aAnchor == Anchor.SOUTH_EAST)
+//			{
+//				w = getStringLength(str, font);
+//				x += aWidth-w;
+//			}
+//
+//			int y = aPositionY+i*lineHeight;
+//
+//			if (aBackground != null)
+//			{
+//				if (w == -1)
+//				{
+//					w = getStringLength(str, font);
+//				}
+//				aGraphics.setColor(aBackground);
+//				aGraphics.fillRect(x, y, w+1, lineHeight+1);
+//			}
+//			if (aTextColor != null)
+//			{
+//				aGraphics.setColor(aTextColor);
+//			}
+//
+//			aGraphics.drawString(str, x, y+ascent);
+//		}
+//	}
 
 
 	public static int getStringLength(String aString, Font aFont)
