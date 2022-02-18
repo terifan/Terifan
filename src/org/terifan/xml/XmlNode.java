@@ -468,6 +468,37 @@ public class XmlNode
 	}
 
 
+	public String getTextContent()
+	{
+		if (mNode instanceof Element)
+		{
+			boolean b = true;
+			XmlNode[] childNodes = getChildNodes();
+			for (XmlNode node : childNodes)
+			{
+				if (node instanceof XmlElement)
+				{
+					return null;
+				}
+			}
+			if (b)
+			{
+				StringBuilder sb = new StringBuilder();
+				for (XmlNode node : childNodes)
+				{
+					String text = node.mNode.getNodeValue();
+					if (text != null && !text.matches("\\s"))
+					{
+						sb.append(text.trim());
+					}
+				}
+				return sb.toString().trim();
+			}
+		}
+		return null;
+	}
+
+
 	public XmlElement toElement()
 	{
 		return new XmlElement(mNode);
@@ -615,7 +646,7 @@ public class XmlNode
 	}
 
 
-	public Object visit(XmlNodeVisitor aVisitor)
+	public <T> T visit(XmlNodeVisitor aVisitor)
 	{
 		NodeList list = mNode.getChildNodes();
 
@@ -647,14 +678,14 @@ public class XmlNode
 
 					if (o != null)
 					{
-						return o;
+						return (T)o;
 					}
 
 					o = aVisitor.process(el);
 
 					if (o != null)
 					{
-						return o;
+						return (T)o;
 					}
 
 					for (String attr : el.getAttributes())
@@ -663,7 +694,7 @@ public class XmlNode
 
 						if (o != null)
 						{
-							return o;
+							return (T)o;
 						}
 					}
 
@@ -671,14 +702,14 @@ public class XmlNode
 
 					if (o != null)
 					{
-						return o;
+						return (T)o;
 					}
 
 					o = aVisitor.leaving(el);
 
 					if (o != null)
 					{
-						return o;
+						return (T)o;
 					}
 				}
 			}
@@ -688,7 +719,7 @@ public class XmlNode
 
 				if (o != null)
 				{
-					return o;
+					return (T)o;
 				}
 			}
 		}
