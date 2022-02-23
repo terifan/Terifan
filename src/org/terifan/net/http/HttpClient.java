@@ -12,6 +12,8 @@ public class HttpClient
 	private String mReferer;
 	private String mAgent;
 	private HashMap<String, Map<String, String>> mCookies;
+	private HttpHost mProxy;
+	private boolean mUpdateReferer;
 
 
 	public HttpClient()
@@ -21,9 +23,35 @@ public class HttpClient
 	}
 
 
+	public boolean isUpdateReferer()
+	{
+		return mUpdateReferer;
+	}
+
+
+	public HttpClient setUpdateReferer(boolean aUpdateReferer)
+	{
+		mUpdateReferer = aUpdateReferer;
+		return this;
+	}
+
+
+	public HttpClient setProxy(HttpHost aProxy)
+	{
+		mProxy = aProxy;
+		return this;
+	}
+
+
+	public HttpHost getProxy()
+	{
+		return mProxy;
+	}
+
+
 	public HttpGet get(String aUrl) throws MalformedURLException
 	{
-		return get(new URL(aUrl), false);
+		return get(aUrl, mUpdateReferer);
 	}
 
 
@@ -35,43 +63,53 @@ public class HttpClient
 
 	public HttpGet get(URL aUrl) throws MalformedURLException
 	{
-		return get(aUrl, false);
+		return get(aUrl, mUpdateReferer);
 	}
 
 
 	public HttpGet get(URL aUrl, boolean aSetReferer) throws MalformedURLException
 	{
-		return new HttpGet(this)
-			.setURL(aUrl)
-			.setHeader("User-Agent", mAgent)
-			.setHeader("Referer", mReferer)
-			.addAction((request, response) ->
+		return new HttpGet(this).setURL(aUrl).setHeader("User-Agent", mAgent).setHeader("Referer", mReferer).addAction((aRequest, aResponse) ->
+		{
+			if (aSetReferer)
 			{
-				if (aSetReferer)
-				{
-					mReferer = aUrl.toExternalForm();
-				}
+				mReferer = aUrl.toExternalForm();
+			}
 
-				copyCookies(request, response);
-			});
+			copyCookies(aRequest, aResponse);
+		});
+	}
+
+
+	public HttpPost post(String aUrl) throws MalformedURLException
+	{
+		return post(aUrl, mUpdateReferer);
+	}
+
+
+	public HttpPost post(String aUrl, boolean aSetReferer) throws MalformedURLException
+	{
+		return post(new URL(aUrl), aSetReferer);
+	}
+
+
+	public HttpPost post(URL aUrl) throws MalformedURLException
+	{
+		return post(aUrl, mUpdateReferer);
 	}
 
 
 	public HttpPost post(URL aUrl, boolean aSetReferer) throws MalformedURLException
 	{
-		return new HttpPost(this)
-			.setURL(aUrl)
-			.setHeader("User-Agent", mAgent)
-			.setHeader("Referer", mReferer)
-			.addAction((request, response) ->
+		return new HttpPost(this).setURL(aUrl).setHeader("User-Agent", mAgent).setHeader("Referer", mReferer).addAction((aRequest, aResponse) ->
+		{
+			if (aSetReferer)
 			{
-				if (aSetReferer)
-				{
-					mReferer = aUrl.toExternalForm();
-				}
+				mReferer = aUrl.toExternalForm();
+			}
 
-				copyCookies(request, response);
-			});
+			copyCookies(aRequest, aResponse);
+		});
 	}
 
 
@@ -141,7 +179,13 @@ public class HttpClient
 	{
 //		System.out.println("******"+mCookies.computeIfAbsent(aURL.getHost(), e->new HashMap<>()));
 
-		return mCookies.computeIfAbsent(aURL.getHost(), e -> new HashMap<>());
+		Map<String, String> map = mCookies.get(aURL.getHost());
+		if (map == null)
+		{
+			map = new HashMap<>();
+			mCookies.put(aURL.getHost(), map);
+		}
+		return map;
 	}
 
 
@@ -162,30 +206,5 @@ public class HttpClient
 		cookies.put(key, value);
 
 		return this;
-	}
-
-
-	public static void main(String... args)
-	{
-		try
-		{
-			HttpClient client = new HttpClient();
-
-			HttpResponse response = client
-				.get("https://dips.surikat.net/Login")
-				.execute();
-
-			System.out.println(response.getHeaders());
-
-			response = client
-				.get("https://dips.surikat.net/Login")
-				.execute();
-
-			System.out.println(response.getHeaders());
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
 	}
 }

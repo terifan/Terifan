@@ -12,11 +12,11 @@ public class HttpGet extends HttpRequest<HttpGet>
 	{
 		super();
 
-		mMethod = "GET";
+		mMethod = HttpMethod.GET;
 	}
 
 
-	public HttpGet(URL aURL) throws MalformedURLException
+	public HttpGet(URL aURL)
 	{
 		this();
 
@@ -24,9 +24,18 @@ public class HttpGet extends HttpRequest<HttpGet>
 	}
 
 
-	public HttpGet(String aURL) throws MalformedURLException
+	public HttpGet(String aURL)
 	{
-		this(new URL(aURL));
+		this();
+
+		try
+		{
+			mURL = new URL(aURL);
+		}
+		catch (MalformedURLException e)
+		{
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 
@@ -35,6 +44,23 @@ public class HttpGet extends HttpRequest<HttpGet>
 		this();
 
 		mClient = aClient;
+	}
+
+
+	/**
+	 * @param aMethod
+	 *   one of GET, HEAD, DELETE or OPTIONS
+	 */
+	@Override
+	public HttpGet setMethod(HttpMethod aMethod)
+	{
+		if (aMethod == null || !(aMethod == HttpMethod.GET || aMethod == HttpMethod.HEAD || aMethod == HttpMethod.DELETE || aMethod == HttpMethod.OPTIONS))
+		{
+			throw new IllegalArgumentException();
+		}
+
+		mMethod = aMethod;
+		return this;
 	}
 
 

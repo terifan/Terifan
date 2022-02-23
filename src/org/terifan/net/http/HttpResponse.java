@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 
 public class HttpResponse
@@ -17,6 +18,7 @@ public class HttpResponse
 	protected HttpClient mClient;
 	protected Map<String, List<String>> mHeaders;
 	protected String mRedirect;
+	private boolean mContentProduced;
 
 
 	HttpResponse(HttpURLConnection aConnection) throws IOException
@@ -62,6 +64,10 @@ public class HttpResponse
 
 	public byte[] getContent()
 	{
+		if (mContent == null && mContentProduced)
+		{
+			throw new IllegalStateException("Response content was written to output stream!");
+		}
 		return mContent;
 	}
 
@@ -107,5 +113,21 @@ public class HttpResponse
 	{
 		mClient = aClient;
 		return this;
+	}
+
+
+	void setContentProduced(boolean aState)
+	{
+		mContentProduced = aState;
+	}
+
+
+	public <T> T to(Function<byte[], T> aFunction)
+	{
+		if (mContent == null || mContent.length == 0)
+		{
+			return null;
+		}
+		return (T)aFunction.apply(mContent);
 	}
 }

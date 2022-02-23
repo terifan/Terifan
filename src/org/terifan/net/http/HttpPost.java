@@ -4,29 +4,32 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-import org.terifan.io.Streams;
 
 
 public class HttpPost extends HttpRequest<HttpPost>
 {
-	protected Object mInput;
+	private final static String TAG = HttpPost.class.getName();
+
+	protected InputStream mInput;
+	protected LinkedHashMap<String,String> mTrailers;
 
 
 	public HttpPost()
 	{
 		super();
 
-		mMethod = "POST";
+		mMethod = HttpMethod.POST;
 	}
 
 
-	public HttpPost(URL aURL) throws MalformedURLException
+	public HttpPost(URL aURL)
 	{
 		this();
 
@@ -34,9 +37,18 @@ public class HttpPost extends HttpRequest<HttpPost>
 	}
 
 
-	public HttpPost(String aURL) throws MalformedURLException
+	public HttpPost(String aURL)
 	{
-		this(new URL(aURL));
+		this();
+
+		try
+		{
+			mURL = new URL(aURL);
+		}
+		catch (MalformedURLException e)
+		{
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 
@@ -48,6 +60,23 @@ public class HttpPost extends HttpRequest<HttpPost>
 	}
 
 
+	/**
+	 * @param aMethod
+	 *   one of POST, PUT
+	 */
+	@Override
+	public HttpPost setMethod(HttpMethod aMethod)
+	{
+		if (aMethod == null || !(aMethod == HttpMethod.POST || aMethod == HttpMethod.PUT))
+		{
+			throw new IllegalArgumentException();
+		}
+
+		mMethod = aMethod;
+		return this;
+	}
+
+
 	public HttpPost setInput(byte[] aInput)
 	{
 		mInput = new ByteArrayInputStream(aInput);
@@ -55,14 +84,17 @@ public class HttpPost extends HttpRequest<HttpPost>
 	}
 
 
-	public HttpPost setInput(InputStream aInput)
+	public HttpPost setInput(byte[] aInput, boolean aUseFixedLengthTransfer)
 	{
-		mInput = aInput;
+		mInput = new ByteArrayInputStream(aInput);
+		mContentLength = (long)aInput.length;
+		mFixedLengthStreaming = aUseFixedLengthTransfer;
+
 		return this;
 	}
 
 
-	public HttpPost setInput(Reader aInput)
+	public HttpPost setInput(InputStream aInput)
 	{
 		mInput = aInput;
 		return this;
@@ -75,13 +107,24 @@ public class HttpPost extends HttpRequest<HttpPost>
 	}
 
 
+//	public HttpPost putTrailer(String aName, String aValue)
+//	{
+//		if (mTrailers == null)
+//		{
+//			mTrailers = new LinkedHashMap<>();
+//		}
+//		mTrailers.put(aName, aValue);
+//		return this;
+//	}
+
+
 	@Override
 	public HttpResponse execute() throws IOException
 	{
 		if (mInput == null && !mParameters.isEmpty())
 		{
-			super.setContentType("application/x-www-form-urlencoded");
-			super.setHeader("charset", "utf-8");
+			setContentType("application/x-www-form-urlencoded");
+			setHeader("charset", "utf-8");
 
 			StringBuilder link = new StringBuilder();
 
@@ -96,7 +139,7 @@ public class HttpPost extends HttpRequest<HttpPost>
 				first = false;
 			}
 
-			mInput = link.toString().getBytes("utf-8");
+			mInput = new ByteArrayInputStream(link.toString().getBytes(StandardCharsets.UTF_8));
 		}
 
 		if (mInput == null)
@@ -104,11 +147,24 @@ public class HttpPost extends HttpRequest<HttpPost>
 			throw new IllegalArgumentException("Source is not set.");
 		}
 
+		if (mTransferListener != null)
+		{
+			mTransferListener.prepareSending(mContentLength == null ? -1 : mContentLength);
+		}
+
 		HttpURLConnection conn = openConnection();
 
-		OutputStream out = conn.getOutputStream();
+		OutputStream outputStream = conn.getOutputStream();
 
-		Streams.transfer(mInput, out);
+		TransferCallback tc = aCount ->
+		{
+			if (mTransferListener != null)
+			{
+				mTransferListener.sending(aCount);
+			}
+		};
+
+		transfer(mInput, outputStream, tc);
 
 		HttpResponse response = buildResponse(conn);
 

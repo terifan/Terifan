@@ -42,7 +42,7 @@ public class XmlDocument extends XmlNode
 
     public XmlDocument(String aXmlContent)
     {
-		this(aXmlContent, true);
+		this(removeMSBug(aXmlContent), true);
     }
 
 
@@ -277,5 +277,15 @@ public class XmlDocument extends XmlNode
 		}
 
 		return null;
+	}
+
+
+	private static String removeMSBug(String aXML)
+	{
+		if (aXML.charAt(0) == 65279)
+		{
+			return aXML.substring(1);
+		}
+		return aXML;
 	}
 }
