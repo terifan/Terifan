@@ -44,6 +44,7 @@ public abstract class HttpRequest<E extends HttpRequest>
 	protected String mCharSet;
 	protected String mLoginName;
 	protected String mPassword;
+	protected String mToken;
 	protected Long mContentLength;
 	protected int mConnectTimeOut;
 	protected int mReadTimeOut;
@@ -208,10 +209,26 @@ public abstract class HttpRequest<E extends HttpRequest>
 	}
 
 
+	/**
+	 * Sets the Authorization header to a "Basic" username/password pair. Calling this method will remove the token authorization value.
+	 */
 	public E setAuthority(String aLoginName, String aPassword)
 	{
+		mToken = null;
 		mLoginName = aLoginName;
 		mPassword = aPassword;
+		return (E)this;
+	}
+
+
+	/**
+	 * Sets the Authorization header to a "Bearer" token. Calling this method will remove the username/password authorization values.
+	 */
+	public E setAuthority(String aToken)
+	{
+		mToken = aToken;
+		mLoginName = null;
+		mPassword = null;
 		return (E)this;
 	}
 
@@ -401,11 +418,18 @@ public abstract class HttpRequest<E extends HttpRequest>
 
 	private void addAuthorization(HttpURLConnection aConnection)
 	{
-		if (mLoginName != null && mPassword != null)
+		if (mLoginName != null && mPassword != null || mToken != null)
 		{
 			log("%s", "\twith basic authorization");
 
-			aConnection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString((mLoginName + ":" + mPassword).getBytes()));
+			if (mToken != null)
+			{
+				aConnection.setRequestProperty("Authorization", "Bearer " + mToken);
+			}
+			else
+			{
+				aConnection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString((mLoginName + ":" + mPassword).getBytes()));
+			}
 		}
 	}
 
