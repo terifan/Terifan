@@ -649,7 +649,6 @@ public abstract class HttpRequest<E extends HttpRequest>
 			for (;;)
 			{
 				int len = aInputStream.read(buffer);
-
 				if (len <= 0)
 				{
 					break;

@@ -3,23 +3,24 @@ package org.terifan.net.http.server;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
-import org.terifan.io.Streams;
 
 
 public class HttpServerRequest
 {
 	private String mMethod;
 	private String mPath;
-	private Integer mContentLength;
+	private Long mContentLength;
 	private InputStream mInputStream;
 	private HashMap<String, String> mHeaders;
 	private InetAddress mLocalAddress;
 	private InetAddress mRemoteAddress;
 	private int mLocalPort;
 	private int mRemotePort;
+	private byte[] mContent;
 
 
 	HttpServerRequest(Socket aSocket)
@@ -79,13 +80,13 @@ public class HttpServerRequest
 	}
 
 
-	void setContentLength(Integer aContentLength)
+	void setContentLength(Long aContentLength)
 	{
 		mContentLength = aContentLength;
 	}
 
 
-	public Integer getContentLength()
+	public Long getContentLength()
 	{
 		return mContentLength;
 	}
@@ -96,12 +97,16 @@ public class HttpServerRequest
 	 */
 	public byte[] getContent() throws IOException
 	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (InputStream in = getInputStream())
+		InputStream in = getInputStream();
+		if (in != null)
 		{
-			Streams.transfer(in, baos);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			transfer(in, baos);
+			mContent = baos.toByteArray();
+			mContentLength = (long)mContent.length;
+			mInputStream = null;
 		}
-		return baos.toByteArray();
+		return mContent;
 	}
 
 
@@ -131,7 +136,7 @@ public class HttpServerRequest
 		{
 			if (key.equalsIgnoreCase("content-length"))
 			{
-				setContentLength(Integer.parseInt(mHeaders.get(key)));
+				setContentLength(Long.parseLong(mHeaders.get(key)));
 			}
 		}
 	}
@@ -141,5 +146,30 @@ public class HttpServerRequest
 	public String toString()
 	{
 		return "HttpServerRequest{" + "mMethod=" + mMethod + ", mPath=" + mPath + ", mContentLength=" + mContentLength + ", mHeaders=" + mHeaders + ", mLocalAddress=" + mLocalAddress + ", mRemoteAddress=" + mRemoteAddress + ", mLocalPort=" + mLocalPort + ", mRemotePort=" + mRemotePort + '}';
+	}
+
+
+	protected long transfer(InputStream aInputStream, OutputStream aOutputStream) throws IOException
+	{
+		byte[] buffer = new byte[4096];
+		long total = 0;
+
+		for (;;)
+		{
+			int len = aInputStream.read(buffer);
+
+			if (len > 0)
+			{
+				aOutputStream.write(buffer, 0, len);
+				total += len;
+			}
+
+			if (len <= 0 || (mContentLength != null && total == mContentLength))
+			{
+				break;
+			}
+		}
+
+		return total;
 	}
 }

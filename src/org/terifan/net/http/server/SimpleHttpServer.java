@@ -1,5 +1,6 @@
 package org.terifan.net.http.server;
 
+import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,6 +20,7 @@ public class SimpleHttpServer
 	private InetAddress mInetAddress;
 	private boolean mDaemon;
 	private int mPort;
+	private PrintStream mLog;
 
 
 	public SimpleHttpServer(int aPort, HttpServerHandler aRequestHandler) throws UnknownHostException
@@ -32,6 +34,13 @@ public class SimpleHttpServer
 		mPort = aPort;
 		mInetAddress = aInetAddress;
 		mRequestHandler = aRequestHandler;
+	}
+
+
+	public SimpleHttpServer setLog(PrintStream aLog)
+	{
+		mLog = aLog;
+		return this;
 	}
 
 
@@ -116,6 +125,10 @@ public class SimpleHttpServer
 	 */
 	protected void printLog(Object aMessage)
 	{
+		if (mLog != null)
+		{
+			mLog.println(aMessage);
+		}
 	}
 
 
