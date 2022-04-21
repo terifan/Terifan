@@ -1,75 +1,42 @@
 package org.terifan.util;
 
-import java.util.function.Consumer;
+import java.util.concurrent.Future;
 
 
 /**
- * An executor implementation that blocks for a maximum time or until a work has finished.
+ * The TimeLimitedExecutor executes a Runnable for a maximum time. If the time limit is reached the working thread will be interrupted.
  *
  * <pre>
- *  TimeLimitedExecutor executor = new TimeLimitedExecutor();
- *
- * 	Work work = () ->
- * 	{
- * 		// perform some work
- * 		Thread.sleep(7000);
- *
- * 		if (executor.isExpired())
- * 		{
- * 			// rollback if possible
- * 		}
- * 	};
- *
- * 	if (executor.waitFor(5000, work))
- * 	{
- * 		// job finshed
- * 	}
- *
- *  // optional
- * 	executor.awaitTermination();
+ * String s = new TimeLimitedExecutor<String>().waitFor(5000, work).getResult();
  * </pre>
  */
-public class TimeLimitedExecutor
+public class TimeLimitedExecutor<R>
 {
 	private final Object mLock;
 	private long mStartTime;
 	private long mStopTime;
 	private boolean mExpired;
 	private boolean mRunning;
-	private Consumer<Throwable> mErrorListener;
+	private boolean mInterrupted;
+	private boolean mInterruptOnTimeLimit;
+	private R mResult;
+	private Exception mException;
 
 
 	public TimeLimitedExecutor()
 	{
 		mLock = new Object();
+		mInterruptOnTimeLimit = true;
 	}
 
 
 	/**
-	 * This listener is invoked with any exception the background thread is throwing.
+	 * Sets whether or not the worker thread should be interrupted or not. Default is true.
 	 */
-	public TimeLimitedExecutor setErrorListener(Consumer<Throwable> aErrorListener)
+	public TimeLimitedExecutor<R> setInterruptOnTimeLimit(boolean aInterruptOnTimeLimit)
 	{
-		mErrorListener = aErrorListener;
+		mInterruptOnTimeLimit = aInterruptOnTimeLimit;
 		return this;
-	}
-
-
-	/**
-	 * Return when background thread started.
-	 */
-	public long getStartTime()
-	{
-		return mStartTime;
-	}
-
-
-	/**
-	 * Return when background thread finished. Will return zero until thread has stopped.
-	 */
-	public long getStopTime()
-	{
-		return mStopTime;
 	}
 
 
@@ -83,18 +50,9 @@ public class TimeLimitedExecutor
 
 
 	/**
-	 * Return true if the background thread is still running.
-	 */
-	public boolean isRunning()
-	{
-		return mRunning;
-	}
-
-
-	/**
 	 * Return true if the work finished within the timeout period. If the response is false then a background thread might still be working.
 	 */
-	public boolean waitFor(long aTimeOut, Work aWork)
+	public TimeLimitedExecutorResult<R> waitFor(long aTimeOut, Work<R> aWork)
 	{
 		if (mStartTime != 0)
 		{
@@ -115,20 +73,24 @@ public class TimeLimitedExecutor
 				mRunning = true;
 				try
 				{
-					aWork.run();
+					mResult = aWork.run(TimeLimitedExecutor.this);
 				}
-				catch (Exception | Error e)
+				catch (InterruptedException e)
 				{
-					if (mErrorListener != null)
-					{
-						mErrorListener.accept(e);
-					}
+					mInterrupted = true;
+				}
+				catch (Exception e)
+				{
+					mException = e;
+				}
+				catch (Error e)
+				{
+					mException = new WrappedException(e);
 				}
 				finally
 				{
 					mRunning = false;
 					mStopTime = System.currentTimeMillis();
-
 					try
 					{
 						synchronized (mLock)
@@ -151,15 +113,20 @@ public class TimeLimitedExecutor
 			{
 				mLock.wait(mStartTime + aTimeOut);
 			}
+
+			mExpired = mRunning;
+
+			if (mRunning && mInterruptOnTimeLimit)
+			{
+				thread.interrupt();
+			}
 		}
 		catch (Exception | Error e)
 		{
 			// ignore
 		}
 
-		mExpired = mRunning;
-
-		return !mExpired;
+		return new TimeLimitedExecutorResult<>(this);
 	}
 
 
@@ -185,9 +152,156 @@ public class TimeLimitedExecutor
 	}
 
 
-	public static interface Work
+	@FunctionalInterface
+	public static interface Work<R>
 	{
-		void run() throws Exception;
+		R run(TimeLimitedExecutor<R> aExecutor) throws Exception;
+	}
+
+
+	@FunctionalInterface
+	public static interface Handler<T>
+	{
+		void accept(T aValue) throws Exception;
+	}
+
+
+	public static class WrappedException extends RuntimeException
+	{
+		public WrappedException(Throwable aThrwbl)
+		{
+			super(aThrwbl);
+		}
+	}
+
+
+	public static class TimeLimitedExecutorResult<R>
+	{
+		TimeLimitedExecutor<R> mExecutor;
+
+
+		TimeLimitedExecutorResult(TimeLimitedExecutor aExecutor)
+		{
+			mExecutor = aExecutor;
+		}
+
+
+		public TimeLimitedExecutorResult<R> onExpired(Handler<TimeLimitedExecutor<R>> aHandler)
+		{
+			if (mExecutor.mInterrupted || mExecutor.mExpired)
+			{
+				try
+				{
+					aHandler.accept(mExecutor);
+				}
+				catch (RuntimeException e)
+				{
+					throw e;
+				}
+				catch (Exception | Error e)
+				{
+					throw new WrappedException(e);
+				}
+			}
+			return this;
+		}
+
+
+		public TimeLimitedExecutorResult<R> onException(Handler<Exception> aHandler)
+		{
+			if (mExecutor.mException != null)
+			{
+				try
+				{
+					aHandler.accept(mExecutor.mException);
+				}
+				catch (RuntimeException e)
+				{
+					throw e;
+				}
+				catch (Exception | Error e)
+				{
+					throw new WrappedException(e);
+				}
+			}
+			return this;
+		}
+
+
+		public TimeLimitedExecutorResult<R> onDone(Handler<R> aHandler)
+		{
+			if (isDone())
+			{
+				try
+				{
+					aHandler.accept(mExecutor.mResult);
+				}
+				catch (RuntimeException e)
+				{
+					throw e;
+				}
+				catch (Exception | Error e)
+				{
+					throw new WrappedException(e);
+				}
+			}
+			return this;
+		}
+
+
+		public TimeLimitedExecutorResult<R> awaitTermination()
+		{
+			mExecutor.awaitTermination();
+			return this;
+		}
+
+
+		public boolean isDone()
+		{
+			return !mExecutor.mRunning && !mExecutor.mExpired;
+		}
+
+
+		public boolean isExpired()
+		{
+			return mExecutor.mExpired;
+		}
+
+
+		public boolean isRunning()
+		{
+			return mExecutor.mRunning;
+		}
+
+
+		public R get()
+		{
+			return mExecutor.mResult;
+		}
+
+
+		public Exception getException()
+		{
+			return mExecutor.mException;
+		}
+
+
+		/**
+		 * Return when background thread started.
+		 */
+		public long getStartTime()
+		{
+			return mExecutor.mStartTime;
+		}
+
+
+		/**
+		 * Return when background thread finished. Will return zero until thread has stopped.
+		 */
+		public long getStopTime()
+		{
+			return mExecutor.mStopTime;
+		}
 	}
 
 
@@ -197,29 +311,31 @@ public class TimeLimitedExecutor
 		{
 			long time = System.currentTimeMillis();
 
-			TimeLimitedExecutor timeoutLock = new TimeLimitedExecutor();
-
-			StringBuilder sb = new StringBuilder();
-
-			Work work = () ->
+			Work<String> work = e ->
 			{
 				Thread.sleep(7000);
-				sb.append("done");
 
-				if (timeoutLock.isExpired())
+				if (e.isExpired())
 				{
-					sb.append("---rollback");
+					System.out.println("rollback");
+					throw new IllegalStateException("rollback");
 				}
+
+				return "bobby";
 			};
 
-			boolean b = timeoutLock.waitFor(5000, work);
+			String s = new TimeLimitedExecutor<String>()
+//				.setInterruptOnTimeLimit(false)
+				.waitFor(5000, work)
+				.onExpired(e -> System.out.println("timeout"))
+				.onException(e -> {throw e;})
+				.onDone(e -> System.out.println(e))
+				.awaitTermination()
+				.onException(e -> {throw e;})
+				.get();
 
 			System.out.println(System.currentTimeMillis() - time);
-			System.out.println(b);
-
-			timeoutLock.awaitTermination();
-
-			System.out.println(sb);
+			System.out.println(s);
 		}
 		catch (Throwable e)
 		{
