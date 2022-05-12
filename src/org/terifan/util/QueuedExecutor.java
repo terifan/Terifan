@@ -1,17 +1,35 @@
 package org.terifan.util;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 
 /**
- * Queue tasks to be executed after/before some process is initialized/destroyed. This class is useful for batch writing records to a file or database.
+ * Executor executing tasks in a background thread. The initializer method is always called when starting executing items and when the queue
+ * is emptied a destroy method is called.
+ * <p>
+ * The initializer can be used to open a file/database while the destroyer can be used to close file/database.
+ * </p>
  */
-public abstract class QueuedExecutor<T>
+public class QueuedExecutor<T>
 {
+	private final Object mShuttingDownLock = new Object();
 	private final ArrayList<T> mTasks;
-	private final long mExecutionDelay;
 	private final long mDestroyDelay;
+	private boolean mShuttingDown;
 	private Worker mWorker;
+	private Consumer<T> mHandler;
+	private Runnable mInitializer;
+	private Runnable mDestroyer;
+
+
+	/**
+	 * Create a new QueuedExecutor with a lifetime of one second.
+	 */
+	public QueuedExecutor()
+	{
+		this(1000);
+	}
 
 
 	/**
@@ -22,11 +40,34 @@ public abstract class QueuedExecutor<T>
 	 * @param aDestroyDelay
 	 *   the delay before execution stops after the last task has been executed.
 	 */
-	public QueuedExecutor(long aExecutionDelay, long aDestroyDelay)
+	public QueuedExecutor(long aDestroyDelay)
 	{
 		mTasks = new ArrayList<>();
-		mExecutionDelay = aExecutionDelay;
 		mDestroyDelay = aDestroyDelay;
+		mHandler = dummy -> {};
+		mInitializer = () -> {};
+		mDestroyer = () -> {};
+	}
+
+
+	public QueuedExecutor setHandler(Consumer<T> aHandler)
+	{
+		mHandler = aHandler;
+		return this;
+	}
+
+
+	public QueuedExecutor setInitializer(Runnable aInitializer)
+	{
+		mInitializer = aInitializer;
+		return this;
+	}
+
+
+	public QueuedExecutor setDestroyer(Runnable aDestroyer)
+	{
+		mDestroyer = aDestroyer;
+		return this;
 	}
 
 
@@ -36,6 +77,11 @@ public abstract class QueuedExecutor<T>
 	 */
 	public void schedule(T aTask)
 	{
+		if (mShuttingDown)
+		{
+			throw new IllegalStateException("Executor is shutting down and doesn't accept any more tasks");
+		}
+
 		synchronized (mTasks)
 		{
 			mTasks.add(aTask);
@@ -47,6 +93,23 @@ public abstract class QueuedExecutor<T>
 			{
 				mWorker = new Worker();
 				mWorker.start();
+			}
+		}
+	}
+
+
+	public void shutdown()
+	{
+		synchronized (mShuttingDownLock)
+		{
+			mShuttingDown = true;
+
+			try
+			{
+				mShuttingDownLock.wait();
+			}
+			catch (InterruptedException e)
+			{
 			}
 		}
 	}
@@ -66,17 +129,9 @@ public abstract class QueuedExecutor<T>
 		@Override
 		public void run()
 		{
-			try
-			{
-				Thread.sleep(mExecutionDelay);
-			}
-			catch (InterruptedException e)
-			{
-			}
-
 			synchronized (mTasks)
 			{
-				mExecutor.init();
+				mInitializer.run();
 			}
 
 			for (;;)
@@ -92,7 +147,16 @@ public abstract class QueuedExecutor<T>
 						}
 						task = mTasks.remove(0);
 					}
-					execute(task);
+					mHandler.accept(task);
+				}
+
+				synchronized (mShuttingDownLock)
+				{
+					if (mShuttingDown)
+					{
+						mShuttingDownLock.notify();
+						break;
+					}
 				}
 
 				try
@@ -115,75 +179,8 @@ public abstract class QueuedExecutor<T>
 			synchronized (mTasks)
 			{
 				mWorker = null;
-				mExecutor.destroy();
+				mDestroyer.run();
 			}
 		}
 	}
-
-
-	/**
-	 * Override this method and implement the initialization of the executor such as opening a database or file stream.
-	 */
-	protected void init()
-	{
-	}
-
-
-	/**
-	 * Override this method and implement the shutdown of the executor such as closing a database or file stream.
-	 */
-	protected void destroy()
-	{
-	}
-
-
-	/**
-	 * Implement this method to execute some code on the task.
-	 */
-	protected abstract void execute(T aTask);
-
-
-//	public static void main(String ... args)
-//	{
-//		try
-//		{
-//			QueuedExecutor<String> executor = new QueuedExecutor<String>(100, 100)
-//			{
-//				@Override
-//				protected void init()
-//				{
-//					System.out.println("init");
-//				}
-//				@Override
-//				protected void destroy()
-//				{
-//					System.out.println("destroy");
-//				}
-//				@Override
-//				protected void execute(String aTask)
-//				{
-//					System.out.println("\t" + aTask);
-//					try
-//					{
-//						Thread.sleep(new java.util.Random().nextInt(100));
-//					}
-//					catch (Exception e)
-//					{
-//						e.printStackTrace(System.out);
-//					}
-//				}
-//			};
-//
-//			for (int i = 0;i<10000;i++)
-//			{
-//				System.out.println("+schedule " + i);
-//				executor.schedule("task " + i);
-//				Thread.sleep(new java.util.Random().nextInt(200));
-//			}
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
 }
