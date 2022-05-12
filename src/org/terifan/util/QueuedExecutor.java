@@ -10,12 +10,16 @@ import java.util.function.Consumer;
  * <p>
  * The initializer can be used to open a file/database while the destroyer can be used to close file/database.
  * </p>
+ * <p>
+ * NOTE: call the shutdown() method before closing an application to ensure the destroyer method is called.
+ * </p>
  */
 public class QueuedExecutor<T>
 {
-	private final Object mShuttingDownLock = new Object();
+	private final Object mShutdownLock = new Object();
+
 	private final ArrayList<T> mTasks;
-	private final long mDestroyDelay;
+	private long mDestroyDelay;
 	private boolean mShuttingDown;
 	private Worker mWorker;
 	private Consumer<T> mHandler;
@@ -100,13 +104,13 @@ public class QueuedExecutor<T>
 
 	public void shutdown()
 	{
-		synchronized (mShuttingDownLock)
+		synchronized (mShutdownLock)
 		{
 			mShuttingDown = true;
 
 			try
 			{
-				mShuttingDownLock.wait();
+				mShutdownLock.wait();
 			}
 			catch (InterruptedException e)
 			{
@@ -117,15 +121,6 @@ public class QueuedExecutor<T>
 
 	private class Worker extends Thread
 	{
-		private final QueuedExecutor<T> mExecutor;
-
-
-		public Worker()
-		{
-			mExecutor = QueuedExecutor.this;
-		}
-
-
 		@Override
 		public void run()
 		{
@@ -150,11 +145,11 @@ public class QueuedExecutor<T>
 					mHandler.accept(task);
 				}
 
-				synchronized (mShuttingDownLock)
+				synchronized (mShutdownLock)
 				{
 					if (mShuttingDown)
 					{
-						mShuttingDownLock.notify();
+						mShutdownLock.notify();
 						break;
 					}
 				}
