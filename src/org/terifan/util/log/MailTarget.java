@@ -2,7 +2,6 @@ package org.terifan.util.log;
 
 import java.util.Date;
 import java.util.Properties;
-//import javax.activation.DataHandler;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Session;
