@@ -7,7 +7,6 @@ import java.util.ArrayDeque;
 public class JSONBuilder
 {
 	private StringWriter mWriter;
-	private String mResult;
 	private ArrayDeque<Boolean> mState;
 	private ArrayDeque<Boolean> mType;
 
@@ -32,7 +31,6 @@ public class JSONBuilder
 			comma();
 			mType.push(OBJECT);
 			mState.push(FIRST);
-			System.out.println(mState);
 			mWriter.append("{");
 		}
 		catch (Exception e)
@@ -47,7 +45,10 @@ public class JSONBuilder
 	{
 		try
 		{
-			mType.pop();
+			if (mType.pop() != OBJECT)
+			{
+				throw new IllegalStateException();
+			}
 			mState.pop();
 			mWriter.append("}");
 		}
@@ -80,7 +81,10 @@ public class JSONBuilder
 	{
 		try
 		{
-			mType.pop();
+			if (mType.pop() != ARRAY)
+			{
+				throw new IllegalStateException();
+			}
 			mState.pop();
 			mWriter.append("]");
 		}
@@ -94,9 +98,24 @@ public class JSONBuilder
 
 	public JSONBuilder key(String aKey)
 	{
-			System.out.println(mState);
-		mWriter.append("\"" + aKey + "\":");
+		try
+		{
+			comma();
+			mWriter.append("\"" + escape(aKey) + "\":");
+			mState.pop();
+			mState.push(FIRST);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.out);
+		}
 		return this;
+	}
+
+
+	private static String escape(String aKey)
+	{
+		return aKey.replace("\"", "\\\"").replace("\n", "\\\n").replace("\t", "\\\t").replace("\r", "\\\r");
 	}
 
 
@@ -104,7 +123,6 @@ public class JSONBuilder
 	{
 		try
 		{
-			System.out.println(mState);
 			comma();
 
 			if (aValue == null)
@@ -125,7 +143,7 @@ public class JSONBuilder
 			}
 			else
 			{
-				mWriter.append("\"" + aValue.toString() + "\"");
+				mWriter.append("\"" + escape(aValue.toString()) + "\"");
 			}
 		}
 		catch (Exception e)
@@ -138,7 +156,7 @@ public class JSONBuilder
 
 	private void comma()
 	{
-		if(!mState.isEmpty())
+		if (!mState.isEmpty())
 		{
 			if (mState.peek() == NOT_FIRST)
 			{
