@@ -1,4 +1,4 @@
-package org.terifan.util;
+package org.terifan.util.executors;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;

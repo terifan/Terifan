@@ -1,5 +1,6 @@
 package org.terifan.util;
 
+import org.terifan.util.executors.FixedThreadExecutor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;

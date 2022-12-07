@@ -1,10 +1,10 @@
-package org.terifan.util;
+package org.terifan.util.executors;
 
 import java.lang.management.ManagementFactory;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.function.Function;
-import org.terifan.util.PrioritizedFixedThreadExecutor.PriorityRunnableTask;
+import org.terifan.util.executors.PrioritizedFixedThreadExecutor.PriorityRunnableTask;
 
 
 public class PrioritizedFixedThreadExecutor<T extends Runnable> implements AutoCloseable

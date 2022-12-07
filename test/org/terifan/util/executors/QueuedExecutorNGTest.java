@@ -1,5 +1,6 @@
-package org.terifan.util;
+package org.terifan.util.executors;
 
+import org.terifan.util.executors.QueuedExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
