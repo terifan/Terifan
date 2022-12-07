@@ -90,18 +90,15 @@ class TextPane
 				}
 			}
 
-			synchronized (aWindow)
+			JScrollBar scrollBar = mScrollPane.getVerticalScrollBar();
+			boolean scroll = scrollBar.getValue() + scrollBar.getVisibleAmount() + 20 >= scrollBar.getMaximum();
+
+			insertString(aWindow, DATETIME_FORMAT.format(System.currentTimeMillis()), mDateTimeStyle);
+			insertString(aWindow, "\t" + String.format(aText == null ? "null" : aText.toString(), aParameters) + "\n", textStyleToStyle(aTextStyle));
+
+			if (scroll)
 			{
-				JScrollBar scrollBar = mScrollPane.getVerticalScrollBar();
-				boolean scroll = scrollBar.getValue() + scrollBar.getVisibleAmount() + 20 >= scrollBar.getMaximum();
-
-				insertString(aWindow, DATETIME_FORMAT.format(System.currentTimeMillis()), mDateTimeStyle);
-				insertString(aWindow, "\t" + String.format(aText == null ? "null" : aText.toString(), aParameters) + "\n", textStyleToStyle(aTextStyle));
-
-				if (scroll)
-				{
-					mTextArea.setCaretPosition(mDocument.getLength());
-				}
+				mTextArea.setCaretPosition(mDocument.getLength());
 			}
 		}
 		catch (Error | Exception e)
