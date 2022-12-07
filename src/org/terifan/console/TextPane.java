@@ -1,13 +1,18 @@
 package org.terifan.console;
 
+import java.awt.Color;
 import java.awt.Cursor;
 import java.text.SimpleDateFormat;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
-import org.terifan.util.log.Log;
+import org.terifan.util.StackTraceFormatter;
 
 
 class TextPane
@@ -17,10 +22,15 @@ class TextPane
 	private StyledDocument mDocument;
 	private JScrollPane mScrollPane;
 	private JTextPane mTextArea;
+	private Style mDateTimeStyle;
+	private Style mDefaultFont;
 
 
 	TextPane()
 	{
+		mDefaultFont = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+		StyleConstants.setFontFamily(mDefaultFont, "consolas");
+
 		mTextArea = new JTextPane();
 		mTextArea.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 
@@ -29,6 +39,8 @@ class TextPane
 		mScrollPane = new JScrollPane();
 		mScrollPane.setViewportView(mTextArea);
 		mScrollPane.setBorder(null);
+
+		mDateTimeStyle = textStyleToStyle(new TextStyle("mDateTimeStyle", Color.GRAY, Color.WHITE, false));
 
 		setEditable(false);
 	}
@@ -59,39 +71,32 @@ class TextPane
 	}
 
 
-	synchronized void append(SimpleConsoleWindow aWindow, TextStyle aTextStyle, Object aText)
+	synchronized void append(SimpleConsoleWindow aWindow, TextStyle aTextStyle, Object aText, Object[] aParameters)
 	{
 		try
 		{
 			if (aText instanceof Throwable)
 			{
-				aText = Log.getStackTraceString((Throwable)aText).trim();
+				aText = StackTraceFormatter.toString((Throwable)aText).trim();
 			}
-
-			String text = DATETIME_FORMAT.format(System.currentTimeMillis()) + "\t" + aText + "\n";
+			if (aParameters != null)
+			{
+				for (int i = 0; i < aParameters.length; i++)
+				{
+					if (aParameters[i] instanceof Throwable)
+					{
+						aParameters[i] = StackTraceFormatter.toString((Throwable)aParameters[i]).trim();
+					}
+				}
+			}
 
 			synchronized (aWindow)
 			{
 				JScrollBar scrollBar = mScrollPane.getVerticalScrollBar();
-
 				boolean scroll = scrollBar.getValue() + scrollBar.getVisibleAmount() + 20 >= scrollBar.getMaximum();
 
-				int len = mDocument.getLength();
-
-				if (len > aWindow.getTextLimit())
-				{
-					mDocument.remove(0, len - aWindow.getTextLimit());
-					len = mDocument.getLength();
-				}
-
-				Style style = mDocument.getStyle(aTextStyle.getName());
-				if (style == null)
-				{
-					aTextStyle.apply(aWindow, mDocument);
-					style = mDocument.getStyle(aTextStyle.getName());
-				}
-
-				mDocument.insertString(len, text, style);
+				insertString(aWindow, DATETIME_FORMAT.format(System.currentTimeMillis()), mDateTimeStyle);
+				insertString(aWindow, "\t" + String.format(aText == null ? "null" : aText.toString(), aParameters) + "\n", textStyleToStyle(aTextStyle));
 
 				if (scroll)
 				{
@@ -101,7 +106,33 @@ class TextPane
 		}
 		catch (Error | Exception e)
 		{
-			e.printStackTrace(Log.out);
+			e.printStackTrace(System.out);
 		}
+	}
+
+
+	private void insertString(SimpleConsoleWindow aWindow, String aString, AttributeSet aStyle) throws BadLocationException
+	{
+		int len = mDocument.getLength();
+
+		if (len > aWindow.getTextLimit())
+		{
+			mDocument.remove(0, len - aWindow.getTextLimit());
+			len = mDocument.getLength();
+		}
+
+		mDocument.insertString(len, aString, aStyle);
+	}
+
+
+	private Style textStyleToStyle(TextStyle aTextStyle)
+	{
+		Style style = mDocument.getStyle(aTextStyle.getName());
+		if (style == null)
+		{
+			aTextStyle.apply(mDefaultFont, mDocument);
+			style = mDocument.getStyle(aTextStyle.getName());
+		}
+		return style;
 	}
 }

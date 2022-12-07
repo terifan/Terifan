@@ -47,9 +47,9 @@ public class TextStyle
 	}
 
 
-	void apply(SimpleConsoleWindow aWindow, StyledDocument aDocument)
+	void apply(Style aDefaultFont, StyledDocument aDocument)
 	{
-		Style regular = aDocument.addStyle("regular", aWindow.getDefaultFont());
+		Style regular = aDocument.addStyle("regular", aDefaultFont);
 
 		Style s = aDocument.addStyle(mName, regular);
 		StyleConstants.setForeground(s, mForeground);

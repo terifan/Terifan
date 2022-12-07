@@ -19,37 +19,38 @@ public class Test
 		{
 			Utilities.setSystemLookAndFeel();
 
-			try (SimpleConsoleWindow console = new SimpleConsoleWindow())
+			try (SimpleConsoleWindow console = new SimpleConsoleWindow().setAllowForceShutdown(true))
 			{
-				for (int j = 0, n = 0; j < 1000; j++)
+				for (int j = 0, n = 0; j < 100; j++)
 				{
 					for (int i = 0; i < 10; i++, n++)
 					{
-						Object text = i == 9 ? new Exception("line " + n) : "line " + n;
+						Object text = i == 9 ? new Exception("line " + n) : "line %d";
 
 						TextStyle style = i == 9 ? RED : i == 3 ? GREEN : i == 4 ? BLUE : i == 5 ? CYAN : i == 6 ? MAGENTA : i == 7 ? YELLOW : i == 8 ? GRAY : BLACK;
 
-						console.append("All", style, text);
+						console.append("All", style, text, n);
 						if (i == 9)
 						{
-							console.append("Error", style, text);
+							console.append("Error", style, text, n);
 						}
 						else if (i > 5)
 						{
-							console.append("Network", style, text);
+							console.append("Network", style, text, n);
 						}
 						else
 						{
-							console.append("General", style, text);
+							console.append("General", style, text, n);
 						}
 						Thread.sleep(50);
 					}
 
-					if (console.isCancelled())
-					{
-						System.out.println("was cancelled");
-						break;
-					}
+//					if (console.isCancelled())
+//					{
+//						console.append("X", BLUE, "closing");
+//						System.out.println("was cancelled");
+//						break;
+//					}
 				}
 			}
 		}

@@ -12,7 +12,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -20,10 +24,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import org.terifan.util.log.Log;
 
 
 public class SimpleConsoleWindow implements AutoCloseable
@@ -39,11 +39,9 @@ public class SimpleConsoleWindow implements AutoCloseable
 
 	private HashMap<String, TextPane> mTabs;
 	private boolean mCancelled;
-	private boolean mDisposeOnClose;
-	private boolean mShutdownOnClose;
 	private boolean mMinimizeToTray;
 	private int mTextLimit;
-	private Style mDefaultFont;
+	private boolean mAllowForceShutdown;
 
 	private JFrame mFrame;
 	private JTabbedPane mTabbedPane;
@@ -53,29 +51,24 @@ public class SimpleConsoleWindow implements AutoCloseable
 
 	public SimpleConsoleWindow()
 	{
+		this("");
+	}
+
+
+	public SimpleConsoleWindow(String aTitle)
+	{
 		mTabs = new HashMap<>();
-
-		mDefaultFont = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
-		StyleConstants.setFontFamily(mDefaultFont, "consolas");
-
-		setTextLimit(100_000);
-
 		mTabbedPane = new JTabbedPane();
 		mContentPanel = new JPanel(new BorderLayout());
 		mContentPanel.add(mTabbedPane, BorderLayout.CENTER);
 
 		show();
+		setTextLimit(100_000);
+		setTitle(aTitle);
 	}
 
 
-	public JPanel getContentPanel()
-	{
-		return mContentPanel;
-	}
-
-
-
-	public int getTextLimit()
+	int getTextLimit()
 	{
 		return mTextLimit;
 	}
@@ -88,29 +81,9 @@ public class SimpleConsoleWindow implements AutoCloseable
 	}
 
 
-	public boolean isMinimizeToTrayEnabled()
-	{
-		return mMinimizeToTray;
-	}
-
-
 	public SimpleConsoleWindow setMinimizeToTrayEnabled(boolean aMinimizeToTray)
 	{
 		mMinimizeToTray = aMinimizeToTray;
-		return this;
-	}
-
-
-	public SimpleConsoleWindow setDisposeOnClose(boolean aDisposeOnClose)
-	{
-		mDisposeOnClose = aDisposeOnClose;
-		return this;
-	}
-
-
-	public SimpleConsoleWindow setShutdownOnClose(boolean aShutdownOnClose)
-	{
-		mShutdownOnClose = aShutdownOnClose;
 		return this;
 	}
 
@@ -129,21 +102,16 @@ public class SimpleConsoleWindow implements AutoCloseable
 	}
 
 
-	public JTabbedPane getTabbedPane()
+	public SimpleConsoleWindow setAllowForceShutdown(boolean aAllowForceShutdown)
 	{
-		return mTabbedPane;
+		mAllowForceShutdown = aAllowForceShutdown;
+		return this;
 	}
 
 
 	public boolean isCancelled()
 	{
 		return mCancelled;
-	}
-
-
-	public JFrame getFrame()
-	{
-		return mFrame;
 	}
 
 
@@ -186,22 +154,20 @@ public class SimpleConsoleWindow implements AutoCloseable
 	}
 
 
-	protected Style getDefaultFont()
-	{
-		return mDefaultFont;
-	}
-
-
 	protected void onClose()
 	{
-		if (JOptionPane.showConfirmDialog(mFrame, "Confirm close?", mFrame.getTitle(), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+		if (mCancelled && mAllowForceShutdown)
+		{
+			if (JOptionPane.showConfirmDialog(mFrame, "Waiting for application to stop. Force shutdown?", mFrame.getTitle(), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+			{
+				System.exit(0);
+			}
+			return;
+		}
+
+		if (!mCancelled && JOptionPane.showConfirmDialog(mFrame, "Confirm close?", mFrame.getTitle(), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
 		{
 			mCancelled = true;
-
-			if (mDisposeOnClose)
-			{
-				close();
-			}
 		}
 	}
 
@@ -212,9 +178,13 @@ public class SimpleConsoleWindow implements AutoCloseable
 		{
 			Image image;
 
-			try (InputStream in = getClass().getResourceAsStream("console_icon.png"))
+			try ( InputStream in = getClass().getResourceAsStream("console_icon.png"))
 			{
 				image = ImageIO.read(in);
+			}
+			catch (Exception e)
+			{
+				image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_RGB);
 			}
 
 			MenuItem openItem = new MenuItem("Open status window");
@@ -248,7 +218,7 @@ public class SimpleConsoleWindow implements AutoCloseable
 		}
 		catch (Exception | Error e)
 		{
-			e.printStackTrace(Log.out);
+			e.printStackTrace(System.out);
 		}
 	}
 
@@ -257,7 +227,7 @@ public class SimpleConsoleWindow implements AutoCloseable
 		@Override
 		public void windowIconified(WindowEvent aEvent)
 		{
-			if (mMinimizeToTray)
+			if (mMinimizeToTray && hasTrayIcon())
 			{
 				hide();
 			}
@@ -272,27 +242,94 @@ public class SimpleConsoleWindow implements AutoCloseable
 	};
 
 
-	public void append(String aTab, TextStyle aStyle, Object aText)
+	private boolean hasTrayIcon()
 	{
-		TextPane textPane = addTabIfAbsent(aTab);
-		textPane.append(this, aStyle, aText);
+		return mTrayIcon != null;
 	}
 
 
-	private TextPane addTabIfAbsent(String aTab)
+	public void append(String aTab, TextStyle aStyle, Object aText, Object... aParameters)
 	{
-		return mTabs.computeIfAbsent(aTab, e->
+		getOrCreateTab(aTab).append(this, aStyle, aText, aParameters);
+	}
+
+
+	public void append(String[] aTabs, TextStyle aStyle, Object aText, Object... aParameters)
+	{
+		for (String tab : aTabs)
+		{
+			getOrCreateTab(tab).append(this, aStyle, aText, aParameters);
+		}
+	}
+
+
+	private synchronized TextPane getOrCreateTab(String aTab)
+	{
+		return mTabs.computeIfAbsent(aTab, e ->
 		{
 			TextPane output = new TextPane();
 
-			synchronized (this)
-			{
-				mTabbedPane.addTab(aTab, output.getScrollPane());
-				mTabbedPane.validate();
-			}
+			mTabbedPane.addTab(aTab, output.getScrollPane());
+			mTabbedPane.validate();
 
 			return output;
 		});
+	}
+
+
+	public SimpleConsoleWindow redirectSystemOut(String aTab, TextStyle aStyle)
+	{
+		return redirectSystemOut(new String[]{aTab}, aStyle);
+	}
+
+
+	public SimpleConsoleWindow redirectSystemOut(String[] aTabs, TextStyle aStyle)
+	{
+		System.setOut(new PrintStream(new ConsoleOutputStream(aTabs, aStyle)));
+		return this;
+	}
+
+
+	public SimpleConsoleWindow redirectSystemErr(String aTab, TextStyle aStyle)
+	{
+		return redirectSystemErr(new String[]{aTab}, aStyle);
+	}
+
+
+	public SimpleConsoleWindow redirectSystemErr(String[] aTabs, TextStyle aStyle)
+	{
+		System.setErr(new PrintStream(new ConsoleOutputStream(aTabs, aStyle)));
+		return this;
+	}
+
+
+	private class ConsoleOutputStream extends OutputStream
+	{
+		private ByteArrayOutputStream mBuffer = new ByteArrayOutputStream();
+		private String[] mTabs;
+		private TextStyle mStyle;
+
+
+		public ConsoleOutputStream(String[] aTabs, TextStyle aStyle)
+		{
+			mTabs = aTabs;
+			mStyle = aStyle;
+		}
+
+
+		@Override
+		public void write(int aByte)
+		{
+			if (aByte == '\n')
+			{
+				append(mTabs, mStyle, mBuffer.toString());
+				mBuffer.reset();
+			}
+			else if (aByte != '\r')
+			{
+				mBuffer.write(aByte);
+			}
+		}
 	}
 
 
@@ -302,16 +339,19 @@ public class SimpleConsoleWindow implements AutoCloseable
 	@Override
 	public void close()
 	{
-		if (mTrayIcon != null)
+		if (hasTrayIcon())
 		{
-			SystemTray.getSystemTray().remove(mTrayIcon);
+			try
+			{
+				SystemTray.getSystemTray().remove(mTrayIcon);
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace(System.out);
+			}
+			mTrayIcon = null;
 		}
 
 		mFrame.dispose();
-
-		if (mShutdownOnClose)
-		{
-			System.exit(0);
-		}
 	}
 }
