@@ -47,7 +47,7 @@ public class TextStyle
 	}
 
 
-	void apply(ConsoleOutputWindow aWindow, StyledDocument aDocument)
+	void apply(SimpleConsoleWindow aWindow, StyledDocument aDocument)
 	{
 		Style regular = aDocument.addStyle("regular", aWindow.getDefaultFont());
 

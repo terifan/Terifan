@@ -10,7 +10,7 @@ import javax.swing.text.StyledDocument;
 import org.terifan.util.log.Log;
 
 
-public class StyledTextPane
+class TextPane
 {
 	private final static SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
@@ -19,7 +19,7 @@ public class StyledTextPane
 	private JTextPane mTextArea;
 
 
-	StyledTextPane()
+	TextPane()
 	{
 		mTextArea = new JTextPane();
 		mTextArea.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
@@ -52,20 +52,20 @@ public class StyledTextPane
 	}
 
 
-	public StyledTextPane setEditable(boolean aEditable)
+	public TextPane setEditable(boolean aEditable)
 	{
 		mTextArea.setEditable(aEditable);
 		return this;
 	}
 
 
-	synchronized void append(ConsoleOutputWindow aWindow, TextStyle aTextStyle, Object aText)
+	synchronized void append(SimpleConsoleWindow aWindow, TextStyle aTextStyle, Object aText)
 	{
 		try
 		{
 			if (aText instanceof Throwable)
 			{
-				aText = Log.getStackTraceString((Throwable)aText);
+				aText = Log.getStackTraceString((Throwable)aText).trim();
 			}
 
 			String text = DATETIME_FORMAT.format(System.currentTimeMillis()) + "\t" + aText + "\n";
@@ -99,7 +99,7 @@ public class StyledTextPane
 				}
 			}
 		}
-		catch (Throwable e)
+		catch (Error | Exception e)
 		{
 			e.printStackTrace(Log.out);
 		}

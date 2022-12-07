@@ -1,13 +1,13 @@
 package org.terifan.console;
 
-import static org.terifan.console.ConsoleOutputWindow.BLACK;
-import static org.terifan.console.ConsoleOutputWindow.GREEN;
-import static org.terifan.console.ConsoleOutputWindow.RED;
-import static org.terifan.console.ConsoleOutputWindow.BLUE;
-import static org.terifan.console.ConsoleOutputWindow.CYAN;
-import static org.terifan.console.ConsoleOutputWindow.MAGENTA;
-import static org.terifan.console.ConsoleOutputWindow.YELLOW;
-import static org.terifan.console.ConsoleOutputWindow.GRAY;
+import static org.terifan.console.SimpleConsoleWindow.BLACK;
+import static org.terifan.console.SimpleConsoleWindow.GREEN;
+import static org.terifan.console.SimpleConsoleWindow.RED;
+import static org.terifan.console.SimpleConsoleWindow.BLUE;
+import static org.terifan.console.SimpleConsoleWindow.CYAN;
+import static org.terifan.console.SimpleConsoleWindow.MAGENTA;
+import static org.terifan.console.SimpleConsoleWindow.YELLOW;
+import static org.terifan.console.SimpleConsoleWindow.GRAY;
 import org.terifan.ui.Utilities;
 
 
@@ -19,7 +19,7 @@ public class Test
 		{
 			Utilities.setSystemLookAndFeel();
 
-			try (ConsoleOutputWindow console = new ConsoleOutputWindow())
+			try (SimpleConsoleWindow console = new SimpleConsoleWindow())
 			{
 				for (int j = 0, n = 0; j < 1000; j++)
 				{

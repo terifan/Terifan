@@ -26,7 +26,7 @@ import javax.swing.text.StyleContext;
 import org.terifan.util.log.Log;
 
 
-public class ConsoleOutputWindow implements AutoCloseable
+public class SimpleConsoleWindow implements AutoCloseable
 {
 	public final static TextStyle RED = new TextStyle("RED", new Color(180, 0, 0), Color.WHITE, false);
 	public final static TextStyle GREEN = new TextStyle("GREEN", new Color(0, 180, 0), Color.WHITE, false);
@@ -37,7 +37,7 @@ public class ConsoleOutputWindow implements AutoCloseable
 	public final static TextStyle GRAY = new TextStyle("GRAY", new Color(160, 160, 160), Color.WHITE, false);
 	public final static TextStyle BLACK = new TextStyle("BLACK", Color.BLACK, Color.WHITE, false);
 
-	private HashMap<String, StyledTextPane> mTabs;
+	private HashMap<String, TextPane> mTabs;
 	private boolean mCancelled;
 	private boolean mDisposeOnClose;
 	private boolean mShutdownOnClose;
@@ -51,7 +51,7 @@ public class ConsoleOutputWindow implements AutoCloseable
 	private TrayIcon mTrayIcon;
 
 
-	public ConsoleOutputWindow()
+	public SimpleConsoleWindow()
 	{
 		mTabs = new HashMap<>();
 
@@ -81,7 +81,7 @@ public class ConsoleOutputWindow implements AutoCloseable
 	}
 
 
-	public ConsoleOutputWindow setTextLimit(int aTextLimit)
+	public SimpleConsoleWindow setTextLimit(int aTextLimit)
 	{
 		mTextLimit = aTextLimit;
 		return this;
@@ -94,35 +94,35 @@ public class ConsoleOutputWindow implements AutoCloseable
 	}
 
 
-	public ConsoleOutputWindow setMinimizeToTrayEnabled(boolean aMinimizeToTray)
+	public SimpleConsoleWindow setMinimizeToTrayEnabled(boolean aMinimizeToTray)
 	{
 		mMinimizeToTray = aMinimizeToTray;
 		return this;
 	}
 
 
-	public ConsoleOutputWindow setDisposeOnClose(boolean aDisposeOnClose)
+	public SimpleConsoleWindow setDisposeOnClose(boolean aDisposeOnClose)
 	{
 		mDisposeOnClose = aDisposeOnClose;
 		return this;
 	}
 
 
-	public ConsoleOutputWindow setShutdownOnClose(boolean aShutdownOnClose)
+	public SimpleConsoleWindow setShutdownOnClose(boolean aShutdownOnClose)
 	{
 		mShutdownOnClose = aShutdownOnClose;
 		return this;
 	}
 
 
-	public ConsoleOutputWindow setTitle(String aTitle)
+	public SimpleConsoleWindow setTitle(String aTitle)
 	{
 		mFrame.setTitle(aTitle);
 		return this;
 	}
 
 
-	public ConsoleOutputWindow setAlwaysOnTop(boolean aAlwaysOnTop)
+	public SimpleConsoleWindow setAlwaysOnTop(boolean aAlwaysOnTop)
 	{
 		mFrame.setAlwaysOnTop(aAlwaysOnTop);
 		return this;
@@ -274,16 +274,16 @@ public class ConsoleOutputWindow implements AutoCloseable
 
 	public void append(String aTab, TextStyle aStyle, Object aText)
 	{
-		StyledTextPane textPane = addTabIfAbsent(aTab);
+		TextPane textPane = addTabIfAbsent(aTab);
 		textPane.append(this, aStyle, aText);
 	}
 
 
-	private StyledTextPane addTabIfAbsent(String aTab)
+	private TextPane addTabIfAbsent(String aTab)
 	{
 		return mTabs.computeIfAbsent(aTab, e->
 		{
-			StyledTextPane output = new StyledTextPane();
+			TextPane output = new TextPane();
 
 			synchronized (this)
 			{
