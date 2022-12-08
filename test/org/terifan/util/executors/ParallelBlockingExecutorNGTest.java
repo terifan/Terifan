@@ -1,7 +1,7 @@
 package org.terifan.util.executors;
 
+import org.terifan.util.ListSupplier;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -18,21 +18,29 @@ public class ParallelBlockingExecutorNGTest
 		ParallelBlockingExecutor executor = new ParallelBlockingExecutor(8);
 
 		List<String> elements = Arrays.asList("a","b","c","d","e","f","g","h");
+		Supplier<String> supplier = new ListSupplier<>(elements);
 
 		StringBuffer sb = new StringBuffer();
+		Handler<String> handler = sb::append;
 
-		Handler<String> handler = new Handler<String>()
-		{
-			@Override
-			public void run(String aParameter) throws Exception
-			{
-				sb.append(aParameter);
-			}
-		};
-
-		executor.execute(elements, handler);
+		executor.execute(supplier, handler);
 
 		assertEquals(sb.length(), elements.size());
+		System.out.println(sb);
+	}
+
+
+	@Test
+	public void testExecuteRange()
+	{
+		ParallelBlockingExecutor executor = new ParallelBlockingExecutor(8);
+
+		StringBuffer sb = new StringBuffer();
+		Handler<Integer> handler = sb::append;
+
+		executor.executeRange(0, 8, handler);
+
+		assertEquals(sb.length(), 8);
 	}
 
 
@@ -59,21 +67,17 @@ public class ParallelBlockingExecutorNGTest
 
 		StringBuffer sb = new StringBuffer();
 
-		Handler<Integer> handler = new Handler<Integer>()
+		Handler<Integer> handler = aParameter ->
 		{
-			@Override
-			public void run(Integer aParameter) throws Exception
+			try
 			{
-				try
-				{
-					Thread.sleep(aParameter);
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace(System.out);
-				}
-				sb.append(aParameter + "\n");
+				Thread.sleep(aParameter);
 			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace(System.out);
+			}
+			sb.append(aParameter + "\n");
 		};
 
 		executor.execute(elements, handler);

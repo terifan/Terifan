@@ -2,14 +2,23 @@ package org.terifan.util.executors;
 
 import java.lang.management.ManagementFactory;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 
 /**
- * ParallelBlockingExecutor executes elements in parallel with a user specified number of worker threads.
+ * ParallelBlockingExecutor executes elements from a <code>Supplier</code> in parallel using a <code>Handler</code> with a user specified
+ * number of worker threads.
+ *
+ * <pre>
+ * List&lt;Integer&gt; supplier = Arrays.asList(1,2,3);
+ * Handler&lt;Integer&gt; handler = i -&gt; System.out.println(i);
+ * new ParallelBlockingExecutor(2).execute(supplier, handler);
+ * </pre>
  */
 public class ParallelBlockingExecutor
 {
+	private final Object mIteratorLock = new Object();
 	private final Worker[] mWorkers;
 	private boolean mCancelled;
 	private int mShutdownCount;
@@ -76,9 +85,10 @@ public class ParallelBlockingExecutor
 	 * Calls the Handler run method for each element provided by the Iterator in parallel. This method blocks until all elements have been
 	 * handled. Acquiring a value from the Iterator is synchronized.
 	 */
-	public <T> void execute(Iterable<T> aIterable, Handler<T> aHandler)
+	public void executeRange(int aStartInclusive, int aEndExclusive, Handler<Integer> aHandler)
 	{
-		execute(aIterable.iterator(), aHandler);
+		AtomicInteger counter = new AtomicInteger(aStartInclusive);
+		execute(() -> {int index = counter.getAndIncrement(); return index >= aEndExclusive ? null : index;}, aHandler);
 	}
 
 
@@ -88,17 +98,16 @@ public class ParallelBlockingExecutor
 	 */
 	public <T> void execute(Iterator<T> aIterator, Handler<T> aHandler)
 	{
-		execute(new Supplier<T>()
+		execute(() ->
 		{
-			@Override
-			public synchronized T get()
+			synchronized (mIteratorLock)
 			{
 				if (!mCancelled && aIterator.hasNext())
 				{
 					return aIterator.next();
 				}
-				return null;
 			}
+			return null;
 		}, aHandler);
 	}
 
@@ -116,7 +125,7 @@ public class ParallelBlockingExecutor
 
 		for (int i = 0; i < mWorkers.length; i++)
 		{
-			mWorkers[i] = new Worker();
+			mWorkers[i] = new Worker(i);
 			mWorkers[i].start();
 		}
 
@@ -135,18 +144,19 @@ public class ParallelBlockingExecutor
 	}
 
 
-	protected Object aquire()
+	private Object aquire()
 	{
 		Object parameter;
 
 		if (mCancelled || (parameter = mSupplier.get()) == null)
 		{
-			mShutdownCount++;
-
-			if (mShutdownCount == mWorkers.length)
+			synchronized (this)
 			{
-				synchronized (this)
+				mShutdownCount++;
+
+				if (mShutdownCount == mWorkers.length)
 				{
+					mCancelled = true;
 					notify();
 				}
 			}
@@ -160,26 +170,40 @@ public class ParallelBlockingExecutor
 
 	private class Worker<T> extends Thread
 	{
+		private int mIndex;
+
+		public Worker(int aIndex)
+		{
+			mIndex = aIndex;
+		}
+
 		@Override
 		public void run()
 		{
-			for (;;)
+			try
 			{
-				T parameter = (T)aquire();
+				for (;;)
+				{
+					T parameter = (T)aquire();
 
-				if (parameter == null)
-				{
-					break;
-				}
+					if (parameter == null)
+					{
+						break;
+					}
 
-				try
-				{
-					mHandler.run(parameter);
+					try
+					{
+						mHandler.run(parameter);
+					}
+					catch (Exception | Error e)
+					{
+						e.printStackTrace(System.out);
+					}
 				}
-				catch (Exception | Error e)
-				{
-					e.printStackTrace(System.out);
-				}
+			}
+			finally
+			{
+				mWorkers[mIndex] = null;
 			}
 		}
 	}
