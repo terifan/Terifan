@@ -5,17 +5,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
-import org.terifan.util.executors.ParallelBlockingExecutor.Handler;
+import org.terifan.util.executors.PollingExecutor.Handler;
 import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 
 
-public class ParallelBlockingExecutorNGTest
+public class PollingExecutorNGTest
 {
 	@Test
 	public void testExecute1()
 	{
-		ParallelBlockingExecutor executor = new ParallelBlockingExecutor(8);
+		PollingExecutor executor = new PollingExecutor(8);
 
 		List<String> elements = Arrays.asList("a","b","c","d","e","f","g","h");
 		Supplier<String> supplier = new ListSupplier<>(elements);
@@ -33,7 +33,7 @@ public class ParallelBlockingExecutorNGTest
 	@Test
 	public void testExecuteRange()
 	{
-		ParallelBlockingExecutor executor = new ParallelBlockingExecutor(8);
+		PollingExecutor executor = new PollingExecutor(8);
 
 		StringBuffer sb = new StringBuffer();
 		Handler<Integer> handler = sb::append;
@@ -47,7 +47,7 @@ public class ParallelBlockingExecutorNGTest
 	@Test
 	public void testExecute2()
 	{
-		ParallelBlockingExecutor executor = new ParallelBlockingExecutor(8);
+		PollingExecutor executor = new PollingExecutor(8);
 
 		Supplier<Integer> elements = new Supplier()
 		{

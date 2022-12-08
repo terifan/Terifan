@@ -16,7 +16,7 @@ import java.util.function.Supplier;
  * new ParallelBlockingExecutor(2).execute(supplier, handler);
  * </pre>
  */
-public class ParallelBlockingExecutor
+public class PollingExecutor
 {
 	private final Object mIteratorLock = new Object();
 	private final Worker[] mWorkers;
@@ -32,7 +32,7 @@ public class ParallelBlockingExecutor
 	 * @param aNumThreads
 	 *   a positive number equals number of threads to use, a negative number results in total available processors minus aNumThreads threads.
 	 */
-	public ParallelBlockingExecutor(int aThreads)
+	public PollingExecutor(int aThreads)
 	{
 		int count;
 		if (aThreads > 0)
@@ -58,7 +58,7 @@ public class ParallelBlockingExecutor
 	 * @param aThreads
 	 *   number of threads expressed as a number between 0 and 1 out of total available CPUs
 	 */
-	public ParallelBlockingExecutor(float aThreads)
+	public PollingExecutor(float aThreads)
 	{
 		if (aThreads < 0 || aThreads > 1)
 		{
