@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -475,6 +477,17 @@ public class ObjectStringifier
 					aPrintStream.print(aIndent);
 					printArray(((List)aValue).toArray(), Object.class, aPrintStream, aIndent + INTENT, 1, aVisitedObjects, true);
 				}
+				else if (Set.class.isAssignableFrom(aType))
+				{
+					aPrintStream.print(aIndent);
+					printArray(((Set)aValue).toArray(), Object.class, aPrintStream, aIndent + INTENT, 1, aVisitedObjects, true);
+				}
+				else if (Map.class.isAssignableFrom(aType))
+				{
+					aPrintStream.print(aIndent);
+					printArray(((Map)aValue).keySet().toArray(), Object.class, aPrintStream, aIndent + INTENT, 1, aVisitedObjects, true);
+					printArray(((Map)aValue).values().toArray(), Object.class, aPrintStream, aIndent + INTENT, 1, aVisitedObjects, true);
+				}
 				else
 				{
 					return false;
@@ -500,7 +513,7 @@ public class ObjectStringifier
 
 			return aField.get(aObject);
 		}
-		catch (IllegalAccessException e)
+		catch (Exception | Error e)
 		{
 			return null;
 		}
