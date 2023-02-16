@@ -1,12 +1,14 @@
 package org.terifan.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.CharArrayWriter;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +34,7 @@ public class ObjectStringifier
 	private HashSet<Object> mDoNotVisitObjects;
 	private HashSet<String> mDoNotVisitFields;
 	private String mArrayLimitSymbol;
-	private PrintStream mPrintStream;
+	private PrintWriter mPrintStream;
 
 
 	public ObjectStringifier()
@@ -212,8 +214,8 @@ public class ObjectStringifier
 			return null;
 		}
 
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (PrintStream ps = new PrintStream(baos))
+		CharArrayWriter buffer = new CharArrayWriter();
+		try (PrintWriter ps = new PrintWriter(buffer))
 		{
 			mPrintStream = ps;
 			printObject(aObject, aObject.getClass(), 0, true);
@@ -221,22 +223,22 @@ public class ObjectStringifier
 
 		if (mIndent)
 		{
-			return new String(baos.toByteArray());
+			return buffer.toString();
 		}
 
-		return new String(baos.toByteArray()).replace("\r", "").replace("\n", "").replace(INTENT, "");
+		return buffer.toString().replace("\r", "").replace("\n", "").replace(INTENT, "");
 	}
 
 
 	public void print(Object aObject)
 	{
-		print(aObject, System.out);
+		print(aObject, new PrintWriter(System.out));
 	}
 
 
-	public void print(Object aObject, PrintStream aPrintStream)
+	public void print(Object aObject, PrintWriter aPrintWriter)
 	{
-		mPrintStream = aPrintStream;
+		mPrintStream = aPrintWriter;
 		printObject(aObject, aObject.getClass(), 0, true);
 		println();
 	}
@@ -504,7 +506,7 @@ public class ObjectStringifier
 				}
 				else if (Calendar.class.isAssignableFrom(aType))
 				{
-					print(aIndent + (mSimpleClassNames ? "Calendar" : "org.terifan.util.Calendar") + "(\"" + ((Calendar)aValue).format("yyyy-MM-dd HH:mm:ss.SSS") + "\")");
+					print(aIndent + (mSimpleClassNames ? "Calendar" : "org.terifan.util.Calendar") + "(\"" + aValue + "\")");
 				}
 				else if (UUID.class.isAssignableFrom(aType))
 				{
