@@ -1,6 +1,7 @@
 package org.terifan.util;
 
 import java.lang.reflect.Array;
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -8,33 +9,21 @@ import java.util.Map;
 
 public class Strings
 {
-	/**
-	 * Matches String that are not null, not empty and match the regular expression.
-	 */
-	public static boolean matches(String aString, String aRegex)
-	{
-		return aString != null && !aString.isEmpty() && aString.matches(aRegex);
-	}
-
-
-	/**
-	 * Matches String that are either null, empty or match the regular expression.
-	 */
-	public static boolean emptyOrMatches(String aString, String aRegex)
-	{
-		return aString == null || aString.equals("") || aString.matches(aRegex);
-	}
-
-
-	public static String nullToEmpty(Object aString)
-	{
-		return aString == null ? "" : aString.toString();
-	}
-
-
 	public static String toString(byte[] aString)
 	{
 		return aString == null ? "" : new String(aString);
+	}
+
+
+	public static String toString(Object aObject)
+	{
+		return aObject == null ? "" : aObject.toString();
+	}
+
+
+	public static String nullToEmpty(Object aObject)
+	{
+		return aObject == null ? "" : aObject.toString();
 	}
 
 
@@ -44,61 +33,38 @@ public class Strings
 	}
 
 
-	public static boolean isNumeric(String aString)
-	{
-		for (int i = 0, sz = aString.length(); i < sz; i++)
-		{
-			if (!Character.isDigit(aString.charAt(i)))
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-
 	/**
 	 * Check if the String provided is null or empty.
 	 *
-	 * @param aString
-	 *   a String to test
-	 * @return
-	 *   true if null or empty
+	 * @param aString a String to test
+	 * @return true if null or empty
 	 */
-	public static boolean isEmptyOrNull(String aString)
+	public static boolean isEmptyOrNull(Object aString)
 	{
-		return aString == null || aString.isEmpty();
+		return aString == null || aString.toString().isEmpty();
 	}
 
 
 	/**
 	 * Check if the String provided is not null or empty.
 	 *
-	 * @param aString
-	 *   a String to test
-	 * @return
-	 *   true if not null or empty
+	 * @param aString a String to test
+	 * @return true if not null or empty
 	 */
-	public static boolean isNotEmptyOrNull(String aString)
+	public static boolean isNotEmptyOrNull(Object aString)
 	{
-		return aString != null && !aString.isEmpty();
+		return aString != null && !aString.toString().isEmpty();
 	}
 
 
 	/**
-	 * Compares two words for similarity and return true if the words have less
-	 * differences than the maximum threshold specified.
+	 * Compares two words for similarity and return true if the words have less differences than the maximum threshold specified.
 	 *
-	 * @param aTemplate
-	 *   the word to compare against
-	 * @param aCompareWith
-	 *   the word to compare with
-	 * @param aCaseSensitive
-	 *   true if the comparison should be case senastive
-	 * @param aTrimCompare
-	 *   differences beyond the end of the template will not be counted
-	 * @return
-	 *   true if the words match
+	 * @param aTemplate the word to compare against
+	 * @param aCompareWith the word to compare with
+	 * @param aCaseSensitive true if the comparison should be case senastive
+	 * @param aTrimCompare differences beyond the end of the template will not be counted
+	 * @return true if the words match
 	 */
 	public static int compareWords(String aTemplate, String aCompareWith, boolean aCaseSensitive, boolean aTrimCompare)
 	{
@@ -115,18 +81,12 @@ public class Strings
 	/**
 	 * Compares two words for similarity and return number of differences.
 	 *
-	 * @param aTemplate
-	 *   the word to compare against
-	 * @param aCompareWith
-	 *   the word to compare with
-	 * @param aMaxErrors
-	 *   number of mismatching characters permitted before the test is aborted
-	 * @param aCaseSensitive
-	 *   true if the comparison should be case sensitive
-	 * @param aTrimCompare
-	 *   differences beyond the end of the template will not be counted
-	 * @return
-	 *   number of different characters
+	 * @param aTemplate the word to compare against
+	 * @param aCompareWith the word to compare with
+	 * @param aMaxErrors number of mismatching characters permitted before the test is aborted
+	 * @param aCaseSensitive true if the comparison should be case sensitive
+	 * @param aTrimCompare differences beyond the end of the template will not be counted
+	 * @return number of different characters
 	 */
 	public static boolean compareWords(String aTemplate, String aCompareWith, int aMaxErrors, boolean aCaseSensitive, boolean aTrimCompare)
 	{
@@ -172,60 +132,9 @@ public class Strings
 	}
 
 
-	public static Integer toInteger(String aString, Integer aDefaultValue)
-	{
-		if (isEmptyOrNull(aString))
-		{
-			return aDefaultValue;
-		}
-		try
-		{
-			return Integer.valueOf(aString);
-		}
-		catch (Throwable e)
-		{
-			return aDefaultValue;
-		}
-	}
-
-
-	public static Long toLong(String aString, Long aDefaultValue)
-	{
-		if (isEmptyOrNull(aString))
-		{
-			return aDefaultValue;
-		}
-		try
-		{
-			return Long.valueOf(aString);
-		}
-		catch (Throwable e)
-		{
-			return aDefaultValue;
-		}
-	}
-
-
-	public static Double toDouble(String aString, Double aDefaultValue)
-	{
-		if (isEmptyOrNull(aString))
-		{
-			return aDefaultValue;
-		}
-		try
-		{
-			return Double.valueOf(aString);
-		}
-		catch (Throwable e)
-		{
-			return aDefaultValue;
-		}
-	}
-
-
 	public static String repeat(char aCharacter, int aLength)
 	{
-		char [] buf = new char[aLength];
+		char[] buf = new char[aLength];
 		Arrays.fill(buf, aCharacter);
 
 		return new String(buf);
@@ -234,9 +143,9 @@ public class Strings
 
 	public static String repeat(String aWord, int aLength)
 	{
-		char [] buf = new char[aLength];
-		char [] src = aWord.toCharArray();
-		for (int i = 0; i < aLength; )
+		char[] buf = new char[aLength];
+		char[] src = aWord.toCharArray();
+		for (int i = 0; i < aLength;)
 		{
 			for (int j = 0; i < aLength && j < src.length; j++, i++)
 			{
@@ -249,26 +158,10 @@ public class Strings
 
 
 	/**
-	 * Converts the provided Object to a String. If the value is null then value
-	 * returned is null.
-	 *
-	 * @param aValue
-	 *   a value to convert.
-	 * @return
-	 *   a String (which can be null).
-	 */
-	public static String asString(Object aValue)
-	{
-		return aValue == null ? null : aValue.toString();
-	}
-
-
-	/**
 	 * Return a comma separated list of all items in the list.
-	 * @param aList
-	 *   a list of items
-	 * @return
-	 *   a String of all items
+	 *
+	 * @param aList a list of items
+	 * @return a String of all items
 	 */
 	public static String listToString(Collection aList)
 	{
@@ -301,7 +194,7 @@ public class Strings
 			return sb.append("]").toString();
 		}
 
-		return asString(aArray);
+		return toString(aArray);
 	}
 
 
@@ -331,8 +224,7 @@ public class Strings
 	 *
 	 * E.g: join("c:/files/", "/", "/my_file.txt") returns "c:/files/my_file.txt".
 	 *
-	 * @return
-	 *   strings join with the separator in-between.
+	 * @return strings join with the separator in-between.
 	 */
 	public static String concat(String aHead, String aSeparator, String aTail)
 	{
@@ -340,7 +232,7 @@ public class Strings
 		{
 			while (aHead.endsWith(aSeparator))
 			{
-				aHead = aHead.substring(0, aHead.length()-1);
+				aHead = aHead.substring(0, aHead.length() - 1);
 			}
 			while (aTail.startsWith(aSeparator))
 			{
@@ -354,12 +246,9 @@ public class Strings
 	/**
 	 * Joins the string excluding any empty or null parts.
 	 *
-	 * @param aSeparator
-	 *   separator between parts
-	 * @param aStrings
-	 *   parts to join
-	 * @return
-	 *   the joined strings
+	 * @param aSeparator separator between parts
+	 * @param aStrings parts to join
+	 * @return the joined strings
 	 */
 	public static String join(String aSeparator, String... aStrings)
 	{
@@ -370,14 +259,10 @@ public class Strings
 	/**
 	 * Joins the string excluding any null parts.
 	 *
-	 * @param aSeparator
-	 *   separator between parts
-	 * @param aIncludeEmptyParts
-	 *   true if empty parts should be included
-	 * @param aStrings
-	 *   parts to join
-	 * @return
-	 *   the joined strings
+	 * @param aSeparator separator between parts
+	 * @param aIncludeEmptyParts true if empty parts should be included
+	 * @param aStrings parts to join
+	 * @return the joined strings
 	 */
 	public static String join(String aSeparator, boolean aIncludeEmptyParts, String... aStrings)
 	{
@@ -405,7 +290,7 @@ public class Strings
 	}
 
 
-	public static String join(String aSeparator, int aFirstIndex, int aLastIndex, FunctionEx<Integer,String> aProducer)
+	public static String join(String aSeparator, int aFirstIndex, int aLastIndex, FunctionEx<Integer, String> aProducer)
 	{
 		try
 		{
@@ -429,27 +314,21 @@ public class Strings
 	}
 
 
-	public static String replaceNull(String aString, String aReplacedWith)
+	public static String replaceNull(Object aString, String aReplacedWith)
 	{
-		return aString == null ? aReplacedWith : aString;
+		return aString == null ? aReplacedWith : aString.toString();
 	}
 
 
-	public static String replaceEmptyOrNull(String aString, String aReplacedWith)
+	public static String replaceEmptyOrNull(Object aString, String aReplacedWith)
 	{
-		return isEmptyOrNull(aString) ? aReplacedWith : aString;
+		return isEmptyOrNull(aString) ? aReplacedWith : aString.toString();
 	}
 
 
-	public static String toTimeString(long aMillis)
+	public static String replaceParams(String aText, Map<String, Object> aParams)
 	{
-		return String.format("%d:%02d:%02d.%03d", aMillis/60/60/1000, (aMillis/60/1000)%60, (aMillis/1000)%60, aMillis%1000);
-	}
-
-
-	public static String replaceParams(String aText, Map<String,Object> aParams)
-	{
-		return replaceParams(aText, e->"" + aParams.get(e));
+		return replaceParams(aText, e -> "" + aParams.get(e));
 	}
 
 
@@ -531,6 +410,12 @@ public class Strings
 	}
 
 
+	public static boolean equalsIgnoreCase(Object aA, Object aB)
+	{
+		return aA != null && aB != null && aA.toString().equalsIgnoreCase(aB.toString());
+	}
+
+
 	@FunctionalInterface
 	public interface StringLookup
 	{
@@ -538,29 +423,46 @@ public class Strings
 	}
 
 
-	/**
-	 * Removes all characters not being either letter, digits or underscore from the string.
-	 */
-	public static String sanitizeString(String aString)
+	@FunctionalInterface
+	public interface FunctionEx<T, R>
 	{
-		StringBuilder sb = new StringBuilder(aString.length());
-
-		for (int i = 0; i < aString.length(); i++)
-		{
-			char c = aString.charAt(i);
-			if (Character.isLetterOrDigit(c) || c == '_')
-			{
-				sb.append(c);
-			}
-		}
-
-		return sb.toString();
+		R apply(T aParam) throws Exception;
 	}
 
 
-	@FunctionalInterface
-	public interface FunctionEx<T,R>
+	/**
+	 * Replaces non-ASCII characters in the string provided with normalized versions if possible.
+	 */
+	public static String normalizeString(String aString)
 	{
-		R apply(T aParam) throws Exception;
+		try
+		{
+			if (aString == null || aString.isEmpty())
+			{
+				return aString;
+			}
+
+			char[] chars = aString.toCharArray();
+
+			for (int i = 0; i < chars.length; i++)
+			{
+				if (chars[i] > 255)
+				{
+					chars[i] = Normalizer.normalize(Character.toString(chars[i]), Normalizer.Form.NFD).charAt(0);
+				}
+
+				if (chars[i] == (char)322)
+				{
+					chars[i] = 'l';
+				}
+			}
+
+			// change direction of apostrophe eg. è to é
+			return Normalizer.normalize(Normalizer.normalize(new String(chars), Normalizer.Form.NFD).replace((char)768, (char)769), Normalizer.Form.NFC);
+		}
+		catch (Throwable e)
+		{
+			return aString;
+		}
 	}
 }
