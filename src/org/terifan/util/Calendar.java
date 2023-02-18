@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.terifan.util.log.Log;
 
 
 public final class Calendar implements Cloneable, Comparable<Calendar>, Serializable
@@ -184,7 +183,7 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace(Log.out);
+			e.printStackTrace(System.err);
 			return false;
 		}
 	}
@@ -1127,6 +1126,17 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	public Date toDate()
 	{
 		return new Date(get());
+	}
+
+
+	public static class IllegalDateTimeFormatException extends IllegalArgumentException
+	{
+		private final static long serialVersionUID = 1L;
+
+		public IllegalDateTimeFormatException(String aMessage)
+		{
+			super(aMessage);
+		}
 	}
 
 
