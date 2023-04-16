@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -14,17 +13,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 
+
 /**
  * Helper class replacing Executors.newFixedThreadPool()
  */
 public class FixedThreadExecutor<T> implements AutoCloseable
 {
-	private LinkedBlockingQueue mBlockingQueue;
+	private final Object LOCK = new Object();
+	private final HashMap<CallableTask, AtomicReference> mResultReceivers;
+	private final LinkedBlockingQueue mBlockingQueue;
+	private final int mThreads;
 	private ExecutorService mExecutorService;
-	private int mThreads;
-	private int mQueueSizeLimit;
 	private OnCompletion mOnCompletion;
-	private HashMap<CallableTask, AtomicReference> mResultReceivers;
+	private int mQueueLimit;
 
 
 	/**
@@ -45,7 +46,6 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 		}
 
 		mBlockingQueue = new LinkedBlockingQueue<>();
-		mQueueSizeLimit = Integer.MAX_VALUE;
 		mResultReceivers = new HashMap<>();
 	}
 
@@ -66,7 +66,6 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
 		mBlockingQueue = new LinkedBlockingQueue<>();
-		mQueueSizeLimit = Integer.MAX_VALUE;
 		mResultReceivers = new HashMap<>();
 	}
 
@@ -117,56 +116,61 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 
 	private void doSubmit(ExecutorService aService, Object aRunnable)
 	{
-		try
+		if (mQueueLimit > 0)
 		{
-			synchronized (this)
+			synchronized (LOCK)
 			{
-				while (mBlockingQueue.size() >= mQueueSizeLimit)
+				while (mBlockingQueue.size() >= mQueueLimit)
 				{
-					wait();
-				}
-
-				if (aRunnable instanceof RunnableTask)
-				{
-					aService.submit(new Runnable()
+					try
 					{
-						@Override
-						public void run()
-						{
-							try
-							{
-								((RunnableTask)aRunnable).run();
-							}
-							catch (Exception e)
-							{
-								e.printStackTrace(System.err);
-							}
-						}
-					});
-				}
-				else if (aRunnable instanceof CallableTask)
-				{
-					aService.submit(new Callable()
+						LOCK.wait(1000);
+					}
+					catch (InterruptedException e)
 					{
-						@Override
-						public Object call()
-						{
-							try
-							{
-								return ((CallableTask)aRunnable).run();
-							}
-							catch (Exception e)
-							{
-								e.printStackTrace(System.err);
-								return e;
-							}
-						}
-					});
+						System.out.println("#");
+					}
 				}
 			}
 		}
-		catch (InterruptedException e)
+
+		if (aRunnable instanceof RunnableTask)
 		{
+			aService.submit(() ->
+			{
+				try
+				{
+					((RunnableTask)aRunnable).run();
+					synchronized (LOCK)
+					{
+						LOCK.notify();
+					}
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace(System.err);
+				}
+			});
+		}
+		else if (aRunnable != null)
+		{
+			aService.submit(() ->
+			{
+				try
+				{
+					Object r = ((CallableTask)aRunnable).run();
+					synchronized (LOCK)
+					{
+						LOCK.notify();
+					}
+					return r;
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace(System.err);
+					return e;
+				}
+			});
 		}
 	}
 
@@ -265,16 +269,16 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 
 	public int getQueueSizeLimit()
 	{
-		return mQueueSizeLimit;
+		return mQueueLimit;
 	}
 
 
 	/**
 	 * Sets how many items the blocking queue will contain before the submit methods start blocking.
 	 */
-	public FixedThreadExecutor<T> setQueueSizeLimit(int aQueueSizeLimit)
+	public FixedThreadExecutor<T> setQueueLimit(int aQueueSizeLimit)
 	{
-		mQueueSizeLimit = aQueueSizeLimit;
+		mQueueLimit = aQueueSizeLimit;
 		return this;
 	}
 
