@@ -47,7 +47,8 @@ public class ImageDimensionUtil
 		{
 			int nextSegment = 0xFFFF & aBuffer.readShort();
 
-			while ((nextSegment & 0xFF00) == 0)
+			// deal with badly coded files, skip till next segment
+			while ((nextSegment & 0xFF00) != 0xFF00)
 			{
 				nextSegment = ((0xFF & nextSegment) << 8) | (0xFF & aBuffer.readByte());
 			}
