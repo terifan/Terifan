@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-
 /**
  * Helper class replacing Executors.newFixedThreadPool()
  */
@@ -228,26 +227,6 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 					{
 						mOnCompletion.onCompletion((Future)aRunnable);
 					}
-
-//					if (aThrowable == null && aRunnable instanceof Future<?>)
-//					{
-//						try
-//						{
-//							Object result = ((Future<?>)aRunnable).get();
-//						}
-//						catch (CancellationException ce)
-//						{
-//							aThrowable = ce;
-//						}
-//						catch (ExecutionException ee)
-//						{
-//							aThrowable = ee.getCause();
-//						}
-//						catch (InterruptedException ie)
-//						{
-//							Thread.currentThread().interrupt(); // ignore/reset
-//						}
-//					}
 
 					if (aThrowable != null)
 					{
