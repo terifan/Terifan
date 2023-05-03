@@ -1,15 +1,19 @@
 package org.terifan.util;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.terifan.util.executors.FixedThreadExecutor;
+import java.util.function.Consumer;
 
 
 public abstract class AsyncTask<Param, Progress, Result>
 {
 	private static final Object LOCK = new Object();
 
-	private static FixedThreadExecutor mExecutor;
-	private static Object mParallelism = 1;
+	private static Consumer<Throwable> mGlobalExceptionHandler = e -> e.printStackTrace(System.err);
+	private static ExecutorService mExecutor;
 
 	private boolean mCancelled;
 	private boolean mFinished;
@@ -21,41 +25,23 @@ public abstract class AsyncTask<Param, Progress, Result>
 	}
 
 
-	/**
-	 * Sets how many concurrent threads will process tasks. This value is used next time an executor is created which occur when all
-	 * pending tasks have been finished.
-	 *
-	 * @param aParallelism a positive number equals number of threads to use, zero or a negative number results in total available processors
-	 */
-	public static void setParallelism(int aParallelism)
+	public static void setGlobalExceptionHandler(Consumer<Throwable> amGlobalExceptionHandler)
 	{
-		mParallelism = aParallelism;
+		mGlobalExceptionHandler = amGlobalExceptionHandler;
 	}
 
 
 	/**
-	 * Sets how many concurrent threads will process tasks. This value is used next time an executor is created which occur when all
-	 * pending tasks have been finished.
-	 *
-	 * @param aParallelism number of threads expressed as a number between 0 and 1 out of total available CPUs
+	 * Convenience version of execute(java.lang.Object) for use with a simple AsyncTask.Task object.
 	 */
-	public static void setParallelism(float aParallelism)
-	{
-		mParallelism = aParallelism;
-	}
-
-
-	/**
-	 * Convenience version of execute(java.lang.Object) for use with a simple Runnable object.
-	 */
-	public static void execute(Runnable aRunnable)
+	public static void execute(Task aTask)
 	{
 		AsyncTask task = new AsyncTask()
 		{
 			@Override
 			protected Object doInBackground(Object aParam) throws Throwable
 			{
-				aRunnable.run();
+				aTask.run();
 				return null;
 			}
 		};
@@ -69,7 +55,7 @@ public abstract class AsyncTask<Param, Progress, Result>
 	 */
 	public final AsyncTask execute(Param aParam)
 	{
-		Runnable task = () ->
+		Task task = () ->
 		{
 			try
 			{
@@ -111,14 +97,17 @@ public abstract class AsyncTask<Param, Progress, Result>
 		{
 			if (mExecutor == null)
 			{
-				if (mParallelism instanceof Float)
+				mExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)new LinkedBlockingQueue())
 				{
-					mExecutor = new FixedThreadExecutor((Float)mParallelism);
-				}
-				else
-				{
-					mExecutor = new FixedThreadExecutor((Integer)mParallelism);
-				}
+					@Override
+					protected void afterExecute(Runnable aRunnable, Throwable aThrowable)
+					{
+						if (getQueue().isEmpty())
+						{
+							mExecutor.shutdown();
+						}
+					}
+				};
 			}
 			mExecutor.submit(task::run);
 		}
@@ -176,10 +165,12 @@ public abstract class AsyncTask<Param, Progress, Result>
 
 
 	/**
-	 * Called after <code>doInBackground</code> if there was an exception.
+	 * Called after <code>doInBackground</code> if there was an exception. This implementation invokes the GlobalExceptionHandler which by
+	 * default print exception to error stream.
 	 */
 	protected void onError(Throwable aThrowable) throws Throwable
 	{
+		mGlobalExceptionHandler.accept(aThrowable);
 	}
 
 
@@ -252,103 +243,109 @@ public abstract class AsyncTask<Param, Progress, Result>
 	 */
 	public static void waitFor()
 	{
-		FixedThreadExecutor prev = mExecutor;
-		mExecutor = null;
+		ExecutorService prev;
+		synchronized (LOCK)
+		{
+			prev = mExecutor;
+			mExecutor = null;
+		}
 		if (prev != null)
 		{
-			prev.close();
+			try
+			{
+				prev.shutdown();
+				prev.awaitTermination(1, TimeUnit.DAYS);
+			}
+			catch (Exception e)
+			{
+			}
 		}
 	}
 
 
-//	public static void main(String... args)
-//	{
-//		try
-//		{
-//			for (int i = 0; i < 1000; i++)
-//			{
-//				AsyncTask<Float, Integer, String> task = new AsyncTask<Float, Integer, String>()
-//				{
-//					@Override
-//					protected String doInBackground(Float aParam) throws Throwable
-//					{
-//						for (int i = 0; i <= 10; i++)
-//						{
-//							onProgressUpdate(10 * i);
-//						}
-//						return "value=" + aParam;
-//					}
-//
-//
-//					@Override
-//					protected void onPostExecute(String aResult) throws Throwable
-//					{
-//						System.out.println(aResult);
-//					}
-//
-//
-//					@Override
-//					protected void onProgressUpdate(Integer aProgress)
-//					{
-//						System.out.println(aProgress + "%");
-//					}
-//				};
-//
-//				task.execute((float)i);
-//			}
-//
-//			AsyncTask.execute(() -> System.out.println("#"));
-//
-//			System.out.println("#".repeat(100));
-//
-//			AsyncTask.waitFor();
-//			AsyncTask.setParallelism(4);
-//
-//			System.out.println("!".repeat(100));
-//
-//			for (int i = 0; i < 1000; i++)
-//			{
-//				AsyncTask<Float, Integer, String> task = new AsyncTask<Float, Integer, String>()
-//				{
-//					@Override
-//					protected String doInBackground(Float aParam) throws Throwable
-//					{
-//						for (int i = 0; i <= 10; i++)
-//						{
-//							onProgressUpdate(10 * i);
-//						}
-//						return "value=" + aParam;
-//					}
-//
-//
-//					@Override
-//					protected void onPostExecute(String aResult) throws Throwable
-//					{
-//						System.out.println(aResult);
-//					}
-//
-//
-//					@Override
-//					protected void onProgressUpdate(Integer aProgress)
-//					{
-//						System.out.println(aProgress + "%");
-//					}
-//				};
-//
-//				task.execute((float)i);
-//			}
-//
-//			AsyncTask.execute(() -> System.out.println("#"));
-//
-//			System.out.println("#".repeat(100));
-//
-//			AsyncTask.finish();
-//
-//			System.out.println("!".repeat(100));
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
+	/**
+	 * Extension of a Runnable that catch exceptions and invokes the GlobalExceptionHandler which by default print exception to error stream.
+	 */
+	@FunctionalInterface
+	public interface Task extends Runnable
+	{
+		void execute() throws Exception;
+
+		@Override
+		default void run()
+		{
+			try
+			{
+				execute();
+			}
+			catch (Throwable e)
+			{
+				mGlobalExceptionHandler.accept(e);
+			}
+		}
+	}
+
+
+	public static void main(String... args)
+	{
+		try
+		{
+			for (int i = 0; i < 1000; i++)
+			{
+				AsyncTask<Float, Integer, String> task = new AsyncTask<Float, Integer, String>()
+				{
+					@Override
+					protected String doInBackground(Float aParam) throws Throwable
+					{
+						for (int i = 0; i <= 10; i++)
+						{
+							onProgressUpdate(10 * i);
+						}
+						return "value=" + aParam;
+					}
+
+
+					@Override
+					protected void onPostExecute(String aResult) throws Throwable
+					{
+						System.out.println(aResult);
+					}
+
+
+					@Override
+					protected void onProgressUpdate(Integer aProgress)
+					{
+						System.out.println(aProgress + "%");
+					}
+				};
+
+				task.execute((float)i);
+			}
+
+			AsyncTask.execute(() -> System.out.println("+".repeat(100)));
+
+			System.out.println("#".repeat(100));
+
+			new Thread()
+			{
+				@Override
+				public void run()
+				{
+					for (int _i = 0; _i < 100; _i++)
+					{
+						int i = _i;
+						AsyncTask.execute(() -> System.out.println("*".repeat(10)+" "+i));
+					}
+				}
+			}.start();
+
+			AsyncTask.waitFor();
+
+			System.out.println("-".repeat(100));
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
+	}
 }
