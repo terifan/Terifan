@@ -11,86 +11,51 @@ import java.util.function.Consumer;
 
 public class Parallel
 {
-	private final int mFrom;
-	private final int mTo;
-	private final int mStep;
-	private final boolean mInclusive;
-
-
-	private Parallel(int aFrom, int aTo, int aStep, boolean aInclusive)
+	private Parallel()
 	{
-		if (aStep <= 0)
-		{
-			throw new IllegalArgumentException("Step must be positive.");
-		}
-
-		mFrom = aFrom;
-		mTo = aTo;
-		mStep = aStep;
-		mInclusive = aInclusive;
 	}
 
 
-	public static Parallel range(int aFrom, int aToExclusive)
+	public static ParallelSingle range(int aFrom, int aToExclusive)
 	{
-		return new Parallel(aFrom, aToExclusive, 1, false);
+		return new ParallelSingle(aFrom, aToExclusive, false);
 	}
 
 
-	public static Parallel rangeClosed(int aFrom, int aToInclusive)
+	public static ParallelSingle rangeClosed(int aFrom, int aToInclusive)
 	{
-		return new Parallel(aFrom, aToInclusive, 1, true);
+		return new ParallelSingle(aFrom, aToInclusive, true);
 	}
 
 
-	public static Parallel range(int aFrom, int aToExclusive, int aStep)
+	public static ParallelStep range(int aFrom, int aToExclusive, int aStep)
 	{
-		return new Parallel(aFrom, aToExclusive, aStep, false);
+		return new ParallelStep(aFrom, aToExclusive, aStep, false);
 	}
 
 
-	public static Parallel rangeClosed(int aFrom, int aToInclusive, int aStep)
+	public static ParallelStep rangeClosed(int aFrom, int aToInclusive, int aStep)
 	{
-		return new Parallel(aFrom, aToInclusive, aStep, true);
+		return new ParallelStep(aFrom, aToInclusive, aStep, true);
 	}
 
 
 	/**
-	 * Calls the Consumer with a value.
-	 * <pre>
-	 * Parallel.range(0, 10, 4).forEach(i->System.out.println(i));
-	 *   "0"
-	 *   "4"
-	 *   "8"
-	 *
-	 * Parallel.rangeClosed(0, 10, 5).forEach(i->System.out.println(i));
-	 *   "0"
-	 *   "5"
-	 *   "10"
-	 *
-	 * Parallel.range(0, 3).forEach(i->System.out.println(i));
-	 *   "0"
-	 *   "1"
-	 *   "2"
-	 *
-	 * Parallel.rangeClosed(0, 3).forEach(i->System.out.println(i));
-	 *   "0"
-	 *   "1"
-	 *   "2"
-	 *   "3"
-	 * </pre>
+	 * 	Parallel.of(
+	 *		()->{System.out.println(1);},
+	 *		()->{System.out.println(2);},
+	 *		()->{System.out.println(3);},
+	 *	);
 	 */
-	public void forEach(Consumer<Integer> aConsumer)
+	public static void of(Runnable... aRunnables)
 	{
 		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 
 		ExecutorService executor = new ThreadPoolExecutor(cpu, cpu, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
-		int to = mInclusive ? mTo + 1 : mTo;
-		for (int i = mFrom; i < to; i += mStep)
+		for (Runnable r : aRunnables)
 		{
-			int _i = Math.min(i, to);
-			executor.submit(() -> aConsumer.accept(_i));
+			executor.submit(r);
 		}
 
 		try
@@ -104,40 +69,129 @@ public class Parallel
 	}
 
 
-	/**
-	 * Calls the BiConsumer with a starting value and ending value equal to starting value plus step size.
-	 * <pre>
-	 * Parallel.range(0, 10, 4).forEach((i,j)->System.out.println(i+", "+j));
-	 *   "0, 3"
-	 *   "4, 7"
-	 *   "8, 9"
-	 *
-	 * Parallel.rangeClosed(0, 10, 4).forEach((i,j)->System.out.println(i+", "+j));
-	 *   "0, 4"
-	 *   "4, 8"
-	 *   "8, 10"
-	 * </pre>
-	 */
-	public void forEach(BiConsumer<Integer, Integer> aConsumer)
+	private static class ParallelImpl
 	{
-		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
+		final int mFrom;
+		final int mTo;
+		final int mStep;
+		final boolean mInclusive;
 
-		ExecutorService executor = new ThreadPoolExecutor(cpu, cpu, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-
-		for (int i = mFrom; i < mTo; i += mStep)
+		ParallelImpl(int aFrom, int aTo, int aStep, boolean aInclusive)
 		{
-			int _i = i;
-			int _j = Math.min(i + mStep, mTo) - (mInclusive ? 0 : 1);
-			executor.submit(() -> aConsumer.accept(_i, _j));
+			if (aStep <= 0)
+			{
+				throw new IllegalArgumentException("Step must be positive.");
+			}
+
+			mFrom = aFrom;
+			mTo = aTo;
+			mStep = aStep;
+			mInclusive = aInclusive;
+		}
+	}
+
+
+	public static class ParallelSingle extends ParallelImpl
+	{
+		ParallelSingle(int aFrom, int aTo, boolean aInclusive)
+		{
+			super(aFrom, aTo, 1, aInclusive);
 		}
 
-		try
+
+		/**
+		 * Calls the Consumer with a value.
+		 * <pre>
+		 * Parallel.range(0, 10, 4).forEach(i->System.out.println(i));
+		 *   "0"
+		 *   "4"
+		 *   "8"
+		 *
+		 * Parallel.rangeClosed(0, 10, 5).forEach(i->System.out.println(i));
+		 *   "0"
+		 *   "5"
+		 *   "10"
+		 *
+		 * Parallel.range(0, 3).forEach(i->System.out.println(i));
+		 *   "0"
+		 *   "1"
+		 *   "2"
+		 *
+		 * Parallel.rangeClosed(0, 3).forEach(i->System.out.println(i));
+		 *   "0"
+		 *   "1"
+		 *   "2"
+		 *   "3"
+		 * </pre>
+		 */
+		public void forEach(Consumer<Integer> aConsumer)
 		{
-			executor.shutdown();
-			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+			int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
+
+			ExecutorService executor = new ThreadPoolExecutor(cpu, cpu, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+
+			int to = mInclusive ? mTo + 1 : mTo;
+			for (int i = mFrom; i < to; i += mStep)
+			{
+				int _i = Math.min(i, to);
+				executor.submit(() -> aConsumer.accept(_i));
+			}
+
+			try
+			{
+				executor.shutdown();
+				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+			}
+			catch (InterruptedException e)
+			{
+			}
 		}
-		catch (InterruptedException e)
+	}
+
+
+	public static class ParallelStep extends ParallelImpl
+	{
+		ParallelStep(int aFrom, int aTo, int aStep, boolean aInclusive)
 		{
+			super(aFrom, aTo, aStep, aInclusive);
+		}
+
+
+		/**
+		 * Calls the BiConsumer with a starting value and ending value equal to starting value plus step size.
+		 * <pre>
+		 * Parallel.range(0, 10, 4).forEach((i,j)->System.out.println(i+", "+j));
+		 *   "0, 3"
+		 *   "4, 7"
+		 *   "8, 9"
+		 *
+		 * Parallel.rangeClosed(0, 10, 4).forEach((i,j)->System.out.println(i+", "+j));
+		 *   "0, 4"
+		 *   "4, 8"
+		 *   "8, 10"
+		 * </pre>
+		 */
+		public void forEach(BiConsumer<Integer, Integer> aConsumer)
+		{
+			int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
+
+			ExecutorService executor = new ThreadPoolExecutor(cpu, cpu, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+
+			for (int i = mFrom; i < mTo; i += mStep)
+			{
+				int _i = i;
+				int _j = Math.min(i + mStep, mTo) - (mInclusive ? 0 : 1);
+				executor.submit(() -> aConsumer.accept(_i, _j));
+			}
+
+			try
+			{
+				executor.shutdown();
+				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+			}
+			catch (InterruptedException e)
+			{
+			}
 		}
 	}
 
@@ -146,9 +200,21 @@ public class Parallel
 //	{
 //		try
 //		{
-//			Parallel.range(0, 10, 4).forEach((i) -> System.out.println(i));
+//			Parallel.of(
+//				()->{System.out.println(1);},
+//				()->{System.out.println(2);},
+//				()->{System.out.println(3);},
+//				()->{System.out.println(4);},
+//				()->{System.out.println(5);},
+//				()->{System.out.println(6);},
+//				()->{System.out.println(7);},
+//				()->{System.out.println(8);},
+//				()->{System.out.println(9);}
+//			);
+//
+//			Parallel.range(0, 10, 4).forEach((i,j) -> System.out.println(i));
 //			System.out.println("-----");
-//			Parallel.rangeClosed(0, 10, 5).forEach((i) -> System.out.println(i));
+//			Parallel.rangeClosed(0, 10, 5).forEach((i,j) -> System.out.println(i));
 //			System.out.println("-----");
 //			Parallel.range(0, 3).forEach((i) -> System.out.println(i));
 //			System.out.println("-----");
