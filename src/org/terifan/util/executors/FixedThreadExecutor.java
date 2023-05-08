@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +27,7 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	private ExecutorService mExecutorService;
 	private OnCompletion mOnCompletion;
 	private int mQueueLimit;
+	private boolean mDaemon;
 
 
 	/**
@@ -212,7 +214,12 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	{
 		if (mExecutorService == null)
 		{
-			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)mBlockingQueue)
+			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)mBlockingQueue, aRunnable ->
+			{
+				Thread t = Executors.defaultThreadFactory().newThread(aRunnable);
+				t.setDaemon(mDaemon);
+				return t;
+			})
 			{
 				@Override
 				protected void afterExecute(Runnable aRunnable, Throwable aThrowable)
@@ -272,6 +279,13 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	public FixedThreadExecutor<T> setOnCompletion(OnCompletion aOnCompletion)
 	{
 		mOnCompletion = aOnCompletion;
+		return this;
+	}
+
+
+	public FixedThreadExecutor setDeamon(boolean aState)
+	{
+		mDaemon = aState;
 		return this;
 	}
 
