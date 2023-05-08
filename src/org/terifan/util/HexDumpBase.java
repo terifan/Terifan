@@ -19,6 +19,7 @@ public class HexDumpBase
 	{
 		mLimit = 100_000;
 		mWidth = 80;
+		mTo = System.out;
 	}
 
 
@@ -83,6 +84,7 @@ public class HexDumpBase
 
 				int padding = 3 * mWidth + mWidth / 8;
 				int col = 0;
+				String mode = "";
 
 				for (; col < mWidth && remaining > 0; col++)
 				{
@@ -92,6 +94,26 @@ public class HexDumpBase
 					{
 						remaining = 0;
 						break;
+					}
+
+					String nextMode;
+					if (c >= '0' && c <= '9')
+					{
+						nextMode = "\033[0;35m";
+					}
+					else if (!(c < ' ' || c >= 128))
+					{
+						nextMode = "\033[0;36m";
+					}
+					else
+					{
+						nextMode = "\033[0m";
+					}
+					if (!nextMode.equals(mode))
+					{
+						mode = nextMode;
+						hexText.append(mode);
+						binText.append(mode);
 					}
 
 					hexText.append(String.format("%02x ", c));
@@ -113,7 +135,7 @@ public class HexDumpBase
 						hexText.append(" ");
 					}
 
-					mTo.println(hexText.append(binText).toString());
+					mTo.println(hexText.append("\033[0m").append(binText).append("\033[0m").toString());
 				}
 
 				binText.setLength(0);
