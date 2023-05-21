@@ -26,6 +26,12 @@ public class DateTimeHelper
 	}
 
 
+	public final static LocalDateTime getFileModifiedTime(Path aPath) throws IOException
+	{
+		return getLocalDateTimeFromMillis(Files.getLastModifiedTime(aPath).toMillis());
+	}
+
+
 	public final static LocalDateTime getLocalDateTimeFromMillis(long aMillis)
 	{
 		return LocalDateTime.ofInstant(Instant.ofEpochMilli(aMillis), ZoneId.systemDefault());
