@@ -14,6 +14,8 @@ import java.io.RandomAccessFile;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 
 /**
@@ -61,6 +63,7 @@ public final class Streams
 	 * <ol>
 	 * <li>java.io.InputStream</li>
 	 * <li>java.io.File</li>
+	 * <li>java.io.Path</li>
 	 * <li>java.lang.String (file path)</li>
 	 * <li>java.lang.CharSequence</li>
 	 * <li>java.net.URL</li>
@@ -72,6 +75,7 @@ public final class Streams
 	 * <ol>
 	 * <li>java.io.OutputStream</li>
 	 * <li>java.io.File</li>
+	 * <li>java.io.Path</li>
 	 * <li>java.lang.String (file path)</li>
 	 * <li>java.net.URL</li>
 	 * <li>java.nio.ByteBuffer</li>
@@ -177,10 +181,6 @@ public final class Streams
 
 	private static InputStream createInputStream(Object aInput) throws IOException
 	{
-		if (aInput == null)
-		{
-			throw new IllegalArgumentException("Input is null");
-		}
 		if (aInput instanceof InputStream)
 		{
 			return (InputStream)aInput;
@@ -195,6 +195,10 @@ public final class Streams
 		if (aInput instanceof File)
 		{
 			return new BufferedInputStream(new FileInputStream((File)aInput));
+		}
+		if (aInput instanceof Path)
+		{
+			return Files.newInputStream((Path)aInput);
 		}
 		if (aInput instanceof String)
 		{
@@ -230,6 +234,10 @@ public final class Streams
 		if (aOutput instanceof File)
 		{
 			return new BufferedOutputStream(new FileOutputStream((File)aOutput));
+		}
+		if (aOutput instanceof Path)
+		{
+			return Files.newOutputStream((Path)aOutput);
 		}
 		if (aOutput instanceof String)
 		{
