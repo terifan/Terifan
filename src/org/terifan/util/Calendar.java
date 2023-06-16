@@ -47,8 +47,8 @@ public final class Calendar implements Cloneable, Comparable<Calendar>, Serializ
 	private final static long serialVersionUID = 1;
 
 	private final static String DEFAULT_DATE_FORMAT_STRING = "yyyy-MM-dd";
-	private final static String DEFAULT_TIME_FORMAT_STRING = "hh:MM:ss";
-	private final static String DEFAULT_DATETIME_FORMAT_STRING = "yyyy-MM-dd hh:MM:ss";
+	private final static String DEFAULT_TIME_FORMAT_STRING = "hh:mm:ss";
+	private final static String DEFAULT_DATETIME_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
 	private final static SimpleDateFormat DEFAULT_TIME_FORMAT = new SimpleDateFormat(DEFAULT_TIME_FORMAT_STRING);
 	private final static SimpleDateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat(DEFAULT_DATE_FORMAT_STRING);
