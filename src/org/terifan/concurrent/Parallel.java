@@ -1,12 +1,14 @@
-package org.terifan.util;
+package org.terifan.concurrent;
 
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 
 public class Parallel
@@ -65,6 +67,38 @@ public class Parallel
 		}
 		catch (InterruptedException e)
 		{
+		}
+	}
+
+
+	public static class Future<T> implements Runnable
+	{
+		private final Callable<T> mSupplier;
+		private T mValue;
+
+
+		public Future(Callable<T> aSupplier)
+		{
+			mSupplier = aSupplier;
+		}
+
+
+		@Override
+		public void run()
+		{
+			try
+			{
+				mValue = mSupplier.call();
+			}
+			catch (Exception e)
+			{
+			}
+		}
+
+
+		public T get()
+		{
+			return mValue;
 		}
 	}
 
