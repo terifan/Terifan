@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
-import org.terifan.util.log.Log;
 
 
 public class HttpHeaderParser
@@ -50,7 +49,7 @@ public class HttpHeaderParser
 			map.put(key, value);
 		}
 
-		Log.out.println(map);
+		System.out.println(map);
 
 //		String port = getPort(map) != 80 ? ":" + getPort(map) : "";
 //		byte[] host = ("http://"+getHost(map) + port).getBytes();

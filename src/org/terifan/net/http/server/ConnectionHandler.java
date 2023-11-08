@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.LinkedHashMap;
 import org.terifan.io.ByteArray;
-import org.terifan.util.log.Log;
 
 
 class ConnectionHandler extends Thread
@@ -42,7 +41,7 @@ class ConnectionHandler extends Thread
 				}
 				catch (Error | Exception e)
 				{
-					e.printStackTrace(Log.out);
+					e.printStackTrace(System.out);
 
 					response = new HttpServerResponse();
 					response.setContent(("REMOTE-EXCEPTION: " + e.toString()).getBytes());

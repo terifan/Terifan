@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
-import org.terifan.util.log.Log;
 
 
 public class Debug
@@ -91,7 +90,7 @@ public class Debug
 					hexText.append(" ");
 				}
 
-				Log.out.println(hexText.append(binText).toString());
+				System.out.println(hexText.append(binText).toString());
 
 				binText.setLength(0);
 				hexText.setLength(0);
