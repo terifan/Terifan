@@ -167,7 +167,7 @@ public class XmlDocument extends XmlNode
 		try
 		{
 			XmlDocument result = new XmlDocument();
-			newTransformer(aTemplate).transform(new DOMSource(mNode), new DOMResult(result.getInternalNode()));
+			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new DOMResult(result.getInternalNode()));
 			return result;
 		}
 		catch (TransformerException e)
@@ -181,7 +181,7 @@ public class XmlDocument extends XmlNode
     {
 		try
 		{
-			newTransformer(aTemplate).transform(new DOMSource(mNode), new StreamResult(aOutput));
+			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutput));
 		}
 		catch (TransformerException e)
 		{
@@ -194,7 +194,7 @@ public class XmlDocument extends XmlNode
     {
 		try
 		{
-			newTransformer(aTemplate).transform(new DOMSource(mNode), new StreamResult(aOutput));
+			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutput));
 		}
 		catch (TransformerException e)
 		{
@@ -207,7 +207,7 @@ public class XmlDocument extends XmlNode
     {
 		try
 		{
-			newTransformer(aTemplate).transform(new DOMSource(mNode), new StreamResult(aOutput));
+			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutput));
 		}
 		catch (TransformerException e)
 		{
