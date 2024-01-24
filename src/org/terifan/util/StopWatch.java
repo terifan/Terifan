@@ -1,7 +1,6 @@
 package org.terifan.util;
 
 import java.util.Arrays;
-import org.terifan.util.log.Log;
 
 
 /**
@@ -276,7 +275,7 @@ public final class StopWatch
 			Thread.sleep(200);
 				w.suspend();
 				Thread.sleep(200);
-			Log.out.println(w);
+			System.out.println(w);
 		}
 		catch (Throwable e)
 		{

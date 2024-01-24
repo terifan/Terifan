@@ -23,7 +23,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.Border;
-import org.terifan.util.log.Log;
 
 
 public class ErrorReportWindow
@@ -58,7 +57,7 @@ public class ErrorReportWindow
 
 		try
 		{
-			aThrowable.printStackTrace(Log.out);
+			aThrowable.printStackTrace(System.out);
 		}
 		catch (Throwable e)
 		{
@@ -77,7 +76,7 @@ public class ErrorReportWindow
 			}
 			catch (Throwable e)
 			{
-				e.printStackTrace(Log.err);
+				e.printStackTrace(System.err);
 			}
 		}
 
@@ -165,7 +164,7 @@ public class ErrorReportWindow
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace(Log.err);
+			e.printStackTrace(System.err);
 		}
 	}
 
@@ -295,7 +294,7 @@ public class ErrorReportWindow
 			}
 			catch (Throwable e)
 			{
-				e.printStackTrace(Log.err);
+				e.printStackTrace(System.err);
 			}
 		}
 	}
@@ -329,7 +328,7 @@ public class ErrorReportWindow
 			}
 			catch (Throwable e)
 			{
-				e.printStackTrace(Log.err);
+				e.printStackTrace(System.err);
 			}
 		}
 	}

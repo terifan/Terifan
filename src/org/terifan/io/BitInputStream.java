@@ -2,7 +2,6 @@ package org.terifan.io;
 
 import java.io.IOException;
 import java.io.InputStream;
-import org.terifan.util.log.Log;
 
 
 /**

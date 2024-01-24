@@ -29,6 +29,7 @@ import org.w3c.dom.Text;
 
 public class XmlNode
 {
+	protected boolean mOmitXmlDeclaration;
 	protected Node mNode;
 
 
@@ -40,6 +41,19 @@ public class XmlNode
 		}
 
 		mNode = aNode;
+	}
+
+
+	public boolean isOmitXmlDeclaration()
+	{
+		return mOmitXmlDeclaration;
+	}
+
+
+	public XmlNode setOmitXmlDeclaration(boolean aOmitXmlDeclaration)
+	{
+		mOmitXmlDeclaration = aOmitXmlDeclaration;
+		return this;
 	}
 
 
@@ -556,7 +570,7 @@ public class XmlNode
 	{
 		try
 		{
-			newTransformer().transform(new DOMSource(mNode), new StreamResult(aFile));
+			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aFile));
 		}
 		catch (TransformerException e)
 		{
@@ -569,7 +583,7 @@ public class XmlNode
 	{
 		try
 		{
-			newTransformer().transform(new DOMSource(mNode), new StreamResult(aWriter));
+			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aWriter));
 		}
 		catch (TransformerException e)
 		{
@@ -582,7 +596,7 @@ public class XmlNode
 	{
 		try
 		{
-			newTransformer().transform(new DOMSource(mNode), new StreamResult(aOutputStream));
+			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutputStream));
 		}
 		catch (TransformerException e)
 		{
@@ -596,7 +610,7 @@ public class XmlNode
 		try
 		{
 			CharArrayWriter cw = new CharArrayWriter();
-			newTransformer().transform(new DOMSource(mNode), new StreamResult(cw));
+			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(cw));
 			return cw.toString().trim();
 		}
 		catch (TransformerException e)
@@ -763,13 +777,13 @@ public class XmlNode
 	}
 
 
-	static Transformer newTransformer() throws TransformerConfigurationException, TransformerFactoryConfigurationError
+	static Transformer newTransformer(boolean aOmitXmlDeclaration) throws TransformerConfigurationException, TransformerFactoryConfigurationError
 	{
-		return newTransformer(null);
+		return newTransformer(null, aOmitXmlDeclaration);
 	}
 
 
-	static Transformer newTransformer(XmlDocument aTemplate) throws TransformerConfigurationException, TransformerFactoryConfigurationError
+	static Transformer newTransformer(XmlDocument aTemplate, boolean aOmitXmlDeclaration) throws TransformerConfigurationException, TransformerFactoryConfigurationError
 	{
 		Transformer transformer;
 		if (aTemplate == null)
@@ -779,6 +793,10 @@ public class XmlNode
 		else
 		{
 			transformer = TransformerFactory.newInstance().newTransformer(new DOMSource(aTemplate.getInternalNode()));
+		}
+		if (aOmitXmlDeclaration)
+		{
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 		}
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "5");

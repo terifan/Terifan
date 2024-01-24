@@ -7,7 +7,6 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import org.terifan.io.ByteArray;
-import org.terifan.util.log.Log;
 
 
 public class Convert

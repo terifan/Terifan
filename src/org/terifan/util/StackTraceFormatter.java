@@ -68,7 +68,7 @@ public class StackTraceFormatter
 			frames.add(parseElement(s.trim()));
 		}
 
-		return frames.toArray(new StackTraceElement[frames.size()]);
+		return frames.toArray(StackTraceElement[]::new);
 	}
 
 
