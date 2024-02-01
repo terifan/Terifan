@@ -250,9 +250,15 @@ public class Strings
 	 * @param aStrings parts to join
 	 * @return the joined strings
 	 */
-	public static String join(String aSeparator, String... aStrings)
+	public static String join(String aSeparator, Object... aStrings)
 	{
-		return join(aSeparator, false, aStrings);
+		return join(aSeparator, false, Arrays.asList(aStrings));
+	}
+
+
+	public static String join(String aSeparator, boolean aIncludeEmptyParts, String... aStrings)
+	{
+		return join(aSeparator, aIncludeEmptyParts, Arrays.asList(aStrings));
 	}
 
 
@@ -264,15 +270,11 @@ public class Strings
 	 * @param aStrings parts to join
 	 * @return the joined strings
 	 */
-	public static String join(String aSeparator, boolean aIncludeEmptyParts, String... aStrings)
+	public static String joinIterable(String aSeparator, boolean aIncludeEmptyParts, Iterable<? extends Object> aStrings)
 	{
 		if (aStrings == null)
 		{
 			return null;
-		}
-		if (aStrings.length == 0)
-		{
-			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		for (Object s : aStrings)
@@ -290,7 +292,7 @@ public class Strings
 	}
 
 
-	public static String join(String aSeparator, int aFirstIndex, int aLastIndex, FunctionEx<Integer, String> aProducer)
+	public static String join(String aSeparator, int aFirstIndex, int aLastIndex, FunctionEx<Integer, Object> aProducer)
 	{
 		try
 		{
