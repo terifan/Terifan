@@ -4,37 +4,28 @@ package org.terifan.util;
 public class Assert
 {
 	/**
-	 * Throws exception if value is true.
+	 * Throws exception.
 	 */
-	public static void fail(boolean aValue)
+	public static void fail()
 	{
-		fail(aValue, "%s", "Test failed");
+		throw new AssertionException("Assertion failed.");
 	}
 
 
 	/**
-	 * Throws exception if value is true.
+	 * Throws exception if parameter is false
 	 */
-	public static void fail(boolean aValue, String aErrorMessage, Object... aArguments)
+	public static void assertTrue(boolean aBoolean)
 	{
-		if (aValue)
+		if (!aBoolean)
 		{
-			throw new AssertionException(aErrorMessage, aArguments);
+			throw new AssertionException("Not a true value");
 		}
 	}
 
 
 	/**
-	 * Throws exception if value isn't true.
-	 */
-	public static void assertTrue(boolean aValue)
-	{
-		assertTrue(aValue, "%s", "Value not true");
-	}
-
-
-	/**
-	 * Throws exception if value isn't true.
+	 * Throws exception if parameter is false
 	 */
 	public static void assertTrue(boolean aValue, String aErrorMessage, Object... aArguments)
 	{
@@ -46,7 +37,7 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value isn't false.
+	 * Throws exception if parameter isn't false.
 	 */
 	public static void assertFalse(boolean aValue)
 	{
@@ -55,7 +46,7 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value isn't false.
+	 * Throws exception if parameter isn't false.
 	 */
 	public static void assertFalse(boolean aValue, String aErrorMessage, Object... aArguments)
 	{
@@ -67,20 +58,20 @@ public class Assert
 
 
 	/**
-	 * Throws exception if values aren't equal.
+	 * Throws exception if parameters do not equal
 	 */
-	public static void assertEquals(Object aActual, Object aExpected)
+	public static void assertEquals(Object aValue, Object aExpected)
 	{
-		assertEquals(aActual, aExpected, "Values not equal: actual: %s, expected: %s", aActual, aExpected);
+		assertEquals(aValue, aExpected, "Values are not equal: {%s} {%s}", aValue, aExpected);
 	}
 
 
 	/**
-	 * Throws exception if values aren't equal.
+	 * Throws exception if parameters do not equal
 	 */
-	public static void assertEquals(Object aActual, Object aExpected, String aErrorMessage, Object... aArguments)
+	public static void assertEquals(Object aValue, Object aExpected, String aErrorMessage, Object... aArguments)
 	{
-		if ((aActual == null && aExpected != null) || aActual != null && !aActual.equals(aExpected))
+		if (!aValue.equals(aExpected))
 		{
 			throw new AssertionException(aErrorMessage, aArguments);
 		}
@@ -88,16 +79,16 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value is null.
+	 * Throws exception if parameter is null.
 	 */
 	public static void assertNotNull(Object aValue)
 	{
-		assertNotNull(aValue, "%s", "Value is null");
+		assertNotNull(aValue, "Value is null");
 	}
 
 
 	/**
-	 * Throws exception if value is null.
+	 * Throws exception if parameter is null.
 	 */
 	public static void assertNotNull(Object aValue, String aErrorMessage, Object... aArguments)
 	{
@@ -109,7 +100,7 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value isn't null.
+	 * Throws exception if parameter isn't null.
 	 */
 	public static void assertNull(Object aValue)
 	{
@@ -118,7 +109,7 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value isn't null.
+	 * Throws exception if parameter isn't null.
 	 */
 	public static void assertNull(Object aValue, String aErrorMessage, Object... aArguments)
 	{
@@ -130,16 +121,16 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value is empty or null.
+	 * Throws exception if parameter is empty or null.
 	 */
 	public static void assertNotEmptyOrNull(Object aValue)
 	{
-		assertNotEmptyOrNull(aValue, "%s", "Value is empty or null");
+		assertNotEmptyOrNull(aValue, "Value is empty or null");
 	}
 
 
 	/**
-	 * Throws exception if value is empty or null.
+	 * Throws exception if parameter is empty or null.
 	 */
 	public static void assertNotEmptyOrNull(Object aValue, String aErrorMessage, Object... aArguments)
 	{
@@ -151,18 +142,18 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value don't match regular expression.
+	 * Throws exception if parameter don't match regular expression.
 	 */
-	public static void assertMatchesOrNull(Object aValue, String aPattern)
+	public static void assertRegexOrNull(Object aValue, String aPattern)
 	{
-		assertMatchesOrNull(aValue, aPattern, "%s", "Value don't match pattern");
+		assertRegexOrNull(aValue, aPattern, "%s", "Value don't match pattern");
 	}
 
 
 	/**
-	 * Throws exception if value don't match regular expression.
+	 * Throws exception if parameter don't match regular expression.
 	 */
-	public static void assertMatchesOrNull(Object aValue, String aPattern, String aErrorMessage, Object... aArguments)
+	public static void assertRegexOrNull(Object aValue, String aPattern, String aErrorMessage, Object... aArguments)
 	{
 		if (aValue != null && !aValue.toString().matches(aPattern))
 		{
@@ -172,18 +163,18 @@ public class Assert
 
 
 	/**
-	 * Throws exception if value don't match regular expression.
+	 * Throws exception if parameter don't match regular expression.
 	 */
-	public static void assertMatches(Object aValue, String aPattern)
+	public static void assertRegex(Object aValue, String aPattern)
 	{
-		assertMatches(aValue, aPattern, "%s", "Value don't match pattern");
+		assertRegex(aValue, aPattern, "Value don't match pattern");
 	}
 
 
 	/**
-	 * Throws exception if value don't match regular expression.
+	 * Throws exception if parameter don't match regular expression.
 	 */
-	public static void assertMatches(Object aValue, String aPattern, String aErrorMessage, Object... aArguments)
+	public static void assertRegex(Object aValue, String aPattern, String aErrorMessage, Object... aArguments)
 	{
 		if (aValue == null || !aValue.toString().matches(aPattern))
 		{
@@ -193,20 +184,20 @@ public class Assert
 
 
 	/**
-	 * Throws exception if the values are the same.
+	 * Throws exception if parameters aren't the same object.
 	 */
-	public static void assertSame(Object aExpected, Object aActual)
+	public static void assertSame(Object aA, Object aB)
 	{
-		assertSame(aExpected, aActual, "%s", "Provided objects are not the same.");
+		assertSame(aA, aB, null);
 	}
 
 
 	/**
-	 * Throws exception if the values are the same.
+	 * Throws exception if parameters aren't the same object.
 	 */
-	public static void assertSame(Object aExpected, Object aActual, String aErrorMessage, Object... aArguments)
+	public static void assertSame(Object aA, Object aB, String aErrorMessage, Object... aArguments)
 	{
-		if (aExpected != aActual)
+		if (aA != aB)
 		{
 			throw new AssertionException(aErrorMessage, aArguments);
 		}
