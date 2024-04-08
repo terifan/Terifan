@@ -8,7 +8,6 @@ import static org.terifan.console.SimpleConsoleWindow.CYAN;
 import static org.terifan.console.SimpleConsoleWindow.MAGENTA;
 import static org.terifan.console.SimpleConsoleWindow.YELLOW;
 import static org.terifan.console.SimpleConsoleWindow.GRAY;
-import org.terifan.ui.Utilities;
 
 
 public class Test
@@ -17,8 +16,6 @@ public class Test
 	{
 		try
 		{
-			Utilities.setSystemLookAndFeel();
-
 			try (SimpleConsoleWindow console = new SimpleConsoleWindow().setAllowForceShutdown(true))
 			{
 				for (int j = 0, n = 0; j < 100; j++)
