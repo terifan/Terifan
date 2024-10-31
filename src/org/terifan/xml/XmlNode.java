@@ -7,6 +7,8 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -20,16 +22,13 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
-import org.w3c.dom.Text;
 
 
 public class XmlNode
 {
-	protected boolean mOmitXmlDeclaration;
 	protected Node mNode;
 
 
@@ -41,19 +40,6 @@ public class XmlNode
 		}
 
 		mNode = aNode;
-	}
-
-
-	public boolean isOmitXmlDeclaration()
-	{
-		return mOmitXmlDeclaration;
-	}
-
-
-	public XmlNode setOmitXmlDeclaration(boolean aOmitXmlDeclaration)
-	{
-		mOmitXmlDeclaration = aOmitXmlDeclaration;
-		return this;
 	}
 
 
@@ -134,27 +120,24 @@ public class XmlNode
 	 */
     public XmlElement [] getElements(XPath aXPath)
     {
-		try
-		{
+        try
+        {
 			NodeList nodeList = (NodeList)aXPath.getDOMExpression().evaluate(mNode, XPathConstants.NODESET);
-
 			if (nodeList == null)
 			{
 				return new XmlElement[0];
 			}
-
-			ArrayList<XmlElement> elements = new ArrayList<>();
-
-			for (int i = 0; i < nodeList.getLength(); i++)
+			XmlElement [] elements = new XmlElement[nodeList.getLength()];
+			int size = 0;
+			for (int i = 0; i < elements.length; i++)
 			{
 				Node node = nodeList.item(i);
 				if (node instanceof Element)
 				{
-					elements.add(new XmlElement(node));
+					elements[size++] = new XmlElement(node);
 				}
 			}
-
-			return elements.toArray(new XmlElement[0]);
+            return Arrays.copyOfRange(elements, 0, size);
         }
         catch (XPathExpressionException e)
         {
@@ -233,6 +216,17 @@ public class XmlNode
 	}
 
 
+    public String getText(XPath aXPath, Supplier<String> aDefaultValue)
+    {
+		String s = getText(aXPath);
+		if (s == null)
+		{
+			return aDefaultValue.get();
+		}
+		return s;
+	}
+
+
     public String getText(XPath aXPath)
     {
         try
@@ -246,20 +240,30 @@ public class XmlNode
     }
 
 
-    public String [] getTextArray(XPath aXPath)
+    public ArrayList<String> getTextArray(XPath aXPath)
+    {
+		return getTextArray(aXPath, true);
+	}
+
+
+	public ArrayList<String> getTextArray(XPath aXPath, boolean aIncludeEmptyElements)
     {
         try
         {
             XmlNodeList list = new XmlNodeList((NodeList)aXPath.getDOMExpression().evaluate(mNode, XPathConstants.NODESET));
 
-			String [] text = new String[list.size()];
+			ArrayList<String> output = new ArrayList<>();
 
-			for (int i = 0; i < list.size(); i++)
+			list.forEach(node ->
 			{
-				text[i] = list.get(i).getValue();
-			}
+				String text = node.getValue();
+				if (aIncludeEmptyElements || !text.isEmpty())
+				{
+					output.add(text);
+				}
+			});
 
-			return text;
+			return output;
         }
         catch (XPathExpressionException e)
         {
@@ -274,6 +278,31 @@ public class XmlNode
 		if (node == null)
 		{
 			return null;
+		}
+		return new XmlElement(node);
+	}
+
+
+	/**
+	 * Get or create an element using an attribute as grouping key.
+	 *
+	 * e.g. element.getOrCreateElement("file-list", "id", file.getParentFileId()).appendElement("item").appendEntity(file, false);
+	 *
+	 * @param aName
+	 *   name of the element
+	 * @param aAttribute
+	 *   attribute used to identify existing nodes
+	 * @param aValue
+	 *   the expected value of the attribute
+	 * @return
+	 *   the existing or created element
+	 */
+    public XmlElement getOrCreateElementGroup(String aName, String aAttribute, Object aValue)
+    {
+		XmlNode node = getNode(new XPath(aName + "[@"+aAttribute+"='"+aValue+"']"));
+		if (node == null)
+		{
+			return appendElement(aName).setAttribute(aAttribute, aValue.toString());
 		}
 		return new XmlElement(node);
 	}
@@ -338,6 +367,17 @@ public class XmlNode
 	}
 
 
+    public String getText(String aPath, Supplier<String> aDefaultValue)
+    {
+		String s = getText(aPath);
+		if (s == null)
+		{
+			return aDefaultValue.get();
+		}
+		return s;
+	}
+
+
     public String getText(String aPath)
     {
 		assertNodePath(aPath);
@@ -347,6 +387,7 @@ public class XmlNode
 		{
 			return null;
 		}
+
 		return node.getValue();
     }
 
@@ -470,52 +511,81 @@ public class XmlNode
 
 	public String getValue()
 	{
-//		StringBuilder sb = new StringBuilder();
-//		NodeList list = mNode.getChildNodes();
-//		for (int i = 0; i < list.getLength(); i++)
-//		{
-//			sb.append(list.item(i).getNodeValue());
-//		}
-//		return sb.toString();
-
-		return mNode.getTextContent();
-	}
-
-
-	public String getTextContent()
-	{
-		if (mNode instanceof Element)
+		Node c = mNode.getFirstChild();
+		if (c != null)
 		{
-			boolean b = true;
-			XmlNode[] childNodes = getChildNodes();
-			for (XmlNode node : childNodes)
-			{
-				if (node instanceof XmlElement)
-				{
-					return null;
-				}
-			}
-			if (b)
-			{
-				StringBuilder sb = new StringBuilder();
-				for (XmlNode node : childNodes)
-				{
-					String text = node.mNode.getNodeValue();
-					if (text != null && !text.matches("\\s"))
-					{
-						sb.append(text.trim());
-					}
-				}
-				return sb.toString().trim();
-			}
+			return c.getNodeValue();
 		}
-		return null;
+		return mNode.getTextContent();
 	}
 
 
 	public XmlElement toElement()
 	{
 		return new XmlElement(mNode);
+	}
+
+
+	public String getAttribute(String aName)
+	{
+		String v = getAttribute(aName, (String)null);
+		if (v == null)
+		{
+			return null;
+		}
+		return v;
+	}
+
+
+	public boolean hasAttribute(String aName)
+	{
+		return getAttribute(aName, (String)null) != null;
+	}
+
+
+	public String getAttribute(String aName, String aDefaultValue)
+	{
+		if (mNode instanceof Element)
+		{
+			Element el = (Element)mNode;
+			if (el.hasAttribute(aName))
+			{
+				return el.getAttribute(aName);
+			}
+			return aDefaultValue;
+		}
+		throw new XmlException("This XmlNode is not an XmlElement or an instance of org.w3c.dom.Element: " + getClass().getName());
+	}
+
+
+	public String getAttribute(String aName, Supplier<String> aDefaultValue)
+	{
+		if (mNode instanceof Element)
+		{
+			Element el = (Element)mNode;
+			if (el.hasAttribute(aName))
+			{
+				return el.getAttribute(aName);
+			}
+			return aDefaultValue.get();
+		}
+		throw new XmlException("This XmlNode is not an XmlElement or an instance of org.w3c.dom.Element: " + getClass().getName());
+	}
+
+
+	public XmlElement setAttribute(String aName, String aValue)
+	{
+		if (mNode instanceof Element)
+		{
+			Element el = (Element)mNode;
+			el.setAttribute(aName, aValue);
+			if (this instanceof XmlElement)
+			{
+				return (XmlElement)this;
+			}
+			return null;
+		}
+		throw new XmlException("This XmlNode is not an XmlElement or an instance of org.w3c.dom.Element: " + getClass().getName());
 	}
 
 
@@ -527,10 +597,27 @@ public class XmlNode
 	}
 
 
-	public XmlNode appendChild(XmlNode aNode)
+	public XmlElement appendElement(String aName, Consumer<XmlElement> aConsumer)
 	{
+		XmlElement el = appendElement(aName);
+		aConsumer.accept(el);
+		return el;
+	}
+
+
+	/**
+	 * Append a child node and return this XmlNode
+	 * @return this XmlNode
+	 */
+	public <T extends XmlNode> T appendChild(XmlNode aNode)
+	{
+		if (aNode.getOwner() != getOwner())
+		{
+			aNode = new XmlElement(mNode.getOwnerDocument().adoptNode(aNode.mNode));
+		}
+
 		mNode.appendChild(aNode.mNode);
-		return aNode;
+		return (T)this;
 	}
 
 
@@ -548,21 +635,66 @@ public class XmlNode
 
 
 	/**
-	 * Append text node.
+	 * Append text node and return this XmlNode.
 	 *
 	 * Note: this method will escape illegal characters!
+	 *
+	 * @param aText
+	 *   if null then nothing happens
+	 * @return
+	 *   this XmlNode
 	 */
-	public XmlNode appendTextNode(String aNodeName, Object aText)
+	public <T extends XmlNode> T appendTextNode(String aNodeName, Object aText)
 	{
 		if (aText == null)
 		{
-			throw new IllegalArgumentException("Provided text is null.");
+			return (T)this;
 		}
 
 		Element node = getOwner().createElement(aNodeName);
-		node.setTextContent(aText.toString());
+		setTextContentBackwardComp(node, "" + aText);
 		mNode.appendChild(node);
-		return this;
+		return (T)this;
+	}
+
+
+	/**
+	 * Append text node and return the created text node.
+	 *
+	 * Note: this method will escape illegal characters!
+	 *
+	 * @param aText
+	 *   if null then nothing happens
+	 * @return
+	 *   this XmlNode
+	 */
+	public XmlElement createTextNode(String aNodeName, Object aText)
+	{
+		if (aText == null)
+		{
+			return null;
+		}
+
+		Element node = getOwner().createElement(aNodeName);
+		setTextContentBackwardComp(node, aText.toString());
+		mNode.appendChild(node);
+		return new XmlElement(node);
+	}
+
+
+	/** for backward compatibility */
+	static void setTextContentBackwardComp(Node aNode, String aText)
+	{
+		NodeList list = aNode.getChildNodes();
+		for (int i = list.getLength(); --i >= 0;)
+		{
+			if (list.item(i).getNodeType() == Node.TEXT_NODE)
+			{
+				aNode.removeChild(list.item(i));
+			}
+		}
+
+		aNode.appendChild(aNode.getOwnerDocument().createTextNode(aText));
 	}
 
 
@@ -570,7 +702,7 @@ public class XmlNode
 	{
 		try
 		{
-			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aFile));
+			newTransformer(true).transform(new DOMSource(mNode), new StreamResult(aFile));
 		}
 		catch (TransformerException e)
 		{
@@ -583,7 +715,7 @@ public class XmlNode
 	{
 		try
 		{
-			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aWriter));
+			newTransformer(true).transform(new DOMSource(mNode), new StreamResult(aWriter));
 		}
 		catch (TransformerException e)
 		{
@@ -596,7 +728,7 @@ public class XmlNode
 	{
 		try
 		{
-			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutputStream));
+			newTransformer(true).transform(new DOMSource(mNode), new StreamResult(aOutputStream));
 		}
 		catch (TransformerException e)
 		{
@@ -607,10 +739,25 @@ public class XmlNode
 
 	public String toXmlString()
 	{
+		return toXmlString(false, false);
+	}
+
+
+	public String toXmlString(boolean aOmitXmlDeclaration, boolean aOmitIndent)
+	{
 		try
 		{
 			CharArrayWriter cw = new CharArrayWriter();
-			newTransformer(mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(cw));
+			Transformer transformer = newTransformer(aOmitIndent);
+			if (aOmitXmlDeclaration)
+			{
+				transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			}
+//			if (aOmitIndent)
+//			{
+//				transformer.setOutputProperty(OutputKeys.INDENT, "no");
+//			}
+			transformer.transform(new DOMSource(mNode), new StreamResult(cw));
 			return cw.toString().trim();
 		}
 		catch (TransformerException e)
@@ -642,98 +789,34 @@ public class XmlNode
 	}
 
 
-	public String[] getAttributes()
-	{
-		NamedNodeMap attributes = mNode.getAttributes();
-		if (attributes == null)
-		{
-			return new String[0];
-		}
-
-		String[] names = new String[attributes.getLength()];
-		for (int i = 0; i < attributes.getLength(); i++)
-		{
-			names[i] = attributes.item(i).getNodeName();
-		}
-
-		return names;
-	}
-
-
-	public <T> T visit(XmlNodeVisitor aVisitor)
+	public Object visit(XmlNodeVisitor aVisitor)
 	{
 		NodeList list = mNode.getChildNodes();
-
 		for (int i = 0; i < list.getLength(); i++)
 		{
-			XmlNode node;
-			Node n = list.item(i);
+			XmlNode node = new XmlNode(list.item(i));
 
-			if (n instanceof Element)
+			if (aVisitor.match(node))
 			{
-				node = new XmlElement(n);
-			}
-			else if (n instanceof Text)
-			{
-				node = new XmlText(n);
-			}
-			else
-			{
-				node = new XmlNode(n);
-			}
-
-			if (node instanceof XmlElement)
-			{
-				XmlElement el = (XmlElement)node;
-
-				if (aVisitor.match(el))
-				{
-					Object o = aVisitor.entering(el);
-
-					if (o != null)
-					{
-						return (T)o;
-					}
-
-					o = aVisitor.process(el);
-
-					if (o != null)
-					{
-						return (T)o;
-					}
-
-					for (String attr : el.getAttributes())
-					{
-						o = aVisitor.attribute(el, attr, el.getAttribute(attr));
-
-						if (o != null)
-						{
-							return (T)o;
-						}
-					}
-
-					o = node.visit(aVisitor);
-
-					if (o != null)
-					{
-						return (T)o;
-					}
-
-					o = aVisitor.leaving(el);
-
-					if (o != null)
-					{
-						return (T)o;
-					}
-				}
-			}
-			else
-			{
-				Object o = aVisitor.process(node);
+				Object o = aVisitor.entering(node);
 
 				if (o != null)
 				{
-					return (T)o;
+					return o;
+				}
+
+				o = node.visit(aVisitor);
+
+				if (o != null)
+				{
+					return o;
+				}
+
+				o = aVisitor.leaving(node);
+
+				if (o != null)
+				{
+					return o;
 				}
 			}
 		}
@@ -777,13 +860,13 @@ public class XmlNode
 	}
 
 
-	static Transformer newTransformer(boolean aOmitXmlDeclaration) throws TransformerConfigurationException, TransformerFactoryConfigurationError
+	static Transformer newTransformer(boolean aOmitIndent) throws TransformerConfigurationException, TransformerFactoryConfigurationError
 	{
-		return newTransformer(null, aOmitXmlDeclaration);
+		return newTransformer(null, aOmitIndent);
 	}
 
 
-	static Transformer newTransformer(XmlDocument aTemplate, boolean aOmitXmlDeclaration) throws TransformerConfigurationException, TransformerFactoryConfigurationError
+	public static Transformer newTransformer(XmlDocument aTemplate, boolean aOmitIndent) throws TransformerConfigurationException, TransformerFactoryConfigurationError
 	{
 		Transformer transformer;
 		if (aTemplate == null)
@@ -794,12 +877,19 @@ public class XmlNode
 		{
 			transformer = TransformerFactory.newInstance().newTransformer(new DOMSource(aTemplate.getInternalNode()));
 		}
-		if (aOmitXmlDeclaration)
+
+		// WARNING! enabling these will break javascript code since non-existing line breaks are added after <br> tags!
+		if (aOmitIndent)
 		{
-			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			transformer.setOutputProperty(OutputKeys.INDENT, "no");
 		}
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "5");
+		else
+		{
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "5");
+		}
+
+		transformer.setOutputProperty("encoding", "utf-8");
 		transformer.setErrorListener(new ErrorListener() {
 			@Override
 			public void warning(TransformerException aException) throws TransformerException
@@ -819,4 +909,40 @@ public class XmlNode
 		});
 		return transformer;
 	}
+
+
+	/**
+	 * Removes this Node from it's parent.
+	 */
+	public void remove()
+	{
+		mNode.getParentNode().removeChild(mNode);
+	}
+
+
+//	public static void main(String ... args)
+//	{
+//		try
+//		{
+//			XmlDocument d = new XmlDocument();
+//
+//			d.appendElement("a").appendTextNode("b", "c");
+//
+//			System.out.println(d.toXmlString());
+//
+//			d.getElement("a").getElement("b").setText("d");
+//
+//			System.out.println(d.toXmlString());
+//
+//			d.getElement("a/b").remove();
+//			System.out.println(d.toXmlString());
+//
+//			d.getElement("a").remove();
+//			System.out.println(d.toXmlString());
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }

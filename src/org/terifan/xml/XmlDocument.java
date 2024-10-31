@@ -9,6 +9,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.net.URL;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,6 +35,12 @@ public class XmlDocument extends XmlNode
     }
 
 
+    public XmlDocument(byte[] aXmlDocument)
+    {
+		this(new String(aXmlDocument, UTF_8));
+    }
+
+
     public XmlDocument(Document aXmlDocument)
     {
 		super(aXmlDocument);
@@ -42,37 +49,37 @@ public class XmlDocument extends XmlNode
 
     public XmlDocument(String aXmlContent)
     {
-		this(removeMSBug(aXmlContent), true);
+		super(parse(aXmlContent, true));
     }
 
 
     public XmlDocument(File aXmlFile)
     {
-		this(aXmlFile, true);
+		super(parse(aXmlFile, true));
     }
 
 
     public XmlDocument(Reader aXmlStream)
     {
-		this(aXmlStream, true);
+		super(parse(aXmlStream, true));
     }
 
 
     public XmlDocument(InputStream aXmlStream)
     {
-		this(aXmlStream, true);
+		super(parse(aXmlStream, true));
     }
 
 
     public XmlDocument(Element aXmlElement)
     {
-		this(aXmlElement, true);
+		super(parse(aXmlElement, true));
     }
 
 
     public XmlDocument(URL aXmlURL)
     {
-		this(aXmlURL, true);
+		super(parse(aXmlURL, true));
     }
 
 
@@ -112,9 +119,9 @@ public class XmlDocument extends XmlNode
     }
 
 
-    public static Document parse(final Object aXmlDocument, boolean aNamespaceAware)
+    public static Document parse(final Object aSource, boolean aNamespaceAware)
     {
-		if (aXmlDocument == null)
+		if (aSource == null)
 		{
 			throw new XmlException("Provided argument is null.");
 		}
@@ -122,36 +129,33 @@ public class XmlDocument extends XmlNode
         {
 			try
 			{
-				if (aXmlDocument instanceof String)
+				if (aSource instanceof String)
 				{
-					return newBuilder(aNamespaceAware).parse(new InputSource(new StringReader((String)aXmlDocument)));
+					return newBuilder(aNamespaceAware).parse(new InputSource(new StringReader((String)aSource)));
 				}
-				else if (aXmlDocument instanceof File)
+				if (aSource instanceof File)
 				{
-					return newBuilder(aNamespaceAware).parse((File)aXmlDocument);
+					return newBuilder(aNamespaceAware).parse((File)aSource);
 				}
-				else if (aXmlDocument instanceof Reader)
+				if (aSource instanceof Reader)
 				{
-					return newBuilder(aNamespaceAware).parse(new InputSource((Reader)aXmlDocument));
+					return newBuilder(aNamespaceAware).parse(new InputSource((Reader)aSource));
 				}
-				else if (aXmlDocument instanceof InputStream)
+				if (aSource instanceof InputStream)
 				{
-					return newBuilder(aNamespaceAware).parse((InputStream)aXmlDocument);
+					return newBuilder(aNamespaceAware).parse((InputStream)aSource);
 				}
-				else if (aXmlDocument instanceof URL)
+				if (aSource instanceof URL)
 				{
-					return newBuilder(aNamespaceAware).parse((String)aXmlDocument.toString());
+					return newBuilder(aNamespaceAware).parse(aSource.toString());
 				}
-				else
-				{
-					throw new IllegalArgumentException("Unsupported type: " + aXmlDocument);
-				}
+				throw new IllegalArgumentException("Unsupported type: " + aSource);
 			}
 			finally
 			{
-				if (aXmlDocument instanceof Closeable)
+				if (aSource instanceof Closeable)
 				{
-					((Closeable)aXmlDocument).close();
+					((Closeable)aSource).close();
 				}
 			}
         }
@@ -167,7 +171,7 @@ public class XmlDocument extends XmlNode
 		try
 		{
 			XmlDocument result = new XmlDocument();
-			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new DOMResult(result.getInternalNode()));
+			newTransformer(aTemplate, true).transform(new DOMSource(mNode), new DOMResult(result.getInternalNode()));
 			return result;
 		}
 		catch (TransformerException e)
@@ -181,7 +185,7 @@ public class XmlDocument extends XmlNode
     {
 		try
 		{
-			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutput));
+			newTransformer(aTemplate, true).transform(new DOMSource(mNode), new StreamResult(aOutput));
 		}
 		catch (TransformerException e)
 		{
@@ -194,7 +198,7 @@ public class XmlDocument extends XmlNode
     {
 		try
 		{
-			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutput));
+			newTransformer(aTemplate, true).transform(new DOMSource(mNode), new StreamResult(aOutput));
 		}
 		catch (TransformerException e)
 		{
@@ -207,7 +211,7 @@ public class XmlDocument extends XmlNode
     {
 		try
 		{
-			newTransformer(aTemplate, mOmitXmlDeclaration).transform(new DOMSource(mNode), new StreamResult(aOutput));
+			newTransformer(aTemplate, true).transform(new DOMSource(mNode), new StreamResult(aOutput));
 		}
 		catch (TransformerException e)
 		{
@@ -277,15 +281,5 @@ public class XmlDocument extends XmlNode
 		}
 
 		return null;
-	}
-
-
-	private static String removeMSBug(String aXML)
-	{
-		if (aXML.charAt(0) == 65279)
-		{
-			return aXML.substring(1);
-		}
-		return aXML;
 	}
 }
