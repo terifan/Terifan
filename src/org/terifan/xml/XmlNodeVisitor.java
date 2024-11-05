@@ -4,22 +4,22 @@ package org.terifan.xml;
 @FunctionalInterface
 public interface XmlNodeVisitor
 {
-	default public boolean match(XmlElement aNode)
+	default public boolean match(XmlNode aNode)
 	{
 		return true;
 	}
 
-	default public Object entering(XmlElement aNode)
+	default public Object entering(XmlNode aNode)
 	{
 		return null;
 	}
 
-	default public Object leaving(XmlElement aNode)
+	default public Object leaving(XmlNode aNode)
 	{
 		return null;
 	}
 
-	default public Object attribute(XmlElement aNode, String aName, String aValue)
+	default public Object attribute(XmlNode aNode, String aName, String aValue)
 	{
 		return null;
 	}
