@@ -1,4 +1,4 @@
-package test;
+package test_terifan;
 
 import org.terifan.net.http.HttpGet;
 
