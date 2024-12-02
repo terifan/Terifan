@@ -7,13 +7,13 @@ import java.util.function.Supplier;
 
 
 /**
- * ParallelBlockingExecutor executes elements from a <code>Supplier</code> in parallel using a <code>Handler</code> with a user specified
+ * PollingExecutor executes elements from a <code>Supplier</code> in parallel using a <code>Handler</code> with a user specified
  * number of worker threads.
  *
  * <pre>
  * List&lt;Integer&gt; supplier = Arrays.asList(1,2,3);
  * Handler&lt;Integer&gt; handler = i -&gt; System.out.println(i);
- * new ParallelBlockingExecutor(2).execute(supplier, handler);
+ * new PollingExecutor(2).execute(supplier.iterator(), handler);
  * </pre>
  */
 public class PollingExecutor

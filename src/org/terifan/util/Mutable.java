@@ -17,13 +17,19 @@ import java.util.function.Supplier;
  */
 public class Mutable<T>
 {
-	private final static Mutable EMPTY = new Mutable(null);
-	private T mValue;
+	private final static Mutable EMPTY = new Mutable();
+	public T value;
+
+
+	public Mutable()
+	{
+		this(null);
+	}
 
 
 	private Mutable(T aValue)
 	{
-		mValue = aValue;
+		value = aValue;
 	}
 
 
@@ -41,9 +47,9 @@ public class Mutable<T>
 
 	public Mutable<T> emptyNull()
 	{
-		if (mValue == null)
+		if (value == null)
 		{
-			mValue = (T)EMPTY;
+			value = (T)EMPTY;
 		}
 		return this;
 	}
@@ -57,7 +63,7 @@ public class Mutable<T>
 
 	public T orElseGet(Supplier<T> aSupplier)
 	{
-		return isPresent() ? mValue : aSupplier.get();
+		return isPresent() ? value : aSupplier.get();
 	}
 
 
@@ -85,7 +91,7 @@ public class Mutable<T>
 	{
 		if (!isPresent())
 		{
-			mValue = aValue;
+			value = aValue;
 		}
 		return this;
 	}
@@ -93,41 +99,51 @@ public class Mutable<T>
 
 	public T orElseGet(Predicate<T> aPredicate, Supplier<T> aSupplier)
 	{
-		return isPresent() && aPredicate.test(mValue) ? mValue : aSupplier.get();
+		return isPresent() && aPredicate.test(value) ? value : aSupplier.get();
 	}
 
 
 	public T orElse(T aValue)
 	{
-		return mValue == EMPTY ? aValue : mValue;
+		return value == EMPTY ? aValue : value;
+	}
+
+
+	public Mutable<T> compareAndSet(T aCompare, T aSet)
+	{
+		if (Objects.equals(aCompare, value))
+		{
+			value = aSet;
+		}
+		return this;
 	}
 
 
 	public T get()
 	{
-		if (mValue == EMPTY)
+		if (value == EMPTY)
 		{
 			throw new NoSuchElementException("No value present");
 		}
-		return mValue;
+		return value;
 	}
 
 
 	public boolean isPresent()
 	{
-		return mValue != null && mValue != EMPTY;
+		return value != null && value != EMPTY;
 	}
 
 
 	public boolean isEmpty()
 	{
-		return mValue == EMPTY;
+		return value == EMPTY;
 	}
 
 
 	public boolean isNull()
 	{
-		return mValue == null;
+		return value == null;
 	}
 
 
@@ -135,7 +151,7 @@ public class Mutable<T>
 	{
 		if (isPresent())
 		{
-			aAction.accept(mValue);
+			aAction.accept(value);
 		}
 		return this;
 	}
@@ -145,7 +161,7 @@ public class Mutable<T>
 	{
 		if (!isEmpty())
 		{
-			aAction.accept(mValue);
+			aAction.accept(value);
 		}
 		return this;
 	}
@@ -163,15 +179,27 @@ public class Mutable<T>
 
 	public Mutable<T> set(T aValue)
 	{
-		mValue = aValue;
+		value = aValue;
 		return this;
 	}
 
 
 	public Mutable<T> clear()
 	{
-		mValue = (T)EMPTY;
+		value = (T)EMPTY;
 		return this;
+	}
+
+
+	public void print()
+	{
+		System.out.print(value);
+	}
+
+
+	public void println()
+	{
+		System.out.println(value);
 	}
 
 
@@ -182,9 +210,9 @@ public class Mutable<T>
 		{
 			return true;
 		}
-		if (aOther instanceof Mutable)
+		if (aOther instanceof Mutable v)
 		{
-			return mValue.equals(((Mutable)aOther).mValue);
+			return value.equals(v.value);
 		}
 		return false;
 	}
@@ -193,28 +221,33 @@ public class Mutable<T>
 	@Override
 	public int hashCode()
 	{
-		return Objects.hashCode(mValue);
+		return Objects.hashCode(value);
 	}
 
 
 	@Override
 	public String toString()
 	{
-		return Objects.toString(mValue, "mutable:null");
+		return Objects.toString(value, "mutable:null");
 	}
 
 
-	public static void main(String[] args)
+	public static void main(String ... args)
 	{
-		Mutable.of(1).ifPresent(System.out::println);
-		Mutable.empty().set(2).ifNotEmpty(System.out::println);
-		Mutable.empty().or(() -> Mutable.of(3)).ifNotEmpty(System.out::println);
-		Mutable.empty().orSet(4).ifNotEmpty(System.out::println);
-		System.out.println(Mutable.empty().orElse(5));
-		System.out.println(Mutable.of(6).orElseGet(e -> e == 6, () -> 0));
-		System.out.println(Mutable.empty().orElseGet(() -> 7));
-		Mutable.of(null).emptyNull().ifEmpty(() -> System.out.println("undefined"));
+		try
+		{
+			Mutable.of(0).compareAndSet(0, -1).println();
 
-//		Mutable.empty().orElseThrow(() -> new RuntimeException());
+			Mutable.of(Long.MAX_VALUE).println();
+			new Mutable<>(Long.MAX_VALUE).println();
+			new Mutable<Long>().set(Long.MAX_VALUE).println();
+
+			Mutable<Long> a = new Mutable<>(Long.MAX_VALUE);
+			Mutable<Long> b = new Mutable<Long>().set(Long.MAX_VALUE);
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }
