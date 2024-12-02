@@ -252,7 +252,7 @@ public class Strings
 	 */
 	public static String join(String aSeparator, Object... aStrings)
 	{
-		return join(aSeparator, false, Arrays.asList(aStrings));
+		return joinIterable(aSeparator, false, Arrays.asList(aStrings));
 	}
 
 
