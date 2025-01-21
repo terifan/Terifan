@@ -6,6 +6,11 @@ import java.util.TimerTask;
 
 /**
  * DelayedExecutor waits a certain time before executing a task. If another task is scheduled any pending task is cancelled.
+ * <pre>
+ *   DelayedExecutor exe = new DelayedExecutor();
+ *   exe.schedule(() -> System.out.println("hello"), 1000);
+ *   exe.schedule(() -> System.out.println("world"), 1000);
+ * </pre>
  */
 public class DelayedExecutor
 {
