@@ -2,32 +2,34 @@ package org.terifan.util.executors;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 
 /**
- * Helper class replacing Executors.newFixedThreadPool()
+ * An executor using N threads to execute tasks submitted to it. The close method will block until all submitted tasks have finished
+ * executing.
+ *
+ * <pre>
+ * try (FixedThreadExecutor executor = new FixedThreadExecutor(1f))
+ * {
+ *    executor.submit(() -> {System.out.println("doing something");});
+ * }
+ * </pre>
  */
 public class FixedThreadExecutor<T> implements AutoCloseable
 {
 	private final Object LOCK = new Object();
-	private final HashMap<CallableTask, AtomicReference> mResultReceivers;
 	private final LinkedBlockingQueue mBlockingQueue;
 	private final int mThreads;
+	private int mCapacity;
 	private ExecutorService mExecutorService;
-	private OnCompletion mOnCompletion;
-	private int mQueueLimit;
-	private boolean mDaemon;
 
 
 	/**
@@ -44,11 +46,10 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 		}
 		else
 		{
-			mThreads = Math.max(1, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors() + aNumThreads);
+			mThreads = Math.max(1, getAvailableProcessors() + aNumThreads);
 		}
 
-		mBlockingQueue = new LinkedBlockingQueue<>();
-		mResultReceivers = new HashMap<>();
+		mBlockingQueue = withBlockingQueue();
 	}
 
 
@@ -64,34 +65,44 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 			throw new IllegalArgumentException();
 		}
 
-		int cpu = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
-
+		int cpu = getAvailableProcessors();
 		mThreads = Math.max(1, Math.min(cpu, (int)Math.round(cpu * aThreads)));
-		mBlockingQueue = new LinkedBlockingQueue<>();
-		mResultReceivers = new HashMap<>();
+		mBlockingQueue = withBlockingQueue();
 	}
 
 
 	/**
-	 * @see java.util.concurrent.ExecutorService#shutdown
+	 * Shutdown the executor immediately.
 	 */
 	public void shutdown()
 	{
 		if (mExecutorService != null)
 		{
-			mExecutorService.shutdown();
+			ExecutorService es = mExecutorService;
+			mExecutorService = null;
+			es.shutdown();
+
+			try
+			{
+				es.awaitTermination(1, TimeUnit.DAYS);
+			}
+			catch (InterruptedException e)
+			{
+			}
 		}
 	}
 
 
 	/**
-	 * @see java.util.concurrent.ExecutorService#shutdownNow
+	 * Shutdown the executor immediately.
 	 */
 	public List<Runnable> shutdownNow()
 	{
 		if (mExecutorService != null)
 		{
-			return mExecutorService.shutdownNow();
+			ExecutorService es = mExecutorService;
+			mExecutorService = null;
+			return es.shutdownNow();
 		}
 
 		return new ArrayList<>();
@@ -99,84 +110,91 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 
 
 	/**
-	 * Submit a task, this method may block if the queue size exceeds the limit.
-	 *
-	 * @see java.util.concurrent.ExecutorService#submit
+	 * Execute a task that don't generate a response. This method may block if the queue size exceeds the limit.
 	 */
-	public void submit(RunnableTask aRunnable)
+	public Future<T> submit(RunnableTask aRunnable)
 	{
-		doSubmit(init(), aRunnable);
+		return handle(aRunnable);
 	}
 
 
-	public void call(AtomicReference aResultReceiver, CallableTask aRunnable)
+	/**
+	 * Execute a task that generate a response. This method may block if the queue size exceeds the limit.
+	 */
+	public Future<T> call(CallableTask aRunnable)
 	{
-		mResultReceivers.put(aRunnable, aResultReceiver);
-		doSubmit(init(), aRunnable);
+		return handle(aRunnable);
 	}
 
 
-	private void doSubmit(ExecutorService aService, Object aRunnable)
+	private Future<T> handle(Object aRunnable)
 	{
-		if (mQueueLimit > 0)
+		synchronized (LOCK)
 		{
-			synchronized (LOCK)
+			try
 			{
-				while (mBlockingQueue.size() >= mQueueLimit)
+				while (mCapacity > 0 && mBlockingQueue.size() >= mCapacity)
 				{
-					try
-					{
-						LOCK.wait(1000);
-					}
-					catch (InterruptedException e)
-					{
-						System.out.println("#");
-					}
+					LOCK.wait(1000);
 				}
+			}
+			catch (InterruptedException e)
+			{
 			}
 		}
 
-		if (aRunnable instanceof RunnableTask)
+		ExecutorService es = init();
+
+		switch (aRunnable)
 		{
-			aService.submit(() ->
-			{
-				try
+			case RunnableTask v -> {
+				return (Future<T>)es.submit(() ->
 				{
-					((RunnableTask)aRunnable).run();
-					synchronized (LOCK)
+					try
 					{
-						LOCK.notify();
+						v.run();
+						synchronized (LOCK)
+						{
+							LOCK.notify();
+						}
 					}
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace(System.err);
-				}
-			});
-		}
-		else if (aRunnable != null)
-		{
-			aService.submit(() ->
-			{
-				try
-				{
-					Object r = ((CallableTask)aRunnable).run();
-					synchronized (LOCK)
+					catch (Exception | Error e)
 					{
-						LOCK.notify();
+						onException(e);
 					}
-					return r;
-				}
-				catch (Exception e)
+				});
+			}
+			case CallableTask v -> {
+				return (Future<T>)es.submit(() ->
 				{
-					e.printStackTrace(System.err);
-					return e;
-				}
-			});
+					try
+					{
+						Object r = v.run();
+						synchronized (LOCK)
+						{
+							LOCK.notify();
+						}
+						return r;
+					}
+					catch (Exception | Error e)
+					{
+						onException(e);
+						return null;
+					}
+				});
+			}
+			default ->
+			{
+				return null;
+			}
 		}
 	}
 
 
+	/**
+	 * Blocks until all tasks finished executing. Repeated calls will be ignored and cause no problem. A closed FixedThreadExecutor is
+	 * restarted when a task is submitted to it.
+	 */
 	@Override
 	public void close()
 	{
@@ -188,21 +206,18 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	{
 		if (mExecutorService != null)
 		{
+			ExecutorService es = mExecutorService;
+			mExecutorService = null;
+
 			try
 			{
-				mExecutorService.shutdown();
-
-				mExecutorService.awaitTermination(aWaitMillis, TimeUnit.MILLISECONDS);
-
+				es.shutdown();
+				es.awaitTermination(aWaitMillis, TimeUnit.MILLISECONDS);
 				return false;
 			}
 			catch (InterruptedException e)
 			{
 				return true;
-			}
-			finally
-			{
-				mExecutorService = null;
 			}
 		}
 
@@ -214,11 +229,12 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	{
 		if (mExecutorService == null)
 		{
+			mCapacity = withCapacity();
 			mExecutorService = new ThreadPoolExecutor(mThreads, mThreads, 0L, TimeUnit.MILLISECONDS, (BlockingQueue<Runnable>)mBlockingQueue, aRunnable ->
 			{
-				Thread t = Executors.defaultThreadFactory().newThread(aRunnable);
-				t.setDaemon(mDaemon);
-				return t;
+				Thread thread = Executors.defaultThreadFactory().newThread(aRunnable);
+				thread.setDaemon(withDaemon());
+				return thread;
 			})
 			{
 				@Override
@@ -226,19 +242,33 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 				{
 					super.afterExecute(aRunnable, aThrowable);
 
-					synchronized (this)
+					synchronized (LOCK)
 					{
-						notify();
-					}
-
-					if (mOnCompletion != null)
-					{
-						mOnCompletion.onCompletion((Future)aRunnable);
+						LOCK.notify();
 					}
 
 					if (aThrowable != null)
 					{
-						aThrowable.printStackTrace(System.err);
+						onException(aThrowable);
+					}
+					else
+					{
+						try
+						{
+							Future f = (Future)aRunnable;
+							if (f.isCancelled())
+							{
+								onCancelled(f);
+							}
+							else
+							{
+								onCompletion(f);
+							}
+						}
+						catch (Exception | Error e)
+						{
+							onException(e);
+						}
 					}
 				}
 			};
@@ -248,45 +278,66 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	}
 
 
-	public LinkedBlockingQueue<T> getBlockingQueue()
+	protected int getAvailableProcessors()
 	{
-		return mBlockingQueue;
-	}
-
-
-	public int getQueueSizeLimit()
-	{
-		return mQueueLimit;
+		return ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
 	}
 
 
 	/**
-	 * Sets how many items the blocking queue will contain before the submit methods start blocking.
+	 * Override to return 'true' for daemon threads.
+	 *
+	 * @return false by default, override and return true to make executing threads be daemon.
 	 */
-	public FixedThreadExecutor<T> setQueueLimit(int aQueueSizeLimit)
+	protected boolean withDaemon()
 	{
-		mQueueLimit = aQueueSizeLimit;
-		return this;
+		return false;
 	}
 
 
-	public OnCompletion getOnCompletion()
+	/**
+	 * Override to return a capacity.
+	 *
+	 * @return unlimited (zero) by default, override to return a capacity of the blocking queue before it start to block adding new tasks.
+	 */
+	protected int withCapacity()
 	{
-		return mOnCompletion;
+		return 0;
 	}
 
 
-	public FixedThreadExecutor<T> setOnCompletion(OnCompletion aOnCompletion)
+	/**
+	 * Override to return custom implementations.
+	 *
+	 * @return a new LinkedBlockingQueue instance.
+	 */
+	protected LinkedBlockingQueue<T> withBlockingQueue()
 	{
-		mOnCompletion = aOnCompletion;
-		return this;
+		return new LinkedBlockingQueue<>();
 	}
 
 
-	public FixedThreadExecutor setDeamon(boolean aState)
+	/**
+	 * Override to do something when an error occurs.
+	 */
+	protected void onException(Throwable aThrowable)
 	{
-		mDaemon = aState;
-		return this;
+	}
+
+
+	/**
+	 * Override to do something immediately when a task is completed.
+	 */
+	protected void onCompletion(Future aFuture) throws Exception
+	{
+	}
+
+
+	/**
+	 * Override to do something immediately when a task is cancelled.
+	 */
+	protected void onCancelled(Future aFuture) throws Exception
+	{
 	}
 
 
@@ -304,9 +355,71 @@ public class FixedThreadExecutor<T> implements AutoCloseable
 	}
 
 
-	@FunctionalInterface
-	public interface OnCompletion<T>
-	{
-		void onCompletion(T aItem);
-	}
+//	public static void main(String... args)
+//	{
+//		try
+//		{
+//			try (FixedThreadExecutor executor = new FixedThreadExecutor(2)
+//			{
+//				@Override
+//				protected void onException(Throwable aThrowable)
+//				{
+//					aThrowable.printStackTrace(System.out);
+//				}
+//				@Override
+//				protected void onCompletion(Future f) throws Exception
+//				{
+//					System.out.println("completed " + f.get());
+//				}
+//				@Override
+//				protected void onCancelled(Future f) throws Exception
+//				{
+//					System.out.println("cancelled " + f);
+//				}
+//				@Override
+//				protected boolean withDaemon()
+//				{
+//					return true;
+//				}
+//				@Override
+//				protected int withCapacity()
+//				{
+//					return 20;
+//				}
+//			})
+//			{
+//				ArrayList<Future> futures = new ArrayList<>();
+//				for (int i = 0; i < 100; i++)
+//				{
+//					int j = i;
+//					futures.add(executor.submit(() ->
+//					{
+//						System.out.println("test " + j);
+//					}));
+//					futures.add(executor.call(() ->
+//					{
+//						System.out.println("test " + j);
+//						return "result " + j;
+//					}));
+//				}
+//				futures.get(197).cancel(true);
+//
+//				List missed = executor.shutdownNow();
+//
+//				for (Future f : futures)
+//				{
+//					if (f.isDone() && !f.isCancelled())
+//					{
+//						System.out.println("finished " + f.get());
+//					}
+//				}
+//
+//				System.out.println(missed.size() + " missed");
+//			}
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }

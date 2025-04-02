@@ -1,7 +1,5 @@
 package org.terifan.util.executors;
 
-import java.util.concurrent.Future;
-
 
 /**
  * The TimeLimitedExecutor executes a Runnable for a maximum time. If the time limit is reached the working thread will be interrupted.
