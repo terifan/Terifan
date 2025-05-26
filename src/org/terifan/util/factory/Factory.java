@@ -12,7 +12,12 @@ public class Factory
 	private final HashMap<Class, Class> mBoundTypes = new HashMap<>();
 	private final HashMap<Class, Object> mSingletons = new HashMap<>();
 	private final HashSet<Class> mFutureSingletons = new HashSet<>();
-	private final HashMap<Class, HashMap<Class, Function>> mProducers = new HashMap<>();
+	private final HashMap<Class, HashMap<Object, Function>> mProducers = new HashMap<>();
+
+	private final HashMap<String, Supplier> mNamedSuppliers = new HashMap<>();
+	private final HashMap<String, Class> mNamedTypes = new HashMap<>();
+	private final HashMap<String, Object> mNamedSingletons = new HashMap<>();
+	private final HashSet<String> mNamedFutureSingletons = new HashSet<>();
 
 
 	public Factory()
@@ -36,6 +41,12 @@ public class Factory
 	}
 
 
+	public FactoryNamedBind bindNamed(String aName)
+	{
+		return new FactoryNamedBind(aName);
+	}
+
+
 	public Producer with(Object aParameter)
 	{
 		if (aParameter == null)
@@ -43,7 +54,7 @@ public class Factory
 			throw new IllegalArgumentException("Provided parameter is null.");
 		}
 
-		HashMap<Class, Function> map = mProducers.get(aParameter.getClass());
+		HashMap<Object, Function> map = mProducers.get(aParameter.getClass());
 
 		if (map == null)
 		{
@@ -54,7 +65,42 @@ public class Factory
 	}
 
 
-	public <T> T newInstance(Class<T> aType)
+	public <T> T named(String aName)
+	{
+		T instance = (T)mNamedSingletons.get(aName);
+
+		if (instance == null)
+		{
+			instance = (T)mNamedSuppliers.getOrDefault(aName, () ->
+			{
+				try
+				{
+					Class type = mNamedTypes.get(aName);
+
+					if (type == null)
+					{
+						throw new IllegalArgumentException("Named type not bound: " + aName);
+					}
+
+					return (T)type.newInstance();
+				}
+				catch (IllegalAccessException | InstantiationException e)
+				{
+					throw new IllegalStateException(e);
+				}
+			}).get();
+
+			if (mNamedFutureSingletons.remove(aName))
+			{
+				mNamedSingletons.put(aName, instance);
+			}
+		}
+
+		return instance;
+	}
+
+
+	public <T> T get(Class<T> aType)
 	{
 		T instance = (T)mSingletons.get(aType);
 
@@ -82,12 +128,12 @@ public class Factory
 	}
 
 
-	public class FactoryBind<T>
+	public class FactoryBind<R>
 	{
-		private Class<T> mFromType;
+		private Class<R> mFromType;
 
 
-		FactoryBind(Class<T> aType)
+		FactoryBind(Class<R> aType)
 		{
 			mFromType = aType;
 		}
@@ -100,14 +146,14 @@ public class Factory
 		}
 
 
-		public FactoryBindTo<T> toSupplier(Supplier aSupplier)
+		public FactoryBindTo<R> toSupplier(Supplier aSupplier)
 		{
 			mSuppliers.put(mFromType, aSupplier);
 			return new FactoryBindTo<>(mFromType);
 		}
 
 
-		public void toInstance(T aInstance)
+		public void toInstance(R aInstance)
 		{
 			mSingletons.put(mFromType, aInstance);
 		}
@@ -119,54 +165,107 @@ public class Factory
 		}
 
 
-		public <U> FactoryProducer<T, U> with(Class<U> aParameterType)
+		public <U> FactoryProducer<U, R> with(Class<U> aParameterType)
 		{
 			return new FactoryProducer<>(mFromType, aParameterType);
 		}
 	}
 
 
-	public class FactoryProducer<T, U>
+	public class FactoryNamedBind
 	{
-		private Class<T> mFromType;
-		private Class<U> mParameterType;
+		private String mName;
 
 
-		FactoryProducer(Class<T> aFromType, Class<U> aParameterType)
+		FactoryNamedBind(String aName)
 		{
-			mFromType = aFromType;
+			mName = aName;
+		}
+
+
+		public FactoryNamedBindTo to(Class aTo)
+		{
+			mNamedTypes.put(mName, aTo);
+			return new FactoryNamedBindTo(mName);
+		}
+
+
+		public FactoryNamedBindTo toSupplier(Supplier aSupplier)
+		{
+			mNamedSuppliers.put(mName, aSupplier);
+			return new FactoryNamedBindTo(mName);
+		}
+
+
+		public void toInstance(Object aInstance)
+		{
+			mNamedSingletons.put(mName, aInstance);
+		}
+
+
+		public <T> FactoryProducer<T, Object> with(Class<T> aParameterType)
+		{
+			return new FactoryProducer<T, Object>(mName, aParameterType);
+		}
+	}
+
+
+	public class FactoryProducer<T,R>
+	{
+		private Object mKey;
+		private Class<T> mParameterType;
+
+
+		FactoryProducer(Object aKey, Class<T> aParameterType)
+		{
+			mKey = aKey;
 			mParameterType = aParameterType;
 		}
 
 
-		public void toProducer(Function<U, T> aFunction)
+		public void toProducer(Function<T, R> aFunction)
 		{
-			HashMap<Class, Function> map = mProducers.computeIfAbsent(mParameterType, k -> new HashMap<>());
-			map.put(mFromType, aFunction);
+			HashMap<Object, Function> map = mProducers.computeIfAbsent(mParameterType, k -> new HashMap<>());
+			map.put(mKey, aFunction);
 		}
 	}
 
 
 	public class Producer
 	{
-		private HashMap<Class, Function> mMap;
+		private HashMap<Object, Function> mMap;
 		private Object mParameter;
 
 
-		Producer(HashMap<Class, Function> aMap, Object aParameter)
+		Producer(HashMap<Object, Function> aMap, Object aParameter)
 		{
 			mMap = aMap;
 			mParameter = aParameter;
 		}
 
 
-		public <T> T newInstance(Class<T> aType)
+		public <T> T get(Class<T> aType)
 		{
 			Function fn = mMap.get(aType);
 
 			if (fn == null)
 			{
 				throw new IllegalArgumentException("Type is not bound to a producer: " + aType);
+			}
+
+			T instance = (T)fn.apply(mParameter);
+
+			return instance;
+		}
+
+
+		public <T> T get(String aName)
+		{
+			Function fn = mMap.get(aName);
+
+			if (fn == null)
+			{
+				throw new IllegalArgumentException("Named type is not bound to a producer: " + mParameter.getClass());
 			}
 
 			T instance = (T)fn.apply(mParameter);
@@ -190,6 +289,24 @@ public class Factory
 		public void asSingleton()
 		{
 			mFutureSingletons.add(mFromType);
+		}
+	}
+
+
+	public class FactoryNamedBindTo
+	{
+		private String mName;
+
+
+		FactoryNamedBindTo(String aName)
+		{
+			mName = aName;
+		}
+
+
+		public void asSingleton()
+		{
+			mNamedFutureSingletons.add(mName);
 		}
 	}
 }
