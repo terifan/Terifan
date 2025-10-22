@@ -36,6 +36,10 @@ public class Console
 			{
 				System.out.print(PARAM + aParams[p++] + RESET);
 			}
+			else if (aPattern.charAt(j + 1) == '%')
+			{
+				System.out.print(PARAM + aPattern.substring(j + 1, k).formatted(aParams[p++]) + RESET);
+			}
 			else
 			{
 				System.out.print(LABEL + aPattern.substring(j + 1, k) + RESET);
