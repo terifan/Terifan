@@ -20,7 +20,7 @@ public class DelayedExecutor
 
 	public DelayedExecutor()
 	{
-		mTimer = new Timer(true);
+		mTimer = new Timer("DelayedExecutor", true);
 	}
 
 
