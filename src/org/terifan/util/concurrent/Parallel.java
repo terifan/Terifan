@@ -1,4 +1,4 @@
-package org.terifan.concurrent;
+package org.terifan.util.concurrent;
 
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.Callable;

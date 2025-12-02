@@ -307,4 +307,13 @@ public final class Streams
 			mFile.close();
 		}
 	}
+
+
+	public static class RuntimeIOException extends RuntimeException
+	{
+		public RuntimeIOException(IOException aCause)
+		{
+			super(aCause);
+		}
+	}
 }

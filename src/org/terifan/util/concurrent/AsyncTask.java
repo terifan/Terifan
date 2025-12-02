@@ -1,4 +1,4 @@
-package org.terifan.concurrent;
+package org.terifan.util.concurrent;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;

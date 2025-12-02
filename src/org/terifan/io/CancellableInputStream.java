@@ -1,4 +1,4 @@
-package org.terifan.net;
+package org.terifan.io;
 
 import java.io.IOException;
 import java.io.InputStream;
