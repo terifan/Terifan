@@ -33,6 +33,17 @@ public final class Streams
 	 */
 	public static byte[] readAll(Object aInput) throws IOException
 	{
+		if (aInput instanceof InputStream in)
+		{
+			try (InputStream tmp = in)
+			{
+				return tmp.readAllBytes();
+			}
+			catch (IOException e)
+			{
+				throw new RuntimeIOException(e);
+			}
+		}
 		return readAll(aInput, true);
 	}
 
