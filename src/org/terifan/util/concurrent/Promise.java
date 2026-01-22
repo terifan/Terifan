@@ -1,4 +1,4 @@
-package org.terifan.util;
+package org.terifan.util.concurrent;
 
 import java.util.function.Consumer;
 
